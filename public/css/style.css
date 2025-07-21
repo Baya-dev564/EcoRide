@@ -1,0 +1,152 @@
+/* public/css/style.css */
+/* Styles personnalisés pour EcoRide */
+
+:root {
+    --primary-green: #28a745;
+    --light-green: #d4edda;
+    --dark-green: #155724;
+}
+
+/* Background image pour la section hero EcoRide */
+.hero-section {
+    background: linear-gradient(rgba(40, 167, 69, 0.7), rgba(32, 201, 151, 0.7)), 
+                url('../assets/img/bg_image1\ \(1\).jpg');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    min-height: 70vh;
+    display: flex;
+    align-items: center;
+    color: rgb(0, 0, 0);
+    text-shadow: 0 2px 4px rgba(0,0,0,0.4);
+}
+
+/* Amélioration du contenu sur l'image */
+.hero-section .container {
+    position: relative;
+    z-index: 2;
+}
+
+.hero-section h1 {
+    color: white !important;
+    font-weight: bold;
+}
+
+.hero-section p {
+    color: rgba(255, 255, 255, 0.95);
+}
+
+
+
+
+body {
+    background-color: #f8f9fa;
+    font-family: 'Segoe UI' ;
+}
+
+/* Navigation */
+.navbar-brand {
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+
+.navbar-nav .badge {
+    font-size: 0.75rem;
+    margin-left: 5px;
+}
+
+/* Sections principales */
+.hero-section {
+    background-image: url(../assets/img/bg_image1\ \(1\).jpg);
+    padding: 4rem 0;
+}
+
+.stats-section {
+    background: linear-gradient(135deg, var(--light-green) 0%, #e9ecef 100%);
+    padding: 3rem 0;
+    border-radius: 15px;
+}
+
+.stat-item h3 {
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.features-section .feature-card {
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    transition: transform 0.3s ease;
+}
+
+.features-section .feature-card:hover {
+    transform: translateY(-5px);
+}
+
+/* Boutons */
+.btn-success {
+    background-color: var(--primary-green);
+    border-color: var(--primary-green);
+}
+
+.btn-success:hover {
+    background-color: var(--dark-green);
+    border-color: var(--dark-green);
+}
+
+.btn-outline-success {
+    color: var(--primary-green);
+    border-color: var(--primary-green);
+}
+
+.btn-outline-success:hover {
+    background-color: var(--primary-green);
+    border-color: var(--primary-green);
+}
+
+/* Footer */
+.footer {
+    background: linear-gradient(135deg, var(--light-green) 0%, #d4edda 100%);
+    border-top: 3px solid var(--primary-green);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .hero-section {
+        padding: 2rem 0;
+        text-align: center;
+    }
+    
+    .stat-item {
+        margin-bottom: 2rem;
+    }
+}
+
+/* Animations */
+.alert {
+    animation: slideIn 0.5s ease;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+.card {
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+    border: 1px solid #dee2e6;
+}
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    transition: all 0.3s ease;
+}
+

@@ -1,0 +1,75 @@
+/* Styles pour la page trajets EcoRide */
+.trip-card {
+    transition: transform 0.2s ease-in-out;
+    border: 1px solid #e0e0e0;
+}
+
+.trip-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.hero-search {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+}
+
+.results-section {
+    min-height: 400px;
+}
+
+/* Assurer que les trajets sont visibles */
+.trip-card, .card {
+    display: block !important;
+    visibility: visible !important;
+}
+/* ========== BACKGROUND IMAGE POUR LA SECTION DE RECHERCHE ========== */
+
+
+
+/* Section de recherche avec background image visible */
+.search-hero-section {
+    background: linear-gradient(135deg, rgba(40, 167, 69, 0.3) 0%, rgba(32, 201, 151, 0.3) 100%),
+                url('../assets/img/bg_image2.jpg');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    
+
+    position: relative;
+}
+
+.search-hero-section .container {
+    position: relative;
+    z-index: 2;
+}
+
+/* Amélioration du formulaire sur l'image de fond */
+.search-hero-section .card {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border: none;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+}
+
+.search-hero-section h1 {
+    color: white !important;
+    font-weight: bold;
+    text-shadow: 0 3px 6px rgba(0,0,0,0.7);
+}
+
+.search-hero-section p {
+    color: rgba(255, 255, 255, 0.95);
+    text-shadow: 0 2px 4px rgba(0,0,0,0.6);
+}
+
+/* Responsive pour la section de recherche */
+@media (max-width: 768px) {
+    .search-hero-section {
+        background-attachment: scroll;
+    }
+    
+    .search-hero-section h1 {
+        font-size: 2.5rem;
+    }
+}

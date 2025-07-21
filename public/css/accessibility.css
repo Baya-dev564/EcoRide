@@ -1,0 +1,101 @@
+/* public/css/accessibility.css */
+/* Styles d'accessibilité pour EcoRide */
+
+/* Focus visible pour la navigation au clavier */
+.form-control:focus,
+.btn:focus,
+.nav-link:focus,
+.dropdown-toggle:focus {
+    outline: 3px solid #28a745 !important;
+    outline-offset: 2px !important;
+    box-shadow: 0 0 0 3px rgba(40, 167, 69, 0.3) !important;
+}
+
+/* Amélioration du contraste pour les textes */
+.text-muted {
+    color: #495057 !important; /* Contraste amélioré */
+}
+
+/* Taille minimale des zones cliquables (44px minimum) */
+.btn,
+.nav-link,
+.page-link {
+    min-height: 44px;
+    min-width: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Masquage visuel mais accessible aux lecteurs d'écran */
+.sr-only {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    padding: 0 !important;
+    margin: -1px !important;
+    overflow: hidden !important;
+    clip: rect(0, 0, 0, 0) !important;
+    white-space: nowrap !important;
+    border: 0 !important;
+}
+
+/* Affichage lors du focus pour les éléments sr-only */
+.sr-only:focus {
+    position: static !important;
+    width: auto !important;
+    height: auto !important;
+    padding: inherit !important;
+    margin: inherit !important;
+    overflow: visible !important;
+    clip: auto !important;
+    white-space: inherit !important;
+}
+
+/* Lien de navigation rapide */
+.skip-link {
+    position: absolute;
+    top: -40px;
+    left: 6px;
+    background: #28a745;
+    color: white;
+    padding: 8px;
+    text-decoration: none;
+    border-radius: 4px;
+    z-index: 9999;
+    transition: top 0.3s;
+}
+
+.skip-link:focus {
+    top: 6px;
+    color: white;
+}
+
+/* Amélioration des cartes de trajets */
+.trip-card:focus-within {
+    outline: 2px solid #28a745;
+    outline-offset: 2px;
+}
+
+/* Amélioration des messages d'erreur */
+.invalid-feedback {
+    font-weight: 500;
+    font-size: 0.9rem;
+}
+
+/* Contraste amélioré pour les badges */
+.badge {
+    font-weight: 600;
+    border: 1px solid rgba(0,0,0,0.1);
+}
+
+/* Animation réduite pour les utilisateurs sensibles */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}

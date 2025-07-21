@@ -1,0 +1,605 @@
+/**
+ * CSS spécifique à la vue show.php - Profil conducteur EcoRide
+ * Styles pour les statistiques, graphiques et affichage des avis
+ * Complète avis.css avec des styles pour la vue show
+ */
+
+/* ===========================================
+   VARIABLES CSS POUR LA VUE SHOW
+   =========================================== */
+:root {
+    --stat-card-bg: #ffffff;
+    --stat-card-border: #e9ecef;
+    --stat-card-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.1);
+    --stat-value-color: #198754;
+    --stat-label-color: #6c757d;
+    --progress-height: 8px;
+    --progress-bg: #e9ecef;
+    --chart-border-radius: 0.5rem;
+    --animation-duration: 0.8s;
+    --animation-delay: 0.2s;
+}
+
+/* ===========================================
+   STYLES POUR LES CARTES DE STATISTIQUES
+   =========================================== */
+
+/* Carte principale des statistiques */
+.card-stats {
+    border: none;
+    border-radius: var(--chart-border-radius);
+    box-shadow: var(--stat-card-shadow);
+    overflow: hidden;
+}
+
+.card-stats .card-header {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-bottom: 3px solid var(--ecoride-primary);
+    padding: 1.5rem;
+}
+
+.card-stats .card-body {
+    padding: 2rem;
+    background: var(--stat-card-bg);
+}
+
+/* Cartes individuelles de statistiques */
+.stat-card {
+    background: var(--stat-card-bg);
+    border: 1px solid var(--stat-card-border);
+    border-radius: var(--chart-border-radius);
+    padding: 1.5rem;
+    text-align: center;
+    transition: all var(--animation-duration) ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--ecoride-primary) 0%, var(--ecoride-warning) 100%);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform var(--animation-duration) ease;
+}
+
+.stat-card:hover::before {
+    transform: scaleX(1);
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    border-color: var(--ecoride-primary);
+}
+
+/* Icône de statistique */
+.stat-icon {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+    opacity: 0.8;
+}
+
+/* Valeur de statistique */
+.stat-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--stat-value-color);
+    margin-bottom: 0.5rem;
+    line-height: 1.2;
+}
+
+/* Libellé de statistique */
+.stat-label {
+    font-size: 0.9rem;
+    color: var(--stat-label-color);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Étoiles dans les statistiques */
+.stars-display {
+    margin-top: 0.5rem;
+    font-size: 1rem;
+}
+
+.stars-display .fa-star {
+    margin: 0 0.1rem;
+}
+
+/* ===========================================
+   STYLES POUR LA RÉPARTITION DES NOTES
+   =========================================== */
+
+/* Barre de répartition */
+.rating-bar {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.5rem 0;
+}
+
+.rating-label {
+    min-width: 60px;
+    font-weight: 500;
+    color: var(--ecoride-dark);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.rating-bar .progress {
+    flex: 1;
+    height: var(--progress-height);
+    background-color: var(--progress-bg);
+    border-radius: calc(var(--progress-height) / 2);
+    overflow: hidden;
+}
+
+.rating-bar .progress-bar {
+    background: linear-gradient(
+        90deg,
+        var(--ecoride-warning) 0%,
+        #ffc107 50%,
+        var(--ecoride-warning) 100%
+    );
+    transition: width var(--animation-duration) ease;
+    animation: progressAnimation var(--animation-duration) ease-in-out;
+}
+
+@keyframes progressAnimation {
+    0% {
+        width: 0%;
+    }
+    100% {
+        width: var(--final-width);
+    }
+}
+
+.rating-count {
+    min-width: 80px;
+    text-align: right;
+    font-size: 0.875rem;
+    color: var(--stat-label-color);
+    font-weight: 500;
+}
+
+/* ===========================================
+   STYLES POUR LES CRITÈRES MOYENS
+   =========================================== */
+
+/* Critère moyen */
+.critere-moyenne {
+    padding: 0.75rem;
+    background: #f8f9fa;
+    border-radius: var(--chart-border-radius);
+    border: 1px solid var(--stat-card-border);
+    transition: all 0.3s ease;
+}
+
+.critere-moyenne:hover {
+    background: #ffffff;
+    border-color: var(--ecoride-primary);
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+/* Label du critère */
+.critere-label {
+    font-weight: 500;
+    color: var(--ecoride-dark);
+    display: flex;
+    align-items: center;
+}
+
+/* Note du critère */
+.critere-note {
+    font-weight: 600;
+    color: var(--stat-value-color);
+    font-size: 0.9rem;
+}
+
+/* Barre de progression du critère */
+.critere-moyenne .progress {
+    height: 6px;
+    background-color: var(--progress-bg);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.critere-moyenne .progress-bar {
+    transition: width var(--animation-duration) ease;
+}
+
+.critere-moyenne .progress-bar.bg-primary {
+    background: linear-gradient(90deg, #0d6efd 0%, #6610f2 100%) !important;
+}
+
+.critere-moyenne .progress-bar.bg-success {
+    background: linear-gradient(90deg, #198754 0%, #20c997 100%) !important;
+}
+
+.critere-moyenne .progress-bar.bg-warning {
+    background: linear-gradient(90deg, #ffc107 0%, #fd7e14 100%) !important;
+}
+
+.critere-moyenne .progress-bar.bg-danger {
+    background: linear-gradient(90deg, #dc3545 0%, #e91e63 100%) !important;
+}
+
+/* ===========================================
+   STYLES POUR LES AVIS INDIVIDUELS
+   =========================================== */
+
+/* Conteneur d'avis */
+.avis-item {
+    opacity: 0;
+    transform: translateY(20px);
+    animation: fadeInUp 0.6s ease-out forwards;
+}
+
+/* Délai d'animation pour chaque avis */
+.avis-item:nth-child(1) { animation-delay: 0.1s; }
+.avis-item:nth-child(2) { animation-delay: 0.2s; }
+.avis-item:nth-child(3) { animation-delay: 0.3s; }
+.avis-item:nth-child(4) { animation-delay: 0.4s; }
+.avis-item:nth-child(5) { animation-delay: 0.5s; }
+
+@keyframes fadeInUp {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Note d'affichage */
+.note-display {
+    padding: 1rem;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: var(--chart-border-radius);
+    border: 2px solid var(--stat-card-border);
+}
+
+.note-display .h4 {
+    margin-bottom: 0;
+    font-weight: 700;
+}
+
+/* Étoiles petites */
+.stars-small {
+    font-size: 0.9rem;
+    letter-spacing: 0.1rem;
+}
+
+/* Étoiles très petites pour les critères */
+.stars-tiny {
+    font-size: 0.7rem;
+    letter-spacing: 0.05rem;
+}
+
+
+/* Détail de critère */
+.critere-detail {
+    text-align: center;
+    padding: 0.5rem;
+    background: #f8f9fa;
+    border-radius: var(--chart-border-radius);
+    border: 1px solid var(--stat-card-border);
+}
+
+.critere-detail small {
+    font-size: 0.75rem;
+    font-weight: 500;
+    margin-bottom: 0.25rem;
+}
+
+/* ===========================================
+   STYLES POUR LES FILTRES
+   =========================================== */
+
+/* Dropdown de filtre */
+#filterDropdown {
+    border: 1px solid var(--stat-card-border);
+    transition: all 0.3s ease;
+}
+
+#filterDropdown:hover {
+    border-color: var(--ecoride-primary);
+    background-color: var(--ecoride-primary);
+    color: white;
+}
+
+/* Items du dropdown */
+.dropdown-item {
+    padding: 0.5rem 1rem;
+    transition: all 0.3s ease;
+}
+
+.dropdown-item:hover {
+    background-color: var(--ecoride-primary);
+    color: white;
+}
+
+.dropdown-item.active {
+    background-color: var(--ecoride-primary);
+    color: white;
+}
+
+/* ===========================================
+   STYLES POUR LES BADGES ET TAGS
+   =========================================== */
+
+/* Badge de statut */
+.badge {
+    font-size: 0.75rem;
+    padding: 0.375rem 0.75rem;
+    border-radius: 0.375rem;
+    font-weight: 500;
+}
+
+/* Tags dans les avis */
+.tags .badge {
+    margin: 0.125rem;
+    transition: all 0.3s ease;
+}
+
+.tags .badge:hover {
+    transform: scale(1.05);
+}
+
+/* ===========================================
+   STYLES RESPONSIVES
+   =========================================== */
+
+/* Tablettes */
+@media (max-width: 768px) {
+    .stat-card {
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+    
+    .stat-icon {
+        font-size: 2rem;
+    }
+    
+    .stat-value {
+        font-size: 1.5rem;
+    }
+    
+    .rating-bar {
+        flex-direction: column;
+        gap: 0.5rem;
+        align-items: stretch;
+    }
+    
+    .rating-label {
+        min-width: auto;
+        justify-content: center;
+    }
+    
+    .rating-count {
+        min-width: auto;
+        text-align: center;
+    }
+    
+    .critere-moyenne {
+        padding: 0.5rem;
+    }
+}
+
+/* Mobiles */
+@media (max-width: 576px) {
+    .card-stats .card-body {
+        padding: 1rem;
+    }
+    
+    .stat-card {
+        padding: 0.75rem;
+    }
+    
+    .stat-icon {
+        font-size: 1.5rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .stat-value {
+        font-size: 1.2rem;
+    }
+    
+    .stat-label {
+        font-size: 0.8rem;
+    }
+    
+    .note-display {
+        padding: 0.75rem;
+    }
+    
+    .critere-detail {
+        padding: 0.25rem;
+    }
+    
+    .stars-small {
+        font-size: 0.8rem;
+    }
+    
+    .stars-tiny {
+        font-size: 0.6rem;
+    }
+}
+
+/* ===========================================
+   ANIMATIONS D'ENTRÉE
+   =========================================== */
+
+/* Animation des statistiques */
+.stat-card {
+    animation: slideInUp 0.6s ease-out;
+}
+
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Animation des barres de progression */
+.progress-bar {
+    animation: growWidth var(--animation-duration) ease-in-out;
+}
+
+@keyframes growWidth {
+    from {
+        width: 0%;
+    }
+    to {
+        width: var(--target-width);
+    }
+}
+
+/* Animation des cartes au survol */
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    transition: all 0.3s ease;
+}
+
+/* ===========================================
+   STYLES POUR L'ACCESSIBILITÉ
+   =========================================== */
+
+/* Focus visible */
+.dropdown-item:focus,
+.stat-card:focus {
+    outline: 2px solid var(--ecoride-primary);
+    outline-offset: 2px;
+}
+
+/* Amélioration du contraste */
+.text-muted {
+    color: #6c757d !important;
+}
+
+/* Styles pour les lecteurs d'écran */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* ===========================================
+   STYLES POUR L'IMPRESSION
+   =========================================== */
+
+@media print {
+    .stat-card {
+        break-inside: avoid;
+        box-shadow: none;
+        border: 1px solid #000;
+    }
+    
+    .progress-bar {
+        background: #000 !important;
+    }
+    
+    .dropdown,
+    .btn {
+        display: none !important;
+    }
+    
+    .avis-item {
+        break-inside: avoid;
+        margin-bottom: 1rem;
+    }
+    
+    .stars-small .fa-star.text-warning,
+    .stars-tiny .fa-star.text-warning {
+        color: #000 !important;
+    }
+}
+
+/* ===========================================
+   STYLES POUR LES TOOLTIPS
+   =========================================== */
+
+/* Tooltip personnalisé */
+.tooltip-custom {
+    position: absolute;
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 0.5rem;
+    border-radius: 0.25rem;
+    font-size: 0.875rem;
+    z-index: 1000;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+}
+
+.tooltip-custom.show {
+    opacity: 1;
+}
+
+/* ===========================================
+   STYLES POUR LES ÉTATS DE CHARGEMENT
+   =========================================== */
+
+/* Skeleton loading pour les statistiques */
+.stat-skeleton {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+}
+
+@keyframes loading {
+    0% {
+        background-position: 200% 0;
+    }
+    100% {
+        background-position: -200% 0;
+    }
+}
+
+/* Placeholder pour les barres de progression */
+.progress-placeholder {
+    height: var(--progress-height);
+    background: var(--progress-bg);
+    border-radius: calc(var(--progress-height) / 2);
+    overflow: hidden;
+    position: relative;
+}
+
+.progress-placeholder::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.6), transparent);
+    animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+    0% {
+        left: -100%;
+    }
+    100% {
+        left: 100%;
+    }
+}

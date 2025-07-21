@@ -1,0 +1,600 @@
+/**
+ * CSS spécifique au formulaire d'avis EcoRide
+ * Styles pour les étoiles, validation, animations
+ * Complète avis.css avec des styles spécifiques au formulaire
+ */
+
+/* ===========================================
+   VARIABLES CSS POUR LE FORMULAIRE
+   =========================================== */
+:root {
+    --star-color-empty: #d6d6d6;
+    --star-color-hover: #ffc107;
+    --star-color-active: #ff9800;
+    --star-size: 1.5rem;
+    --star-size-small: 1rem;
+    --form-border-radius: 0.5rem;
+    --form-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.1);
+    --transition-fast: 0.2s ease;
+    --transition-medium: 0.3s ease;
+}
+
+/* ===========================================
+   STYLES GÉNÉRAUX DU FORMULAIRE
+   =========================================== */
+
+/* Carte principale du formulaire */
+#avisForm .card {
+    border: none;
+    box-shadow: var(--form-shadow);
+    border-radius: var(--form-border-radius);
+    overflow: hidden;
+}
+
+/* Header de la carte */
+#avisForm .card-header {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-bottom: 3px solid var(--ecoride-primary);
+    padding: 1.5rem;
+}
+
+/* Corps de la carte */
+#avisForm .card-body {
+    padding: 2rem;
+}
+
+/* Footer de la carte */
+#avisForm .card-footer {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-top: 1px solid #dee2e6;
+    padding: 1.5rem;
+}
+
+/* Sections du formulaire */
+#avisForm section {
+    position: relative;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    background: #fdfdfd;
+    border-radius: var(--form-border-radius);
+    border: 1px solid #f0f0f0;
+    transition: var(--transition-medium);
+}
+
+#avisForm section:hover {
+    border-color: var(--ecoride-primary);
+    box-shadow: 0 0 0 0.2rem rgba(25, 135, 84, 0.1);
+}
+
+/* Titres des sections */
+#avisForm section h3 {
+    color: var(--ecoride-dark);
+    font-weight: 600;
+    margin-bottom: 1rem;
+}
+
+/* ===========================================
+   STYLES POUR LES ÉTOILES - NOTE GLOBALE
+   =========================================== */
+
+/* Conteneur principal des étoiles */
+.star-rating-container {
+    padding: 2rem;
+    background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+    border-radius: var(--form-border-radius);
+    border: 2px dashed #dee2e6;
+    margin: 1rem 0;
+    transition: var(--transition-medium);
+}
+
+.star-rating-container:hover {
+    border-color: var(--ecoride-primary);
+    border-style: solid;
+}
+
+/* Conteneur des étoiles */
+.star-rating {
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+/* Étoiles individuelles */
+.star {
+    cursor: pointer;
+    font-size: var(--star-size);
+    color: var(--star-color-empty);
+    transition: var(--transition-fast);
+    padding: 0.25rem;
+    border-radius: 50%;
+    position: relative;
+}
+
+/* Effet hover sur les étoiles */
+.star:hover {
+    color: var(--star-color-hover);
+    transform: scale(1.2);
+    text-shadow: 0 0 10px rgba(255, 193, 7, 0.6);
+}
+
+/* Étoiles actives */
+.star.active {
+    color: var(--star-color-active);
+    text-shadow: 0 0 5px rgba(255, 152, 0, 0.5);
+}
+
+/* Étoiles inactives */
+.star.inactive {
+    color: var(--star-color-empty);
+    transform: scale(0.9);
+}
+
+/* Animation de sélection */
+.star.selected {
+    animation: starPulse 0.4s ease;
+}
+
+@keyframes starPulse {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.3);
+    }
+    100% {
+        transform: scale(1.1);
+    }
+}
+
+/* ===========================================
+   STYLES POUR LES CRITÈRES DÉTAILLÉS
+   =========================================== */
+
+/* Conteneur des critères */
+.star-rating-critere {
+    display: flex;
+    justify-content: center;
+    gap: 0.25rem;
+    margin-top: 0.5rem;
+    padding: 0.5rem;
+    background: #f8f9fa;
+    border-radius: var(--form-border-radius);
+    border: 1px solid #e9ecef;
+    transition: var(--transition-medium);
+}
+
+.star-rating-critere:hover {
+    background: #ffffff;
+    border-color: var(--ecoride-primary);
+}
+
+/* Étoiles petites pour les critères */
+.star-small {
+    cursor: pointer;
+    font-size: var(--star-size-small);
+    color: var(--star-color-empty);
+    transition: var(--transition-fast);
+    padding: 0.1rem;
+    border-radius: 50%;
+}
+
+.star-small:hover {
+    color: var(--star-color-hover);
+    transform: scale(1.1);
+}
+
+.star-small.active {
+    color: var(--star-color-active);
+}
+
+.star-small.inactive {
+    color: var(--star-color-empty);
+}
+
+/* Labels des critères */
+.col-md-6 .form-label {
+    font-weight: 500;
+    color: var(--ecoride-dark);
+    margin-bottom: 0.5rem;
+}
+
+/* Icônes des critères */
+.col-md-6 .form-label i {
+    width: 20px;
+    text-align: center;
+}
+
+/* ===========================================
+   STYLES POUR LE COMMENTAIRE
+   =========================================== */
+
+/* Textarea du commentaire */
+#commentaire {
+    resize: vertical;
+    min-height: 120px;
+    border: 2px solid #e9ecef;
+    border-radius: var(--form-border-radius);
+    transition: var(--transition-medium);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    line-height: 1.6;
+}
+
+#commentaire:focus {
+    border-color: var(--ecoride-primary);
+    box-shadow: 0 0 0 0.2rem rgba(25, 135, 84, 0.25);
+}
+
+/* Compteur de caractères */
+#charCount {
+    font-weight: 600;
+    color: var(--ecoride-primary);
+    transition: var(--transition-fast);
+}
+
+/* Compteur quand proche de la limite */
+#charCount.warning {
+    color: #ffc107;
+}
+
+/* Compteur quand limite dépassée */
+#charCount.error {
+    color: #dc3545;
+}
+
+/* ===========================================
+   STYLES POUR LES TAGS
+   =========================================== */
+
+/* Champ de saisie des tags */
+#tags {
+    border: 2px solid #e9ecef;
+    border-radius: var(--form-border-radius);
+    transition: var(--transition-medium);
+}
+
+#tags:focus {
+    border-color: var(--ecoride-primary);
+    box-shadow: 0 0 0 0.2rem rgba(25, 135, 84, 0.25);
+}
+
+/* Conteneur des tags suggérés */
+.suggested-tags {
+    margin-top: 1rem;
+    padding: 1rem;
+    background: #f8f9fa;
+    border-radius: var(--form-border-radius);
+    border: 1px solid #e9ecef;
+}
+
+/* Tags suggérés */
+.suggested-tag {
+    cursor: pointer;
+    transition: var(--transition-fast);
+    margin: 0.25rem;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid #dee2e6;
+    border-radius: 1rem;
+}
+
+.suggested-tag:hover {
+    background-color: var(--ecoride-primary) !important;
+    color: white !important;
+    border-color: var(--ecoride-primary);
+    transform: translateY(-2px);
+}
+
+.suggested-tag.selected {
+    background-color: var(--ecoride-primary) !important;
+    color: white !important;
+    border-color: var(--ecoride-primary);
+}
+
+/* ===========================================
+   STYLES POUR LA VALIDATION
+   =========================================== */
+
+/* Champs valides */
+.form-control.is-valid {
+    border-color: var(--ecoride-primary);
+    background-image: none;
+}
+
+.form-control.is-valid:focus {
+    border-color: var(--ecoride-primary);
+    box-shadow: 0 0 0 0.2rem rgba(25, 135, 84, 0.25);
+}
+
+/* Champs invalides */
+.form-control.is-invalid {
+    border-color: #dc3545;
+    background-image: none;
+}
+
+.form-control.is-invalid:focus {
+    border-color: #dc3545;
+    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+}
+
+/* Messages de validation */
+.valid-feedback {
+    display: block;
+    color: var(--ecoride-primary);
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+}
+
+.invalid-feedback {
+    display: block;
+    color: #dc3545;
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+}
+
+/* ===========================================
+   STYLES POUR LES BOUTONS
+   =========================================== */
+
+/* Bouton principal (Publier) */
+#submitBtn {
+    background: linear-gradient(135deg, var(--ecoride-primary) 0%, #157347 100%);
+    border: none;
+    padding: 0.75rem 2rem;
+    font-weight: 600;
+    border-radius: var(--form-border-radius);
+    transition: var(--transition-medium);
+    position: relative;
+    overflow: hidden;
+}
+
+#submitBtn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0.5rem 1rem rgba(25, 135, 84, 0.3);
+}
+
+#submitBtn:active {
+    transform: translateY(0);
+}
+
+/* Bouton secondaire (Annuler) */
+.btn-secondary {
+    background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+    border: none;
+    padding: 0.75rem 2rem;
+    font-weight: 600;
+    border-radius: var(--form-border-radius);
+    transition: var(--transition-medium);
+}
+
+.btn-secondary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0.5rem 1rem rgba(108, 117, 125, 0.3);
+}
+
+/* Animation de loading pour le bouton */
+#submitBtn.loading {
+    pointer-events: none;
+    opacity: 0.8;
+}
+
+#submitBtn.loading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 20px;
+    height: 20px;
+    margin-top: -10px;
+    margin-left: -10px;
+    border: 2px solid #ffffff;
+    border-top: 2px solid transparent;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+/* ===========================================
+   STYLES POUR LES ALERTES
+   =========================================== */
+
+/* Alerte d'information (trajet) */
+.alert-info {
+    background: linear-gradient(135deg, #d1ecf1 0%, #bee5eb 100%);
+    border: 1px solid #86cfda;
+    border-radius: var(--form-border-radius);
+    padding: 1.5rem;
+}
+
+.alert-info .alert-heading {
+    color: #0c5460;
+    font-weight: 600;
+}
+
+.alert-info p {
+    color: #0c5460;
+    margin-bottom: 0.5rem;
+}
+
+/* Alerte d'erreur */
+.alert-danger {
+    background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+    border: 1px solid #f1aeb5;
+    border-radius: var(--form-border-radius);
+    padding: 1.5rem;
+}
+
+/* ===========================================
+   STYLES RESPONSIVES
+   =========================================== */
+
+/* Tablettes */
+@media (max-width: 768px) {
+    :root {
+        --star-size: 1.2rem;
+        --star-size-small: 0.9rem;
+    }
+    
+    #avisForm .card-body {
+        padding: 1.5rem;
+    }
+    
+    #avisForm section {
+        padding: 1rem;
+    }
+    
+    .star-rating-container {
+        padding: 1.5rem;
+    }
+    
+    .star-rating {
+        gap: 0.3rem;
+    }
+    
+    .star-rating-critere {
+        gap: 0.2rem;
+    }
+}
+
+/* Mobiles */
+@media (max-width: 576px) {
+    :root {
+        --star-size: 1rem;
+        --star-size-small: 0.8rem;
+    }
+    
+    #avisForm .card-body {
+        padding: 1rem;
+    }
+    
+    #avisForm section {
+        padding: 0.75rem;
+    }
+    
+    .star-rating-container {
+        padding: 1rem;
+    }
+    
+    .star-rating {
+        gap: 0.2rem;
+    }
+    
+    .star-rating-critere {
+        gap: 0.1rem;
+    }
+    
+    .suggested-tag {
+        font-size: 0.75rem;
+        padding: 0.25rem 0.5rem;
+    }
+    
+    #submitBtn,
+    .btn-secondary {
+        padding: 0.5rem 1rem;
+        font-size: 0.9rem;
+    }
+}
+
+/* ===========================================
+   ANIMATIONS D'ENTRÉE
+   =========================================== */
+
+/* Animation d'apparition des sections */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+#avisForm section {
+    animation: fadeInUp 0.6s ease-out;
+}
+
+/* Délai d'animation pour chaque section */
+#avisForm section:nth-child(1) {
+    animation-delay: 0.1s;
+}
+
+#avisForm section:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+#avisForm section:nth-child(3) {
+    animation-delay: 0.3s;
+}
+
+#avisForm section:nth-child(4) {
+    animation-delay: 0.4s;
+}
+
+#avisForm section:nth-child(5) {
+    animation-delay: 0.5s;
+}
+
+/* ===========================================
+   STYLES POUR L'ACCESSIBILITÉ
+   =========================================== */
+
+/* Focus visible pour les étoiles */
+.star:focus,
+.star-small:focus {
+    outline: 2px solid var(--ecoride-primary);
+    outline-offset: 2px;
+}
+
+/* Amélioration du contraste pour les textes */
+.form-text {
+    color: #6c757d;
+    font-size: 0.875rem;
+}
+
+/* Styles pour les lecteurs d'écran */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* ===========================================
+   STYLES POUR L'IMPRESSION
+   =========================================== */
+
+@media print {
+    .star-rating-container {
+        border: 1px solid #000;
+    }
+    
+    .star,
+    .star-small {
+        color: #000 !important;
+    }
+    
+    .btn,
+    .suggested-tags {
+        display: none !important;
+    }
+    
+    #avisForm section {
+        break-inside: avoid;
+        box-shadow: none;
+        border: 1px solid #000;
+    }
+}

@@ -1,0 +1,144 @@
+[
+    {
+        "_id": "avis_6878e3d15f4dd",
+        "user_id": null,
+        "trajet_id": "",
+        "conducteur_id": "",
+        "note_globale": 5,
+        "criteres": {
+            "ponctualite": 3,
+            "conduite": 3,
+            "proprete": 4,
+            "ambiance": 4
+        },
+        "commentaire": "okijhgfrtyh",
+        "tags": [],
+        "date_creation": "2025-07-17 11:51:45",
+        "statut": "validé"
+    },
+    {
+        "_id": "avis_6879009433f71",
+        "user_id": 1,
+        "pseudo": "Baya",
+        "trajet_id": "",
+        "conducteur_id": "",
+        "note_globale": 5,
+        "criteres": {
+            "ponctualite": 5,
+            "conduite": 4,
+            "proprete": 4,
+            "ambiance": 5
+        },
+        "commentaire": "bon voyage !",
+        "tags": [
+            "sympa",
+            "musique"
+        ],
+        "date_creation": "2025-07-17 13:54:28",
+        "statut": "validé"
+    },
+    {
+        "_id": "avis_687901ef7f716",
+        "user_id": 1,
+        "pseudo": "Baya",
+        "trajet_id": "",
+        "conducteur_id": "",
+        "note_globale": 5,
+        "criteres": {
+            "ponctualite": 5,
+            "conduite": 5,
+            "proprete": 5,
+            "ambiance": 5
+        },
+        "commentaire": "bon voyage !",
+        "tags": [
+            "sympa",
+            "musique"
+        ],
+        "date_creation": "2025-07-17 14:00:15",
+        "statut": "validé"
+    },
+    {
+        "_id": "avis_6879071219911",
+        "user_id": 1,
+        "pseudo": "Baya",
+        "trajet_id": "",
+        "conducteur_id": "",
+        "note_globale": 5,
+        "criteres": {
+            "ponctualite": 5,
+            "conduite": 5,
+            "proprete": 5,
+            "ambiance": 5
+        },
+        "commentaire": "super trajet à refaire ",
+        "tags": [
+            "sympa",
+            "musique"
+        ],
+        "date_creation": "2025-07-17 14:22:10",
+        "statut": "validé"
+    },
+    {
+        "_id": "avis_687d654fe3add",
+        "user_id": 5,
+        "pseudo": "TestUser1",
+        "trajet_id": "",
+        "conducteur_id": "",
+        "note_globale": 5,
+        "criteres": {
+            "ponctualite": 5,
+            "conduite": 5,
+            "proprete": 5,
+            "ambiance": 5
+        },
+        "commentaire": "très bon trajet",
+        "tags": [
+            "sympa",
+            "ponctuel"
+        ],
+        "date_creation": "2025-07-20 21:53:19",
+        "statut": "validé"
+    },
+    {
+        "_id": "avis_687e8cc7e9e8d",
+        "user_id": 6,
+        "pseudo": "testeur85",
+        "trajet_id": "",
+        "conducteur_id": "",
+        "note_globale": 5,
+        "criteres": {
+            "ponctualite": 5,
+            "conduite": 5,
+            "proprete": 5,
+            "ambiance": 5
+        },
+        "commentaire": "super trajet",
+        "tags": [
+            "musique"
+        ],
+        "date_creation": "2025-07-21 18:53:59",
+        "statut": "validé"
+    },
+    {
+        "_id": "avis_687e8d23c29c6",
+        "user_id": 6,
+        "pseudo": "testeur85",
+        "trajet_id": "",
+        "conducteur_id": "",
+        "note_globale": 5,
+        "criteres": {
+            "ponctualite": 5,
+            "conduite": 5,
+            "proprete": 5,
+            "ambiance": 5
+        },
+        "commentaire": "conducteur très gentil et ponctuel",
+        "tags": [
+            "sympa",
+            "ponctuel"
+        ],
+        "date_creation": "2025-07-21 18:55:31",
+        "statut": "validé"
+    }
+]
