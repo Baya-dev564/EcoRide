@@ -70,7 +70,8 @@ EcoRide/
 ### Étapes d'Installation
 
 1. **Cloner le projet**
-URL repo 
+URL repo git clone https://github.com/Baya-dev564/EcoRide.git
+cd EcoRide
 
 
 2. **Créer la base de données**
@@ -81,10 +82,12 @@ CREATE DATABASE EcoRide CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 4. **Configurer la connexion**
 // config/database.php
-$host = 'localhost';
-$dbname = 'EcoRide';
-$username = 'root';
-$password = 'vide';
+$Host: localhost (127.0.0.1)
+Port: 3306
+User: root
+Password: (vide par défaut avec Laragon)
+Base: EcoRide
+
 
 5. **Configurer le serveur web**
 - Pointer le DocumentRoot vers `/public/`

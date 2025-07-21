@@ -254,6 +254,12 @@ public function details($trajetId = null)
             header('Location: /EcoRide/public/connexion');
             exit;
         }
+               if (empty($_SESSION['user']['permis_conduire'])) {
+        $_SESSION['erreur'] = 'Vous devez avoir un permis de conduire validé pour proposer un trajet.';
+        header('Location: /EcoRide/public/profil');
+        exit;
+    
+        }
         
         // Récupération des véhicules de l'utilisateur
         $vehicules = $this->recupererVehiculesUtilisateur($_SESSION['user']['id']);
@@ -310,6 +316,11 @@ public function details($trajetId = null)
             $_SESSION['message'] = 'Vous devez être connecté pour proposer un trajet.';
             header('Location: /EcoRide/public/connexion');
             exit;
+        }
+           if (empty($_SESSION['user']['permis_conduire'])) {
+        $_SESSION['erreur'] = 'Vous devez avoir un permis de conduire validé pour proposer un trajet.';
+        header('Location: /EcoRide/public/profil');
+        exit;
         }
         
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {

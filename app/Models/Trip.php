@@ -273,7 +273,7 @@ public function getTrajetDetails($trajetId)
                 JOIN utilisateurs u ON t.conducteur_id = u.id
                 LEFT JOIN vehicules v ON t.vehicule_id = v.id
                 WHERE t.id = ?";
-        
+       
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute([$trajetId]);
         $trajet = $stmt->fetch(PDO::FETCH_ASSOC);
