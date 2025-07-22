@@ -1,6 +1,5 @@
 /**
  * Script JavaScript personnalisé pour le système d'avis EcoRide
- * Utilise JavaScript natif (pas de jQuery) selon l'énoncé du TP
  * Gère l'interactivité et les fonctionnalités dynamiques des avis
  */
 

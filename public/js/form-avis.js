@@ -1,9 +1,9 @@
 // ============================
-// JS formulaire avis EcoRide (COMPLET ET CORRIGÉ !)
+// JS formulaire avis EcoRide )
 // ============================
 
 document.addEventListener('DOMContentLoaded', function() {
-    // --- 1. GESTION DES ÉTOILES (Note globale) ---
+    // ---  GESTION DES ÉTOILES (Note globale) ---
     const starContainer = document.querySelector('.star-rating');
     if (starContainer) {
         const stars = starContainer.querySelectorAll('.star');
@@ -21,7 +21,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // --- 2. GESTION DES ÉTOILES (CRITÈRES) ---
+    // ---  GESTION DES ÉTOILES (CRITÈRES) ---
     document.querySelectorAll('.star-rating-critere').forEach(container => {
         const stars = container.querySelectorAll('.star-small');
         const hiddenInput = container.querySelector('input[type="hidden"]');
@@ -37,7 +37,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // --- 3. NOUVEAU : GESTION DES TAGS SUGGÉRÉS CLIQUABLES ---
+    // ---  GESTION DES TAGS SUGGÉRÉS CLIQUABLES ---
     const tagsInput = document.getElementById('tags');
     const suggestedTags = document.querySelectorAll('.suggested-tag');
     
@@ -72,7 +72,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // --- 4. NOUVEAU : VALIDATION TEMPS RÉEL DU COMMENTAIRE ---
+    // --- VALIDATION TEMPS RÉEL DU COMMENTAIRE ---
     const commentaireField = document.getElementById('commentaire');
     const charCountElement = document.getElementById('charCount');
     
@@ -124,7 +124,7 @@ document.addEventListener('DOMContentLoaded', function() {
         validateCommentaire();
     }
 
-    // --- 5. VALIDATION ET ENVOI AJAX (AMÉLIORÉ) ---
+    // ---  VALIDATION ET ENVOI AJAX  ---
     const form = document.getElementById('avisForm');
     if (!form) return; // Sécurité
 
@@ -174,7 +174,7 @@ document.addEventListener('DOMContentLoaded', function() {
         submitBtn.disabled = true;
         submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Envoi en cours...';
 
-        // --- ENVOI AJAX CORRIGÉ : vérifie que le serveur répond bien en JSON ---
+        // --- ENVOI AJAX  : vérifie que le serveur répond bien en JSON ---
         fetch('/api/avis', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -187,7 +187,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 const text = await response.text();
                 throw new Error("Erreur inattendue du serveur :\n" + text.substring(0, 250));
             }
-            // Ici, on est sûr d'avoir du JSON
+            // réponse en JSON
             return response.json();
         })
         .then(data => {
