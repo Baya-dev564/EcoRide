@@ -1,10 +1,6 @@
 <?php
 /**
  * Vue détail d'un trajet EcoRide
- * Respecte la sémantique HTML5, l'accessibilité WCAG 2.1 et les bonnes pratiques
- * 
- * @author Équipe EcoRide
- * @version 1.0
  */
 
 ob_start();
@@ -591,72 +587,6 @@ ob_start();
     </div>
 </div>
 
-<!-- Script pour la gestion de la réservation -->
-<script>
-/**
- * Gestion de la réservation avec double confirmation
- * Respecte les bonnes pratiques d'accessibilité et d'UX
- */
-document.addEventListener('DOMContentLoaded', function() {
-    'use strict';
-    
-    const formReservation = document.getElementById('formReservation');
-    const btnReserver = document.getElementById('btnReserver');
-    const modalElement = document.getElementById('modalConfirmation');
-    const btnConfirmerReservation = document.getElementById('btnConfirmerReservation');
-    
-    // Vérification de l'existence des éléments
-    if (!formReservation || !btnReserver || !modalElement || !btnConfirmerReservation) {
-        return; // Sortir si les éléments n'existent pas
-    }
-    
-    // Initialisation de la modal Bootstrap
-    const modalConfirmation = new bootstrap.Modal(modalElement, {
-        keyboard: true,
-        backdrop: true
-    });
-    
-    // Gestion de la soumission du formulaire
-    formReservation.addEventListener('submit', function(event) {
-        event.preventDefault();
-        
-        // Désactiver le bouton pour éviter les doubles clics
-        btnReserver.disabled = true;
-        btnReserver.innerHTML = '<i class="fas fa-spinner fa-spin me-2" aria-hidden="true"></i>Préparation...';
-        
-        // Afficher la modal après un court délai
-        setTimeout(function() {
-            modalConfirmation.show();
-            
-            // Réactiver le bouton
-            btnReserver.disabled = false;
-            btnReserver.innerHTML = '<i class="fas fa-check me-2" aria-hidden="true"></i>Réserver ce trajet';
-        }, 500);
-    });
-    
-    // Gestion de la confirmation finale
-    btnConfirmerReservation.addEventListener('click', function() {
-        // Désactiver le bouton de confirmation
-        btnConfirmerReservation.disabled = true;
-        btnConfirmerReservation.innerHTML = '<i class="fas fa-spinner fa-spin me-2" aria-hidden="true"></i>Réservation...';
-        
-        // Soumettre le formulaire
-        formReservation.submit();
-    });
-    
-    // Réinitialiser le bouton si la modal est fermée sans confirmation
-    modalElement.addEventListener('hidden.bs.modal', function() {
-        btnConfirmerReservation.disabled = false;
-        btnConfirmerReservation.innerHTML = '<i class="fas fa-check me-2" aria-hidden="true"></i>Confirmer la réservation';
-    });
-    
-    // Gestion du focus pour l'accessibilité
-    modalElement.addEventListener('shown.bs.modal', function() {
-        btnConfirmerReservation.focus();
-    });
-});
-</script>
-
 <?php
 $content = ob_get_clean();
 
@@ -696,7 +626,7 @@ $jsonLd = [
 
 // Fichiers CSS et JS spécifiques
 $cssFiles = ['css/trips.css', 'css/trip-details.css'];
-$jsFiles = ['js/trip-details.js'];
+$jsFiles = ['js/trips.js'];
 
 // Inclusion du layout principal
 require __DIR__ . '/../layouts/main.php';

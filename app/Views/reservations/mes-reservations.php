@@ -162,7 +162,6 @@ $jsFiles = ['js/mes-reservations.js'];
                                         <h3 id="reservation-<?= $reservation['id'] ?>" class="h6 mb-2">
                                             <span class="visually-hidden">Trajet de </span>
                                             <i class="fas fa-map-marker-alt text-success me-1" aria-hidden="true"></i>
-                                            <!-- ✅ CORRECTION : Utiliser les colonnes correctes de votre BDD -->
                                             <?= htmlspecialchars($reservation['lieu_depart']) ?>
                                         </h3>
                                         <div class="text-center text-muted my-1">

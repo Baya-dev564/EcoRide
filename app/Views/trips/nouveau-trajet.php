@@ -1,6 +1,6 @@
 <?php
 // app/Views/trips/nouveau-trajet.php
-// Vue pour le formulaire de création d'un nouveau trajet avec sémantique HTML5 et nouveaux champs BDD
+// Vue pour le formulaire de création d'un nouveau trajet 
 
 ob_start();
 
@@ -8,7 +8,7 @@ ob_start();
 $jsFiles = ['/EcoRide/public/js/nouveau-trajet.js'];
 ?>
 
-<!-- Messages d'alerte avec sémantique appropriée -->
+<!-- Messages d'alerte -->
 <?php if (!empty($message)): ?>
     <aside class="container mt-3" role="alert" aria-live="polite">
         <div class="alert alert-success alert-dismissible fade show shadow-sm">
@@ -182,7 +182,6 @@ $jsFiles = ['/EcoRide/public/js/nouveau-trajet.js'];
                         </fieldset>
 
                         <!-- Section véhicule et places -->
-                       <!-- Section véhicule et places -->
 <fieldset class="row mb-4">
     <legend class="col-12">
         <h3 class="text-success mb-3">

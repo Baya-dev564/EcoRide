@@ -1,12 +1,6 @@
 <?php
 /**
  * Vue de recherche et affichage des trajets EcoRide
- * 
- * Interface complète avec formulaire de recherche, filtres avancés,
- * affichage des résultats et pagination - Compatible avec MVC corrigé
- * 
- * @author Équipe EcoRide - TP Développement Web
- * @version 4.0 - Harmonisation complète avec modèle/contrôleur corrigés
  */
 
 ob_start();
@@ -33,7 +27,7 @@ ob_start();
             <div class="col-lg-10">
                 <div class="card shadow-lg">
                     <div class="card-body p-4">
-                        <!-- Votre formulaire de recherche existant -->
+      
                         <form method="GET" class="row g-3">
                             <div class="col-md-3">
                                 <label for="lieu_depart" class="form-label">
@@ -121,12 +115,12 @@ ob_start();
                                 <i class="fas fa-route text-success" aria-hidden="true"></i> 
                                 Résultats de recherche
                             </h2>
-                            <!-- ✅ CORRECTION : Gestion sécurisée des stats -->
+                            <!-- Gestion sécurisée des stats -->
                             <p class="text-muted mb-0" aria-live="polite" aria-atomic="true">
                                 <span class="sr-only">Nombre de trajets trouvés : </span>
                                 <?= ($stats['total_trajets'] ?? 0) ?> trajet(s) trouvé(s)
                                 <?php if (($stats['trajets_electriques'] ?? 0) > 0): ?>
-                                    <span class="sr-only">, dont </span>• <?= $stats['trajets_electriques'] ?> écologique(s) 🌱
+                                    <span class="sr-only">, dont </span>• <?= $stats['trajets_electriques'] ?> écologique(s) 
                                 <?php endif; ?>
                                 <?php if (($stats['total_trajets'] ?? 0) > 0): ?>
                                     <span class="sr-only">, prix moyen : </span>• Prix moyen : <?= $stats['prix_moyen'] ?? 0 ?> crédits
@@ -134,7 +128,7 @@ ob_start();
                             </p>
                         </div>
                         
-                        <!-- ✅ CORRECTION : Tri dynamique maintenant fonctionnel -->
+                        <!-- Tri dynamique maintenant fonctionnel -->
                         <div class="dropdown">
                             <button class="btn btn-outline-secondary dropdown-toggle" 
                                     type="button" 
@@ -219,7 +213,7 @@ ob_start();
                                         </p>
                                     </div>
                                     
-                                    <!-- ✅ CORRECTION : Badge véhicule électrique harmonisé -->
+                                    <!--  véhicule électrique -->
                                     <?php if (!empty($trajet['vehicule_electrique'])): ?>
                                         <span class="badge bg-success" role="img" aria-label="Véhicule électrique, trajet écologique">
                                             <i class="fas fa-leaf" aria-hidden="true"></i> Électrique
@@ -264,7 +258,7 @@ ob_start();
                                         <?php endif; ?>
                                     </div>
                                     
-                                    <!-- ✅ MODIFICATION : Section conducteur avec liens avis intégrés -->
+                                    <!-- Section conducteur avec liens avis intégrés -->
                                     <div class="driver-details flex-grow-1">
                                         <div class="fw-semibold"><?= htmlspecialchars($trajet['conducteur_pseudo']) ?></div>
                                         <div class="text-muted small">
@@ -282,7 +276,7 @@ ob_start();
                                                 </span>
                                                 <span class="ms-1" aria-hidden="true"><?= number_format($trajet['conducteur_note'], 1) ?></span>
                                                 
-                                                <!-- ✅ MODIFICATION : Lien vers les avis intégré -->
+                                                <!-- Lien vers les avis intégré -->
                                                 <a href="/avis/conducteur/<?= $trajet['conducteur_id'] ?>" 
                                                    class="text-warning text-decoration-none ms-2"
                                                    aria-label="Voir tous les avis de <?= htmlspecialchars($trajet['conducteur_pseudo']) ?>">
@@ -292,7 +286,7 @@ ob_start();
                                             <?php else: ?>
                                                 <span class="text-muted">Nouveau conducteur</span>
                                                 
-                                                <!-- ✅ MODIFICATION : Lien pour nouveau conducteur -->
+                                                <!--  Lien pour nouveau conducteur -->
                                                 <a href="/avis/conducteur/<?= $trajet['conducteur_id'] ?>" 
                                                    class="text-muted text-decoration-none ms-2"
                                                    aria-label="Voir le profil de <?= htmlspecialchars($trajet['conducteur_pseudo']) ?>">
@@ -368,7 +362,7 @@ ob_start();
                 <?php endforeach; ?>
             </div>
 
-            <!-- ✅ CORRECTION : Pagination sécurisée -->
+            <!--  Pagination sécurisée -->
             <?php if (!empty($pagination) && ($pagination['total_pages'] ?? 0) > 1): ?>
                 <div class="row mt-5">
                     <div class="col-12">

@@ -1,14 +1,14 @@
 <?php
 // app/Views/user/profil.php
-// Vue pour le profil utilisateur EcoRide avec SÉMANTIQUE HTML5 CORRECTE
+// Vue pour le profil utilisateur 
 
 ob_start();
 
-// Inclusion du fichier JavaScript spécifique avec chemin corrigé
+// Inclusion du fichier JavaScript spécifique 
 $jsFiles = ['/js/profil.js'];
 ?>
 
-<!-- Messages d'alerte avec sémantique appropriée -->
+<!-- Messages d'alerte -->
 <?php if (!empty($message)): ?>
     <aside class="container mt-3" role="alert" aria-live="polite">
         <div class="alert alert-success alert-dismissible fade show shadow-sm">
@@ -21,7 +21,7 @@ $jsFiles = ['/js/profil.js'];
     </aside>
 <?php endif; ?>
 
-<!-- Contenu principal avec structure sémantique HTML5 -->
+<!-- Contenu principal -->
 <main class="container py-4" role="main">
     <!-- En-tête du profil utilisateur -->
     <header class="row mb-4">
@@ -78,7 +78,7 @@ $jsFiles = ['/js/profil.js'];
                             </p>
                         </section>
                         
-                        <!-- Actions et badges avec sémantique appropriée -->
+                        <!-- Actions et badges -->
                         <aside class="col-md-4 text-md-end">
                             <div class="d-flex flex-column align-items-md-end">
                                 <div class="badge bg-warning text-dark fs-6 mb-2" role="img" aria-label="Solde de crédits : <?= $user['credit'] ?> crédits">
@@ -105,7 +105,7 @@ $jsFiles = ['/js/profil.js'];
         </div>
     </header>
 
-    <!-- Section des statistiques avec sémantique appropriée -->
+    <!-- Section des statistiques -->
     <section class="row mb-4" aria-labelledby="statistiques-titre">
         <div class="col-12">
             <h2 id="statistiques-titre" class="sr-only">Statistiques de votre activité EcoRide</h2>
@@ -160,7 +160,7 @@ $jsFiles = ['/js/profil.js'];
         </article>
     </section>
 
-    <!-- Contenu principal avec sections sémantiques -->
+    <!-- Contenu principal -->
     <div class="row">
         <!-- Section des informations personnelles -->
         <section class="col-md-8" aria-labelledby="infos-titre">
@@ -278,7 +278,7 @@ $jsFiles = ['/js/profil.js'];
 
     </div>
 </main>
-<!-- Modal de modification du profil avec sémantique appropriée -->
+<!-- Modal de modification du profil -->
 <div class="modal fade" id="modalModifierProfil" tabindex="-1" aria-labelledby="modalModifierProfilLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -451,7 +451,7 @@ $jsFiles = ['/js/profil.js'];
 </div>
 
 
-<!-- Modal ajout véhicule avec sémantique appropriée -->
+<!-- Modal ajout véhicule  -->
 <div class="modal fade" id="modalAjouterVehicule" tabindex="-1" aria-labelledby="modalAjouterVehiculeLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -541,7 +541,7 @@ $jsFiles = ['/js/profil.js'];
                                     <input class="form-check-input" 
                                            type="checkbox" 
                                            id="electrique" 
-                            2               name="electrique"
+                                           name="electrique"
                                            aria-describedby="electrique-help">
                                     <label class="form-check-label" for="electrique">
                                         <i class="fas fa-leaf text-success me-1" aria-hidden="true"></i>
@@ -566,6 +566,7 @@ $jsFiles = ['/js/profil.js'];
 </div>
 
 <?php
+
 $content = ob_get_clean();
 require __DIR__ . '/../layouts/main.php';
 ?>

@@ -1,6 +1,6 @@
 <?php
 // app/Views/reservations/reserver.php
-// Vue pour le formulaire de réservation d'un trajet avec sémantique HTML5 correcte
+// Vue pour le formulaire de réservation e
 
 ob_start();
 

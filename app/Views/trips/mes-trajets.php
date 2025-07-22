@@ -1,6 +1,7 @@
 <?php
 // app/Views/trips/mes-trajets.php
-// Vue pour afficher les trajets proposés par l'utilisateur avec sémantique HTML5
+// Vue pour afficher les trajets proposés par l'utilisateur 
+
 
 ob_start();
 
