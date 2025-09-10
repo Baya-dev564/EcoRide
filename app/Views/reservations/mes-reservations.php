@@ -3,7 +3,6 @@
 
 ob_start();
 
-
 $jsFiles = ['js/mes-reservations.js'];
 ?>
 
@@ -60,7 +59,6 @@ $jsFiles = ['js/mes-reservations.js'];
         <div class="col-12">
             <h2 id="stats-titre" class="visually-hidden">Statistiques de vos réservations</h2>
         </div>
-        
         <article class="col-md-4">
             <div class="card border-0 shadow-sm">
                 <div class="card-body text-center">
@@ -72,7 +70,6 @@ $jsFiles = ['js/mes-reservations.js'];
                 </div>
             </div>
         </article>
-        
         <article class="col-md-4">
             <div class="card border-0 shadow-sm">
                 <div class="card-body text-center">
@@ -86,7 +83,6 @@ $jsFiles = ['js/mes-reservations.js'];
                 </div>
             </div>
         </article>
-        
         <article class="col-md-4">
             <div class="card border-0 shadow-sm">
                 <div class="card-body text-center">
@@ -172,7 +168,6 @@ $jsFiles = ['js/mes-reservations.js'];
                                             <?= htmlspecialchars($reservation['lieu_arrivee']) ?>
                                         </div>
                                     </div>
-
                                     <!-- Informations du trajet -->
                                     <div class="col-md-3">
                                         <div class="text-center">
@@ -191,7 +186,6 @@ $jsFiles = ['js/mes-reservations.js'];
                                             </div>
                                         </div>
                                     </div>
-
                                     <!-- Détails de la réservation -->
                                     <div class="col-md-3">
                                         <div class="text-center">
@@ -206,7 +200,6 @@ $jsFiles = ['js/mes-reservations.js'];
                                             </div>
                                         </div>
                                     </div>
-
                                     <!-- Conducteur -->
                                     <div class="col-md-2">
                                         <div class="text-center">
@@ -240,7 +233,7 @@ $jsFiles = ['js/mes-reservations.js'];
                                     </div>
                                 <?php endif; ?>
 
-                                <!-- Actions -->
+                                <!-- Statistiques et liens -->
                                 <footer class="row mt-3">
                                     <div class="col-12">
                                         <div class="d-flex justify-content-between align-items-center">
@@ -270,6 +263,22 @@ $jsFiles = ['js/mes-reservations.js'];
                                         </div>
                                     </div>
                                 </footer>
+
+                                <!-- AJOUT BOUTON : Validation trajet -->
+                                <?php // Ce bloc affiche le bouton "Confirmer mon trajet" si trajets terminé et validation en attente. ?>
+                                <?php if (
+                                    isset($reservation['statut_validation'], $reservation['trajet_statut_execution']) &&
+                                    $reservation['statut_validation'] === 'attente' &&
+                                    $reservation['trajet_statut_execution'] === 'termine'
+                                ): ?>
+                                    <form method="POST" action="/valider-trajet" class="mt-3">
+                                        <input type="hidden" name="reservation_id" value="<?= $reservation['id'] ?>">
+                                        <button type="submit" class="btn btn-primary w-100">
+                                            ✅ Confirmer mon trajet
+                                        </button>
+                                    </form>
+                                <?php endif; ?>
+                                <!-- FIN AJOUT -->
                             </div>
                         </article>
                     </div>
