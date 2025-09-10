@@ -532,5 +532,163 @@ public function details($trajetId = null)
         $timestamp = strtotime($date);
         return $timestamp && $timestamp >= strtotime('today') ? $date : '';
     }
+    /**
+ * Démarrer le trajet : marqué statut en cours et date de début fixée.
+ */
+public function demarrerTrajet()
+{
+    // Vérifier méthode POST
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+        http_response_code(405);
+        echo 'Méthode non autorisée';
+        exit;
+    }
+
+    // Vérifier utilisateur connecté
+    if (!isset($_SESSION['user'])) {
+        http_response_code(401);
+        echo 'Vous devez être connecté.';
+        exit;
+    }
+
+    $trajetId = (int)($_POST['trajet_id'] ?? 0);
+    if (!$trajetId) {
+        $_SESSION['erreur'] = 'Trajet non spécifié.';
+        header('Location: /mes-trajets');
+        exit;
+    }
+
+    // Vérifier que l'utilisateur est bien le conducteur
+    $trajet = $this->tripModel->getTrajetDetails($trajetId);
+    if (!$trajet) {
+        $_SESSION['erreur'] = 'Trajet introuvable.';
+        header('Location: /mes-trajets');
+        exit;
+    }
+
+    if ($trajet['conducteur_id'] !== $_SESSION['user']['id']) {
+        $_SESSION['erreur'] = 'Accès refusé : vous n’êtes pas le conducteur.';
+        header('Location: /mes-trajets');
+        exit;
+    }
+
+    // Vérifier que le trajet est en statut 'attente'
+    if ($trajet['statut_execution'] !== 'attente') {
+        $_SESSION['erreur'] = 'Le trajet ne peut pas être démarré.';
+        header('Location: /mes-trajets');
+        exit;
+    }
+
+    // Mettre à jour le statut du trajet en 'en_cours' et date de début réelle
+    $resultat = $this->tripModel->demarrerTrajet($trajetId);
+
+    if ($resultat['succes']) {
+        $_SESSION['message'] = 'Trajet démarré avec succès.';
+    } else {
+        $_SESSION['erreur'] = $resultat['erreur'] ?? 'Erreur lors du démarrage.';
+    }
+
+    header('Location: /mes-trajets');
+    exit;
 }
+
+/**
+ * Terminer le trajet : statut terminé, date de fin réelle fixée.
+ */
+public function terminerTrajet()
+{
+    // Vérifications identiques à demarrerTrajet()
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+        http_response_code(405);
+        echo 'Méthode non autorisée';
+        exit;
+    }
+
+    if (!isset($_SESSION['user'])) {
+        http_response_code(401);
+        echo 'Vous devez être connecté.';
+        exit;
+    }
+
+    $trajetId = (int)($_POST['trajet_id'] ?? 0);
+    if (!$trajetId) {
+        $_SESSION['erreur'] = 'Trajet non spécifié.';
+        header('Location: /mes-trajets');
+        exit;
+    }
+
+    $trajet = $this->tripModel->getTrajetDetails($trajetId);
+    if (!$trajet) {
+        $_SESSION['erreur'] = 'Trajet introuvable.';
+        header('Location: /mes-trajets');
+        exit;
+    }
+
+    if ($trajet['conducteur_id'] !== $_SESSION['user']['id']) {
+        $_SESSION['erreur'] = 'Accès refusé : vous n’êtes pas le conducteur.';
+        header('Location: /mes-trajets');
+        exit;
+    }
+
+    if ($trajet['statut_execution'] !== 'en_cours') {
+        $_SESSION['erreur'] = 'Le trajet n’est pas en cours.';
+        header('Location: /mes-trajets');
+        exit;
+    }
+
+    // Mise à jour du trajet en statut 'termine' avec date fin réelle
+    $resultat = $this->tripModel->terminerTrajet($trajetId);
+
+    if ($resultat['succes']) {
+        $_SESSION['message'] = 'Trajet terminé avec succès.';
+    } else {
+        $_SESSION['erreur'] = $resultat['erreur'] ?? 'Erreur lors de la clôture du trajet.';
+    }
+
+    header('Location: /mes-trajets');
+    exit;
+}
+
+/**
+ * Signaler un problème sur un trajet
+ * Simple formulaire POST avec motif et commentaire
+ */
+public function signalerProbleme()
+{
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+        http_response_code(405);
+        echo 'Méthode non autorisée';
+        exit;
+    }
+
+    if (!isset($_SESSION['user'])) {
+        http_response_code(401);
+        echo 'Vous devez être connecté.';
+        exit;
+    }
+
+    $trajetId = (int)($_POST['trajet_id'] ?? 0);
+    $motif = trim($_POST['motif'] ?? '');
+    $commentaire = trim($_POST['commentaire'] ?? '');
+
+    if (!$trajetId || empty($motif)) {
+        $_SESSION['erreur'] = 'Trajet ou motif invalide.';
+        header('Location: /mes-trajets');
+        exit;
+    }
+
+    $resultat = $this->tripModel->signalerProbleme($trajetId, $motif, $commentaire);
+
+    if ($resultat['succes']) {
+        $_SESSION['message'] = 'Problème signalé avec succès. Merci de votre retour.';
+    } else {
+        $_SESSION['erreur'] = $resultat['erreur'] ?? 'Erreur lors du signalement.';
+    }
+
+    header('Location: /mes-trajets');
+    exit;
+}
+
+}
+
 ?>

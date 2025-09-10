@@ -209,5 +209,53 @@ class Reservation
             return ['succes' => false, 'erreur' => 'Erreur lors de l\'annulation.'];
         }
     }
+    /**
+ * Valide un trajet effectué par un passager, libère les crédits au conducteur
+ *
+ * @param int $reservationId
+ * @param int $userId (passager)
+ * @return array ['succes' => bool, 'erreur' => string|null]
+ */
+public function validerTrajet($reservationId, $userId)
+{
+    try {
+        $this->pdo->beginTransaction();
+
+        // Récupérer la réservation confirmée non validée
+        $sql = "SELECT r.*, t.conducteur_id FROM reservations r
+                JOIN trajets t ON r.trajet_id = t.id
+                WHERE r.id = ? AND r.passager_id = ? AND r.statut = 'confirme' AND r.statut_validation = 'attente'";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute([$reservationId, $userId]);
+
+        $reservation = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if (!$reservation) {
+            $this->pdo->rollBack();
+            return ['succes' => false, 'erreur' => 'Réservation introuvable ou déjà validée.'];
+        }
+
+        // Mettre à jour la validation
+        $sql = "UPDATE reservations SET statut_validation = 'valide', date_validation = NOW()
+                WHERE id = ?";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute([$reservationId]);
+
+        // Créditer le conducteur
+        $sql = "UPDATE utilisateurs SET credit = credit + ? WHERE id = ?";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute([$reservation['credits_utilises'], $reservation['conducteur_id']]);
+
+        $this->pdo->commit();
+
+        return ['succes' => true, 'erreur' => null];
+
+    } catch (PDOException $e) {
+        $this->pdo->rollBack();
+        error_log('Erreur validerTrajet: ' . $e->getMessage());
+        return ['succes' => false, 'erreur' => 'Erreur technique.'];
+    }
+}
+
 }
 ?>

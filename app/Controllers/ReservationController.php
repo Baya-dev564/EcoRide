@@ -235,5 +235,45 @@ public function annuler()
             exit;
         }
     }
+    /**
+ * Validation du trajet par le passager après fin du trajet
+ */
+public function validerTrajet()
+{
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+        http_response_code(405);
+        echo 'Méthode non autorisée';
+        exit;
+    }
+
+    if (!isset($_SESSION['user'])) {
+        http_response_code(401);
+        echo 'Vous devez être connecté.';
+        exit;
+    }
+
+    $reservationId = (int)($_POST['reservation_id'] ?? 0);
+    if (!$reservationId) {
+        $_SESSION['erreur'] = 'Réservation non spécifiée.';
+        header('Location: /mes-reservations');
+        exit;
+    }
+
+    require_once __DIR__ . '/../Models/Reservation.php';
+    global $pdo;
+    $reservationModel = new Reservation($pdo);
+
+    $resultat = $reservationModel->validerTrajet($reservationId, $_SESSION['user']['id']);
+
+    if ($resultat['succes']) {
+        $_SESSION['message'] = 'Validation prise en compte. Merci pour votre retour !';
+    } else {
+        $_SESSION['erreur'] = $resultat['erreur'] ?? 'Erreur lors de la validation.';
+    }
+
+    header('Location: /mes-reservations');
+    exit;
+}
+
 }
 ?>

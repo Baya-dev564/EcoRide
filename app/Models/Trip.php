@@ -567,5 +567,92 @@ private function calculerPlacesDisponibles($trajetId, $placesInitiales)
             return false;
         }
     }
+    /**
+ * Marque un trajet comme démarré
+ *
+ * @param int $trajetId
+ * @return array ['succes' => bool, 'erreur' => string|null]
+ */
+public function demarrerTrajet($trajetId)
+{
+    try {
+        $sql = "UPDATE trajets 
+                SET statut_execution = 'en_cours', date_debut_reel = NOW()
+                WHERE id = ? AND statut_execution = 'attente'";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute([$trajetId]);
+
+        if ($stmt->rowCount() === 0) {
+            return ['succes' => false, 'erreur' => 'Le trajet ne peut pas être démarré (statut incorrect).'];
+        }
+
+        // Ici vous pouvez ajouter envoi d'email aux passagers (hors scope actuel)
+        return ['succes' => true, 'erreur' => null];
+
+    } catch (PDOException $e) {
+        error_log('Erreur demarrerTrajet: ' . $e->getMessage());
+        return ['succes' => false, 'erreur' => 'Erreur technique.'];
+    }
+}
+
+/**
+ * Marque un trajet comme terminé
+ *
+ * @param int $trajetId
+ * @return array ['succes' => bool, 'erreur' => string|null]
+ */
+public function terminerTrajet($trajetId)
+{
+    try {
+        $sql = "UPDATE trajets 
+                SET statut_execution = 'termine', date_fin_reel = NOW()
+                WHERE id = ? AND statut_execution = 'en_cours'";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute([$trajetId]);
+
+        if ($stmt->rowCount() === 0) {
+            return ['succes' => false, 'erreur' => 'Le trajet ne peut pas être terminé (statut incorrect).'];
+        }
+
+        // Envoi de validation à passagers (hors scope actuel)
+        return ['succes' => true, 'erreur' => null];
+
+    } catch (PDOException $e) {
+        error_log('Erreur terminerTrajet: ' . $e->getMessage());
+        return ['succes' => false, 'erreur' => 'Erreur technique.'];
+    }
+}
+
+/**
+ * Signalement d'un problème sur un trajet
+ *
+ * @param int $trajetId
+ * @param string $motif
+ * @param string|null $commentaire
+ * @return array ['succes' => bool, 'erreur' => string|null]
+ */
+public function signalerProbleme($trajetId, $motif, $commentaire = null)
+{
+    try {
+        // Met à jour le statut du trajet à 'probleme', stocke motif et commentaire
+        $sql = "UPDATE trajets 
+                SET statut_execution = 'probleme', motif_signalement = ?, commentaire_signalement = ?
+                WHERE id = ?";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute([$motif, $commentaire, $trajetId]);
+
+        if ($stmt->rowCount() === 0) {
+            return ['succes' => false, 'erreur' => 'Erreur lors du signalement.'];
+        }
+
+        // Alertes admins possibles (hors scope)
+
+        return ['succes' => true, 'erreur' => null];
+    } catch (PDOException $e) {
+        error_log('Erreur signalerProbleme: ' . $e->getMessage());
+        return ['succes' => false, 'erreur' => 'Erreur technique.'];
+    }
+}
+
 }
 ?>
