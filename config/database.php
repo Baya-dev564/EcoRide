@@ -1,9 +1,9 @@
 <?php
 // Connexion à la base de données EcoRide
-$host = 'localhost';
-$db   = 'EcoRide';
-$user = 'root';
-$pass = ''; // Mets ton mot de passe si tu en as un
+$host = 'mysql';        // Service Docker
+$db   = 'EcoRide';      // Base configurée  
+$user = 'ecoride';      // Utilisateur dédié
+$pass = 'ecoridepass';  // Mot de passe défini dans docker-compose.yml
 $charset = 'utf8mb4';
 
 $dsn = "mysql:host=$host;dbname=$db;charset=$charset";
