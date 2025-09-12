@@ -2,12 +2,12 @@
 // app/Views/trips/mes-trajets.php
 // Vue pour afficher les trajets proposés par l'utilisateur 
 
-
 ob_start();
 
 // Inclusion du fichier JavaScript spécifique
 $jsFiles = ['/EcoRide/public/js/mes-trajets.js'];
 ?>
+
 
 <!-- Messages d'alerte -->
 <?php if (!empty($message)): ?>
@@ -21,6 +21,7 @@ $jsFiles = ['/EcoRide/public/js/mes-trajets.js'];
         </div>
     </aside>
 <?php endif; ?>
+
 
 <main class="container py-4" role="main">
     <!-- En-tête -->
@@ -41,6 +42,7 @@ $jsFiles = ['/EcoRide/public/js/mes-trajets.js'];
             </div>
         </div>
     </header>
+
 
     <!-- Statistiques rapides -->
     <section class="row mb-4" aria-labelledby="stats-titre">
@@ -88,6 +90,7 @@ $jsFiles = ['/EcoRide/public/js/mes-trajets.js'];
             </div>
         </article>
     </section>
+
 
     <!-- Liste des trajets -->
     <section aria-labelledby="liste-titre">
@@ -176,7 +179,6 @@ $jsFiles = ['/EcoRide/public/js/mes-trajets.js'];
                                             <?= htmlspecialchars($trajet['lieu_arrivee']) ?>
                                         </div>
                                     </div>
-
                                     <!-- Date et heure -->
                                     <div class="col-md-2">
                                         <div class="text-center">
@@ -195,7 +197,6 @@ $jsFiles = ['/EcoRide/public/js/mes-trajets.js'];
                                             </div>
                                         </div>
                                     </div>
-
                                     <!-- Places et réservations -->
                                     <div class="col-md-2">
                                         <div class="text-center">
@@ -208,7 +209,6 @@ $jsFiles = ['/EcoRide/public/js/mes-trajets.js'];
                                             <div class="text-muted">places</div>
                                         </div>
                                     </div>
-
                                     <!-- Prix -->
                                     <div class="col-md-2">
                                         <div class="text-center">
@@ -221,7 +221,6 @@ $jsFiles = ['/EcoRide/public/js/mes-trajets.js'];
                                             <div class="text-muted">par place</div>
                                         </div>
                                     </div>
-
                                     <!-- Véhicule -->
                                     <div class="col-md-2">
                                         <div class="text-center">
@@ -244,7 +243,7 @@ $jsFiles = ['/EcoRide/public/js/mes-trajets.js'];
                                     </div>
                                 </div>
 
-                                <!-- Commentaire -->
+                                <!-- Commentaire du conducteur -->
                                 <?php if (!empty($trajet['commentaire'])): ?>
                                     <div class="row mt-3">
                                         <div class="col-12">
@@ -261,7 +260,7 @@ $jsFiles = ['/EcoRide/public/js/mes-trajets.js'];
                                     </div>
                                 <?php endif; ?>
 
-                                <!-- Statistiques -->
+                                <!-- Statistiques supplémentaires -->
                                 <footer class="row mt-3">
                                     <div class="col-12">
                                         <div class="d-flex justify-content-between align-items-center">
@@ -279,6 +278,31 @@ $jsFiles = ['/EcoRide/public/js/mes-trajets.js'];
                                         </div>
                                     </div>
                                 </footer>
+
+                                <!-- ====== AJOUT DES BOUTONS DÉMARRER / ARRÊTER ====== -->
+                                <div class="col-12 mt-3">
+                                    <?php if (isset($trajet['statut_execution'])): ?>
+                                        <?php if ($trajet['statut_execution'] === 'attente'): ?>
+                                            <form method="POST" action="/demarrer-trajet" class="mb-2">
+                                                <input type="hidden" name="trajet_id" value="<?= $trajet['id'] ?>">
+                                                <button type="submit" class="btn btn-success w-100" aria-label="Démarrer le trajet">
+                                                    <i class="fas fa-play me-1"></i> Démarrer le trajet
+                                                </button>
+                                            </form>
+                                        <?php elseif ($trajet['statut_execution'] === 'en_cours'): ?>
+                                            <form method="POST" action="/terminer-trajet" class="mb-2">
+                                                <input type="hidden" name="trajet_id" value="<?= $trajet['id'] ?>">
+                                                <button type="submit" class="btn btn-warning w-100" aria-label="Arrêter le trajet">
+                                                    <i class="fas fa-flag-checkered me-1"></i> Arrêter le trajet
+                                                </button>
+                                            </form>
+                                        <?php elseif ($trajet['statut_execution'] === 'termine'): ?>
+                                            <span class="badge bg-success">Trajet terminé</span>
+                                        <?php elseif ($trajet['statut_execution'] === 'probleme'): ?>
+                                            <span class="badge bg-danger">Trajet signalé</span>
+                                        <?php endif; ?>
+                                    <?php endif; ?>
+                                </div>
                             </div>
                         </article>
                     </div>

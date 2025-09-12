@@ -261,5 +261,29 @@ switch ($path) {
             echo '<a href="/">← Retour accueil</a>';
         }
         break;
+        case '/demarrer-trajet':
+    require_once __DIR__ . '/../app/Controllers/TripController.php';
+    $controller = new TripController();
+    $controller->demarrerTrajet();
+    break;
+
+case '/terminer-trajet':
+    require_once __DIR__ . '/../app/Controllers/TripController.php';
+    $controller = new TripController();
+    $controller->terminerTrajet();
+    break;
+
+case '/valider-trajet':
+    require_once __DIR__ . '/../app/Controllers/ReservationController.php';
+    $controller = new ReservationController();
+    $controller->validerTrajet();
+    break;
+
+case '/signaler-probleme':
+    require_once __DIR__ . '/../app/Controllers/TripController.php';
+    $controller = new TripController();
+    $controller->signalerProbleme();
+    break;
+
 }
 ?>
