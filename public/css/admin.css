@@ -1,469 +1,459 @@
 /**
- * CSS pour l'interface d'administration EcoRide
- * Respecte les bonnes pratiques et la sémantique HTML5
- * Compatible avec Bootstrap 5 et responsive
+ * Styles CSS pour l'administration EcoRide - VERSION SIMPLIFIÉE
+ * Compatible avec Bootstrap 5 et Dashboard Bootstrap simple
+ * Suppression du CSS inutile pour l'ancienne vue complexe
  */
 
-/* Variables CSS pour l'administration */
+/* ========================================
+   1. VARIABLES CSS PERSONNALISÉES
+======================================== */
 :root {
-    --admin-primary: #198754;
-    --admin-primary-dark: #146c43;
-    --admin-success: #20c997;
-    --admin-info: #0dcaf0;
-    --admin-warning: #ffc107;
-    --admin-danger: #dc3545;
-    --admin-dark: #212529;
-    --admin-light: #f8f9fa;
-    --admin-white: #ffffff;
-    --admin-border: #dee2e6;
-    --admin-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
-    --admin-shadow-hover: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
-    --admin-transition: all 0.3s ease;
-    --admin-border-radius: 0.375rem;
+  /* Couleurs principales EcoRide */
+  --admin-primary: #0d6efd;
+  --admin-success: #198754;
+  --admin-info: #0dcaf0;
+  --admin-warning: #ffc107;
+  --admin-danger: #dc3545;
+  --admin-secondary: #6c757d;
+  
+  /* Couleurs spécifiques admin */
+  --admin-bg: #f8f9fa;
+  --admin-navbar: #212529;
+  --admin-card-bg: #ffffff;
+  --admin-border: #dee2e6;
+  --admin-text: #495057;
+  --admin-text-light: #6c757d;
+  
+  /* Espacements */
+  --admin-spacing-xs: 0.25rem;
+  --admin-spacing-sm: 0.5rem;
+  --admin-spacing-md: 1rem;
+  --admin-spacing-lg: 1.5rem;
+  --admin-spacing-xl: 2rem;
+  
+  /* Bordures et ombres */
+  --admin-border-radius: 0.5rem;
+  --admin-shadow-sm: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+  --admin-shadow-md: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+  
+  /* Transitions */
+  --admin-transition: all 0.3s ease;
+  --admin-transition-fast: all 0.15s ease;
 }
 
-/* Navigation admin */
+/* ========================================
+   2. LAYOUT GÉNÉRAL ADMIN
+======================================== */
+
+/* Corps de page admin */
+.admin-layout {
+  background-color: var(--admin-bg);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+/* Navigation admin personnalisée */
 .admin-navbar {
-    background: linear-gradient(135deg, var(--admin-primary) 0%, var(--admin-success) 100%);
-    border-bottom: 2px solid var(--admin-primary-dark);
-    box-shadow: var(--admin-shadow);
+  background: var(--admin-navbar) !important;
+  box-shadow: var(--admin-shadow-md);
+  border-bottom: 3px solid var(--admin-primary);
 }
 
 .admin-navbar .navbar-brand {
-    font-weight: 600;
-    font-size: 1.25rem;
+  font-weight: 700;
+  color: #ffffff !important;
 }
 
 .admin-navbar .nav-link {
-    color: rgba(255, 255, 255, 0.9);
-    transition: var(--admin-transition);
+  color: rgba(255, 255, 255, 0.8) !important;
+  transition: var(--admin-transition-fast);
+  position: relative;
 }
 
-.admin-navbar .nav-link:hover {
-    color: var(--admin-white);
-    transform: translateY(-1px);
+.admin-navbar .nav-link:hover,
+.admin-navbar .nav-link.active {
+  color: #ffffff !important;
 }
 
-.admin-navbar .navbar-text {
-    color: rgba(255, 255, 255, 0.9);
-    font-weight: 500;
+.admin-navbar .nav-link.active::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 30px;
+  height: 3px;
+  background: var(--admin-primary);
+  border-radius: 2px;
 }
 
-/* En-tête admin */
-.admin-header {
-    background: linear-gradient(135deg, var(--admin-light) 0%, var(--admin-white) 100%);
-    border-bottom: 1px solid var(--admin-border);
-    padding: 2rem 0;
-}
-
-.admin-title {
-    color: var(--admin-dark);
-    font-size: 2rem;
-    font-weight: 700;
-    margin-bottom: 0.5rem;
-}
-
-.admin-subtitle {
-    color: #6c757d;
-    font-size: 1.1rem;
-    margin-bottom: 0;
-}
-
-.admin-date {
-    color: #6c757d;
-    font-size: 0.9rem;
-    font-weight: 500;
-}
-
-/* Contenu principal */
+/* Contenu principal admin */
 .admin-main {
-    padding: 2rem 0;
-    min-height: 60vh;
+  min-height: calc(100vh - 200px);
+  padding: var(--admin-spacing-xl) var(--admin-spacing-md);
 }
 
-.section-title {
-    color: var(--admin-dark);
-    font-size: 1.5rem;
-    font-weight: 600;
-    margin-bottom: 1.5rem;
-    padding-bottom: 0.5rem;
-    border-bottom: 2px solid var(--admin-primary);
+/* ========================================
+   3. CARTES ET TABLEAUX ADMIN
+======================================== */
+
+/* Cartes admin améliorées */
+.admin-card {
+  border: none;
+  box-shadow: var(--admin-shadow-sm);
+  margin-bottom: var(--admin-spacing-lg);
+  transition: var(--admin-transition);
 }
 
-/* Cartes de statistiques */
-.stat-card {
-    background: var(--admin-white);
-    border: 1px solid var(--admin-border);
-    border-radius: var(--admin-border-radius);
-    box-shadow: var(--admin-shadow);
-    transition: var(--admin-transition);
-    height: 100%;
-    overflow: hidden;
+.admin-card:hover {
+  box-shadow: var(--admin-shadow-md);
+  transform: translateY(-2px);
 }
 
-.stat-card:hover {
-    transform: translateY(-3px);
-    box-shadow: var(--admin-shadow-hover);
+.admin-card-header {
+  background: linear-gradient(135deg, var(--admin-primary), #0056b3);
+  color: white;
+  font-weight: 600;
+  border-bottom: none;
 }
 
-.stat-card-body {
-    padding: 1.5rem;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+/* Tables admin */
+.admin-table {
+  background: white;
+  border-radius: var(--admin-border-radius);
+  box-shadow: var(--admin-shadow-sm);
+  overflow: hidden;
 }
 
-.stat-content {
-    flex: 1;
+.admin-table th {
+  background: var(--admin-bg);
+  font-weight: 600;
+  border-bottom: 2px solid var(--admin-border);
+  color: var(--admin-text);
 }
 
-.stat-number {
-    font-size: 2.5rem;
-    font-weight: 700;
-    margin-bottom: 0.25rem;
-    line-height: 1;
+.admin-table td {
+  vertical-align: middle;
 }
 
-.stat-label {
-    font-size: 1rem;
-    font-weight: 500;
-    margin-bottom: 0.25rem;
-    color: var(--admin-white);
+.admin-table .btn-sm {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.875rem;
+  border-radius: 0.25rem;
 }
 
-.stat-detail {
-    font-size: 0.85rem;
-    opacity: 0.8;
-    color: var(--admin-white);
+/* ========================================
+   4. BADGES ET STATUTS ADMIN
+======================================== */
+
+/* Badges de statut pour les trajets */
+.badge-status-en-attente { 
+  background-color: var(--admin-warning);
+  color: #000;
+  font-weight: 500;
 }
 
-.stat-icon {
-    font-size: 3rem;
-    opacity: 0.3;
+.badge-status-valide { 
+  background-color: var(--admin-success);
+  color: white;
+  font-weight: 500;
 }
 
-/* Variantes de couleurs pour les cartes */
-.stat-card-primary {
-    background: linear-gradient(135deg, var(--admin-primary) 0%, #157347 100%);
-    color: var(--admin-white);
+.badge-status-refuse { 
+  background-color: var(--admin-danger);
+  color: white;
+  font-weight: 500;
 }
 
-.stat-card-success {
-    background: linear-gradient(135deg, var(--admin-success) 0%, #198754 100%);
-    color: var(--admin-white);
+/* Badges de statut pour les utilisateurs */
+.badge-user-active {
+  background-color: var(--admin-success);
+  color: white;
 }
 
-.stat-card-info {
-    background: linear-gradient(135deg, var(--admin-info) 0%, #0a58ca 100%);
-    color: var(--admin-white);
+.badge-user-inactive {
+  background-color: var(--admin-secondary);
+  color: white;
 }
 
-.stat-card-warning {
-    background: linear-gradient(135deg, var(--admin-warning) 0%, #fd7e14 100%);
-    color: var(--admin-dark);
+.badge-user-admin {
+  background-color: var(--admin-primary);
+  color: white;
 }
 
-/* Cartes d'action */
-.action-card {
-    background: var(--admin-white);
-    border: 1px solid var(--admin-border);
-    border-radius: var(--admin-border-radius);
-    box-shadow: var(--admin-shadow);
-    height: 100%;
+/* ========================================
+   5. BOUTONS ADMIN PERSONNALISÉS
+======================================== */
+
+/* Boutons admin avec gradients */
+.btn-admin-primary {
+  background: linear-gradient(135deg, var(--admin-primary), #0056b3);
+  border: none;
+  box-shadow: 0 2px 4px rgba(13, 110, 253, 0.3);
+  color: white;
+  transition: var(--admin-transition);
 }
 
-.action-card-header {
-    background: var(--admin-primary);
-    color: var(--admin-white);
-    padding: 1rem 1.5rem;
-    border-bottom: 1px solid var(--admin-border);
+.btn-admin-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(13, 110, 253, 0.4);
+  color: white;
 }
 
-.action-card-title {
-    font-size: 1.25rem;
-    font-weight: 600;
-    margin-bottom: 0;
+.btn-admin-success {
+  background: linear-gradient(135deg, var(--admin-success), #146c43);
+  border: none;
+  color: white;
 }
 
-.action-card-body {
-    padding: 1.5rem;
+.btn-admin-danger {
+  background: linear-gradient(135deg, var(--admin-danger), #b02a37);
+  border: none;
+  color: white;
 }
 
-/* Liste des actions */
-.actions-list {
-    list-style: none;
-    padding: 0;
-    margin: 0;
+.btn-admin-warning {
+  background: linear-gradient(135deg, var(--admin-warning), #d39e00);
+  border: none;
+  color: #000;
 }
 
-.action-item {
-    margin-bottom: 1rem;
+/* ========================================
+   6. NOTIFICATION ET ALERTES
+======================================== */
+
+/* Badge de notification sur les boutons */
+.notification-badge {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background: var(--admin-danger);
+  color: white;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  font-size: 0.7rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  animation: pulse 2s infinite;
 }
 
-.action-item:last-child {
-    margin-bottom: 0;
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); }
 }
 
-.action-link {
-    display: flex;
-    align-items: center;
-    padding: 1rem;
-    border: 1px solid var(--admin-border);
-    border-radius: var(--admin-border-radius);
-    text-decoration: none;
-    transition: var(--admin-transition);
-    color: var(--admin-dark);
+/* Alertes admin personnalisées */
+.admin-alert {
+  border: none;
+  border-radius: var(--admin-border-radius);
+  box-shadow: var(--admin-shadow-sm);
+  margin-bottom: var(--admin-spacing-md);
 }
 
-.action-link:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--admin-shadow-hover);
-    text-decoration: none;
-    color: var(--admin-dark);
+.admin-alert-success {
+  background: rgba(25, 135, 84, 0.1);
+  color: var(--admin-success);
+  border-left: 4px solid var(--admin-success);
 }
 
-.action-icon {
-    font-size: 1.5rem;
-    margin-right: 1rem;
-    width: 40px;
-    text-align: center;
+.admin-alert-danger {
+  background: rgba(220, 53, 69, 0.1);
+  color: var(--admin-danger);
+  border-left: 4px solid var(--admin-danger);
 }
 
-.action-content {
-    flex: 1;
+.admin-alert-warning {
+  background: rgba(255, 193, 7, 0.1);
+  color: #856404;
+  border-left: 4px solid var(--admin-warning);
 }
 
-.action-title {
-    font-size: 1.1rem;
-    font-weight: 600;
-    margin-bottom: 0.25rem;
+/* ========================================
+   7. FORMULAIRES ADMIN
+======================================== */
+
+/* Styles pour les formulaires admin */
+.admin-form-control {
+  border: 1px solid var(--admin-border);
+  border-radius: var(--admin-border-radius);
+  transition: var(--admin-transition-fast);
 }
 
-.action-desc {
-    font-size: 0.9rem;
-    color: #6c757d;
-    margin-bottom: 0;
+.admin-form-control:focus {
+  border-color: var(--admin-primary);
+  box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
 }
 
-/* Variantes de couleurs pour les liens d'action */
-.action-link-primary:hover {
-    border-color: var(--admin-primary);
+.admin-form-label {
+  font-weight: 600;
+  color: var(--admin-text);
+  margin-bottom: var(--admin-spacing-sm);
 }
 
-.action-link-primary .action-icon {
-    color: var(--admin-primary);
+/* ========================================
+   8. LOADER ET STATES
+======================================== */
+
+/* État de chargement */
+.loading {
+  opacity: 0.6;
+  pointer-events: none;
+  position: relative;
 }
 
-.action-link-warning:hover {
-    border-color: var(--admin-warning);
+.loading::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 20px;
+  height: 20px;
+  margin: -10px 0 0 -10px;
+  border: 2px solid var(--admin-border);
+  border-top-color: var(--admin-primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
 }
 
-.action-link-warning .action-icon {
-    color: var(--admin-warning);
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
 
-.action-link-info:hover {
-    border-color: var(--admin-info);
+/* Skeleton loader pour les cartes */
+.skeleton {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: loading 1.5s infinite;
 }
 
-.action-link-info .action-icon {
-    color: var(--admin-info);
+@keyframes loading {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
 }
 
-/* Carte de résumé */
-.summary-card {
-    background: var(--admin-white);
-    border: 1px solid var(--admin-border);
-    border-radius: var(--admin-border-radius);
-    box-shadow: var(--admin-shadow);
-    height: 100%;
+/* ========================================
+   9. ANIMATIONS ET EFFETS
+======================================== */
+
+/* Animation d'entrée pour les éléments */
+.fade-in {
+  animation: fadeIn 0.5s ease-in;
 }
 
-.summary-card-header {
-    background: var(--admin-success);
-    color: var(--admin-white);
-    padding: 1rem 1.5rem;
-    border-bottom: 1px solid var(--admin-border);
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
-.summary-card-title {
-    font-size: 1.25rem;
-    font-weight: 600;
-    margin-bottom: 0;
+/* Effet de survol sur les cartes */
+.hover-lift {
+  transition: var(--admin-transition);
 }
 
-.summary-card-body {
-    padding: 1.5rem;
+.hover-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--admin-shadow-md);
 }
 
-.summary-stats {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 1.5rem;
+/* Effet de focus pour l'accessibilité */
+.focus-visible {
+  outline: 2px solid var(--admin-primary);
+  outline-offset: 2px;
 }
 
-.summary-item {
-    text-align: center;
-    flex: 1;
-}
+/* ========================================
+   10. RESPONSIVE DESIGN
+======================================== */
 
-.summary-item:not(:last-child) {
-    border-right: 1px solid var(--admin-border);
-}
-
-.summary-label {
-    font-size: 0.9rem;
-    color: #6c757d;
-    margin-bottom: 0.5rem;
-}
-
-.summary-value {
-    font-size: 2rem;
-    font-weight: 700;
-    margin-bottom: 0.25rem;
-}
-
-.summary-value-success {
-    color: var(--admin-success);
-}
-
-.summary-value-info {
-    color: var(--admin-info);
-}
-
-.summary-detail {
-    font-size: 0.8rem;
-    color: #6c757d;
-}
-
-.system-status {
-    text-align: center;
-    padding: 1rem;
-    background: var(--admin-light);
-    border-radius: var(--admin-border-radius);
-}
-
-.status-indicator {
-    display: inline-flex;
-    align-items: center;
-    font-weight: 500;
-}
-
-.status-online {
-    color: var(--admin-success);
-}
-
-.status-indicator i {
-    margin-right: 0.5rem;
-}
-
-/* Pied de page admin */
-.admin-footer {
-    background: var(--admin-dark);
-    color: var(--admin-white);
-    padding: 1.5rem 0;
-    margin-top: 2rem;
-}
-
-.footer-text {
-    margin-bottom: 0;
-    font-size: 0.9rem;
-}
-
-/* Responsive */
+/* Tablettes et mobiles */
 @media (max-width: 768px) {
-    .admin-title {
-        font-size: 1.5rem;
-    }
-    
-    .admin-subtitle {
-        font-size: 1rem;
-    }
-    
-    .stat-number {
-        font-size: 2rem;
-    }
-    
-    .stat-card-body {
-        padding: 1rem;
-    }
-    
-    .action-card-body {
-        padding: 1rem;
-    }
-    
-    .summary-stats {
-        flex-direction: column;
-        gap: 1rem;
-    }
-    
-    .summary-item:not(:last-child) {
-        border-right: none;
-        border-bottom: 1px solid var(--admin-border);
-        padding-bottom: 1rem;
-    }
+  .admin-main {
+    padding: var(--admin-spacing-md) var(--admin-spacing-sm);
+  }
+  
+  .admin-table {
+    font-size: 0.875rem;
+  }
+  
+  .admin-table th,
+  .admin-table td {
+    padding: 0.5rem;
+  }
+  
+  .btn-admin-primary,
+  .btn-admin-success,
+  .btn-admin-danger,
+  .btn-admin-warning {
+    font-size: 0.875rem;
+    padding: 0.5rem 1rem;
+  }
 }
 
 @media (max-width: 576px) {
-    .admin-main {
-        padding: 1rem 0;
-    }
-    
-    .stat-card-body {
-        flex-direction: column;
-        text-align: center;
-    }
-    
-    .stat-icon {
-        font-size: 2rem;
-        margin-top: 1rem;
-    }
-    
-    .action-link {
-        flex-direction: column;
-        text-align: center;
-    }
-    
-    .action-icon {
-        margin-right: 0;
-        margin-bottom: 0.5rem;
-    }
+  .admin-card-header {
+    font-size: 0.95rem;
+  }
+  
+  .notification-badge {
+    width: 16px;
+    height: 16px;
+    font-size: 0.6rem;
+  }
 }
 
-/* Animations */
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
+/* ========================================
+   11. UTILITAIRES ADMIN
+======================================== */
 
-.stat-card,
-.action-card,
-.summary-card {
-    animation: fadeIn 0.6s ease-out;
-}
+/* Classes utilitaires pour les couleurs */
+.admin-text-primary { color: var(--admin-primary) !important; }
+.admin-text-success { color: var(--admin-success) !important; }
+.admin-text-info { color: var(--admin-info) !important; }
+.admin-text-warning { color: var(--admin-warning) !important; }
+.admin-text-danger { color: var(--admin-danger) !important; }
 
-/* Accessibilité */
-.sr-only {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    padding: 0;
-    margin: -1px;
-    overflow: hidden;
-    clip: rect(0, 0, 0, 0);
-    white-space: nowrap;
-    border: 0;
-}
+.admin-bg-light { background-color: var(--admin-bg) !important; }
 
-/* Focus pour l'accessibilité */
-.action-link:focus,
-.nav-link:focus {
-    outline: 2px solid var(--admin-primary);
-    outline-offset: 2px;
+/* Classes pour les espacements admin */
+.admin-spacing-sm { margin: var(--admin-spacing-sm); }
+.admin-spacing-md { margin: var(--admin-spacing-md); }
+.admin-spacing-lg { margin: var(--admin-spacing-lg); }
+
+/* Classes pour les bordures */
+.admin-border { border: 1px solid var(--admin-border) !important; }
+.admin-border-radius { border-radius: var(--admin-border-radius) !important; }
+
+/* Classes pour les ombres */
+.admin-shadow-sm { box-shadow: var(--admin-shadow-sm) !important; }
+.admin-shadow-md { box-shadow: var(--admin-shadow-md) !important; }
+
+/* Classes pour les transitions */
+.admin-transition { transition: var(--admin-transition) !important; }
+.admin-transition-fast { transition: var(--admin-transition-fast) !important; }
+
+/* ========================================
+   12. MODE SOMBRE (OPTIONNEL)
+======================================== */
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --admin-bg: #1a1a1a;
+    --admin-card-bg: #2d2d2d;
+    --admin-text: #ffffff;
+    --admin-text-light: #cccccc;
+    --admin-border: #404040;
+  }
+  
+  .admin-table {
+    background: var(--admin-card-bg);
+    color: var(--admin-text);
+  }
+  
+  .admin-table th {
+    background: #404040;
+    color: var(--admin-text);
+  }
 }

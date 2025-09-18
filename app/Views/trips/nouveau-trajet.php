@@ -5,7 +5,7 @@
 ob_start();
 
 // Inclusion du fichier JavaScript spécifique
-$jsFiles = ['/EcoRide/public/js/nouveau-trajet.js'];
+$jsFiles = ['/public/js/nouveau-trajet.js'];
 ?>
 
 <!-- Messages d'alerte -->
@@ -256,7 +256,7 @@ $jsFiles = ['/EcoRide/public/js/nouveau-trajet.js'];
                                            id="vehicule_electrique" 
                                            name="vehicule_electrique" 
                                            value="1" 
-                                           <?= isset($donnees['vehicule_electrique']) && $donnees8['vehicule_electrique'] ? 'checked' : '' ?>
+                                           <?= isset($donnees['vehicule_electrique']) && $donnees['vehicule_electrique'] ? 'checked' : '' ?>
                                            aria-describedby="electrique-help">
                                     <label class="form-check-label" for="vehicule_electrique">
                                         <i class="fas fa-leaf text-success me-1" aria-hidden="true"></i>

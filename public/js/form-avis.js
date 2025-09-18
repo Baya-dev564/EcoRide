@@ -163,7 +163,7 @@ document.addEventListener('DOMContentLoaded', function() {
             Object.values(avisData.criteres).some(val => !val) ||
             !avisData.commentaire ||
             avisData.commentaire.length < 10
-        ) {
+        ) {2
             alert("Merci de remplir tous les champs obligatoires et d'attribuer une note !");
             return;
         }
@@ -174,37 +174,38 @@ document.addEventListener('DOMContentLoaded', function() {
         submitBtn.disabled = true;
         submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Envoi en cours...';
 
-        // --- ENVOI AJAX  : vérifie que le serveur répond bien en JSON ---
-        fetch('/api/avis', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(avisData)
-        })
-        .then(async response => {
-            const contentType = response.headers.get("content-type");
-            if (!contentType || !contentType.includes("application/json")) {
-                // Le serveur a répondu du HTML / erreur PHP : on affiche le contenu
-                const text = await response.text();
-                throw new Error("Erreur inattendue du serveur :\n" + text.substring(0, 250));
-            }
-            // réponse en JSON
-            return response.json();
-        })
-        .then(data => {
-            if (data.succes) {
-                alert('Avis publié avec succès !');
-                window.location.href = '/avis';
-            } else {
-                alert('Erreur : ' + data.message);
-            }
-        })
-        .catch(error => {
-            alert("Erreur lors de l'envoi de l'avis ou réponse inattendue du serveur !\n" + error.message);
-        })
-        .finally(() => {
-            // Restaurer le bouton
-            submitBtn.disabled = false;
-            submitBtn.innerHTML = originalText;
-        });
-    });
+       // --- ENVOI AJAX CORRIGÉ ---
+fetch('/api/avis', {
+    method: 'POST',
+    headers: { 
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'X-Requested-With': 'XMLHttpRequest'
+    },
+    body: new URLSearchParams({
+        trajet_id: avisData.trajet_id,
+        conducteur_id: avisData.conducteur_id,
+        note: avisData.note_globale,
+        commentaire: avisData.commentaire,
+        nom_utilisateur: 'Utilisateur' // Ou récupère depuis une variable
+    })
+})
+.then(response => response.json())
+.then(data => {
+    if (data.success) {
+        alert('Avis publié avec succès !');
+        window.location.href = '/avis';
+    } else {
+        alert('Erreur : ' + (data.error || data.message));
+    }
+})
+.catch(error => {
+    console.error('Erreur:', error);
+    alert("Erreur lors de l'envoi de l'avis !");
+})
+.finally(() => {
+    // Restaurer le bouton
+    submitBtn.disabled = false;
+    submitBtn.innerHTML = originalText;
+});
+    })
 });

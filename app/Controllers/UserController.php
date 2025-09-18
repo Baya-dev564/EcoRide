@@ -20,6 +20,8 @@ class UserController
      */
     public function profil()
     {
+         
+        
         // Vérification que l'utilisateur est connecté (sécurité obligatoire)
         if (!isset($_SESSION['user'])) {
             $_SESSION['message'] = 'Vous devez être connecté pour accéder à votre profil.';
@@ -65,6 +67,7 @@ class UserController
         
         // Affichage de la vue profil avec Bootstrap 5 et JavaScript
         require __DIR__ . '/../Views/user/profil.php';
+        
     }
     
     /**
