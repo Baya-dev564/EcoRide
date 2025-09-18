@@ -76,10 +76,12 @@ $errors = $errors ?? [];
                 <?php endif; ?>
 
                 <!-- Formulaire principal -->
-                <form id="avisForm"   class="needs-validation" novalidate>
+                <form id="avisForm" class="needs-validation" novalidate method="POST" action="index.php?action=ajouterAvis">
+
                     <!-- Champs cachés -->
-                    <input type="hidden" name="trajet_id" value="<?= htmlspecialchars($trajet_id) ?>">
-                    <input type="hidden" name="conducteur_id" value="<?= htmlspecialchars($conducteur_id) ?>">
+                   <input type="hidden" name="trajet_id" value="123">
+<input type="hidden" name="conducteur_id" value="456">
+
                     
                     <!-- Carte du formulaire -->
                     <div class="card shadow-sm">
@@ -279,6 +281,7 @@ $errors = $errors ?? [];
                                     </p>
                                 </div>
                             </section>
+                            
                             
                         </div>
                         

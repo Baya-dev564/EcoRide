@@ -1,18 +1,18 @@
-version: '3.8'   # Version du format Docker Compose utilisé
 
-services:        # Définition des services/containeurs Docker
-
-  php:           # Service PHP pour exécuter le code backend
-    build: .     # Utilise ton Dockerfile personnalisé
+services:
+  php:
+    build: .
     container_name: ecoride-php
     volumes:
       - ./app:/var/www/app
       - ./public:/var/www/public
       - ./config:/var/www/config
+      - ./sessions:/tmp/sessions
+      - ./config/php.ini:/usr/local/etc/php/conf.d/custom.ini
     networks:
       - ecoride-network
 
-  nginx:         # Service Nginx servant ton site web
+  nginx:
     image: nginx:latest
     container_name: ecoride-nginx
     ports:
@@ -25,14 +25,14 @@ services:        # Définition des services/containeurs Docker
     networks:
       - ecoride-network
 
-  mysql:         # Service MySQL
+  mysql:
     image: mysql:8.0
     container_name: ecoride-mysql
     ports:
       - "3306:3306"
-    environment:                     # ✅ SECTION ENVIRONMENT CORRECTE
+    environment:
       MYSQL_ROOT_PASSWORD: rootpass
-      MYSQL_DATABASE: EcoRide
+      MYSQL_DATABASE: Ecoride
       MYSQL_USER: ecoride
       MYSQL_PASSWORD: ecoridepass
     volumes:
@@ -40,9 +40,13 @@ services:        # Définition des services/containeurs Docker
     networks:
       - ecoride-network
 
-  mongo:         # Service MongoDB
-    image: mongo:6.0
+  mongo:
+    image: mongo:4.4
     container_name: ecoride-mongo
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ecoride
+      MONGO_INITDB_ROOT_PASSWORD: ecoride123
     ports:
       - "27017:27017"
     volumes:
@@ -50,9 +54,12 @@ services:        # Définition des services/containeurs Docker
     networks:
       - ecoride-network
 
-networks:         # Déclaration du réseau Docker
-  ecoride-network:
-
-volumes:          # Déclaration des volumes Docker
-  mongo-data:
+volumes:
   mysql-data:
+    driver: local
+  mongo-data:
+    driver: local
+
+networks:
+  ecoride-network:
+    driver: bridge

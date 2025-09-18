@@ -1,10 +1,12 @@
 <?php
 /**
- * Modèle User pour la gestion complète des utilisateurs EcoRide+admin
+ * Modèle User pour la gestion des utilisateurs EcoRide
+ * Version nettoyée et corrigée avec les vrais noms de tables
  */
 
 class User
 {
+    protected $connection = 'mysql';
     private $pdo;
     
     public function __construct($pdo)
@@ -35,6 +37,7 @@ class User
             
             $motDePasseHache = password_hash($data['mot_de_passe'], PASSWORD_DEFAULT);
             
+            // CORRIGÉ : utilisateurs (pas users)
             $sql = "INSERT INTO utilisateurs (
                         pseudo, email, mot_de_passe, credit, 
                         nom, prenom, telephone, adresse, ville, code_postal, 
@@ -59,6 +62,7 @@ class User
             if ($resultat) {
                 $userId = $this->pdo->lastInsertId();
                 
+                // CORRIGÉ : credits (pas transactions_credits)
                 $this->enregistrerTransactionCredit(
                     $userId, 
                     20, 
@@ -92,6 +96,7 @@ class User
     public function authentifier($email, $motDePasse)
     {
         try {
+            // CORRIGÉ : utilisateurs (pas users)
             $sql = "SELECT id, pseudo, nom, prenom, email, mot_de_passe, credit,
                            telephone, adresse, ville, code_postal, permis_conduire,
                            bio, photo_profil, role, created_at, updated_at
@@ -104,6 +109,9 @@ class User
             if (!$user || !password_verify($motDePasse, $user['mot_de_passe'])) {
                 return ['succes' => false, 'erreur' => 'Email ou mot de passe incorrect.'];
             }
+            
+            // Je mets à jour la dernière connexion
+            $this->mettreAJourDerniereConnexion($user['id']);
             
             unset($user['mot_de_passe']);
             $user['permis_conduire'] = (bool)$user['permis_conduire'];
@@ -126,6 +134,7 @@ class User
     public function getUserById($userId)
     {
         try {
+            // CORRIGÉ : utilisateurs (pas users) + suppression last_login qui n'existe pas
             $sql = "SELECT id, pseudo, nom, prenom, email, credit, created_at,
                            telephone, adresse, ville, code_postal, permis_conduire, 
                            bio, photo_profil, role, updated_at
@@ -169,6 +178,7 @@ class User
                 ];
             }
             
+            // CORRIGÉ : utilisateurs (pas users)
             $sql = "UPDATE utilisateurs 
                     SET pseudo = ?, nom = ?, prenom = ?, email = ?, 
                         telephone = ?, adresse = ?, ville = ?, code_postal = ?, 
@@ -213,37 +223,39 @@ class User
     }
 
     /**
-     * Récupère les statistiques de l'utilisateur
+     * Récupère les statistiques personnelles de l'utilisateur
+     * CORRIGÉ : avec les bons noms de tables
      */
     public function getStatistiquesUtilisateur($userId)
     {
         try {
-            // Trajets proposés
+            // CORRIGÉ : trajets (pas trips)
             $sql = "SELECT COUNT(*) FROM trajets WHERE conducteur_id = ?";
             $stmt = $this->pdo->prepare($sql);
             $stmt->execute([$userId]);
             $trajetsProposés = $stmt->fetchColumn();
             
-            // Réservations effectuées
-            $sql = "SELECT COUNT(*) FROM reservations WHERE passager_id = ? AND statut = 'confirme'";
+            // CORRIGÉ : reservations avec user_id ou passager_id (à vérifier ta structure)
+            $sql = "SELECT COUNT(*) FROM reservations WHERE passager_id = ? AND statut = 'confirmee'";
             $stmt = $this->pdo->prepare($sql);
             $stmt->execute([$userId]);
             $reservationsEffectuées = $stmt->fetchColumn();
             
-            // Crédits gagnés
-            $sql = "SELECT COALESCE(SUM(montant), 0) FROM transactions_credits 
-                    WHERE utilisateur_id = ? AND type_transaction = 'credit' AND source != 'inscription'";
+            // CORRIGÉ : credits (pas transactions_credits) - CETTE PARTIE DÉPEND DE TA STRUCTURE
+            // Si tu as une table credits séparée, sinon on peut utiliser les crédits actuels
+            $sql = "SELECT credit FROM utilisateurs WHERE id = ?";
             $stmt = $this->pdo->prepare($sql);
             $stmt->execute([$userId]);
-            $creditsGagnés = $stmt->fetchColumn();
+            $creditsActuels = $stmt->fetchColumn();
             
-            // Calcul CO2 économisé
+            // Calcul CO2 économisé basé sur les trajets partagés
+            // CORRIGÉ : trajets et reservations avec bons noms
             $sql = "SELECT COALESCE(SUM(t.distance_km * COALESCE(r.nb_places_total, 0)), 0) as km_partages
                     FROM trajets t
                     LEFT JOIN (
                         SELECT trajet_id, SUM(nb_places) as nb_places_total
                         FROM reservations 
-                        WHERE statut = 'confirme'
+                        WHERE statut = 'confirmee'
                         GROUP BY trajet_id
                     ) r ON t.id = r.trajet_id
                     WHERE t.conducteur_id = ?";
@@ -252,12 +264,13 @@ class User
             $stmt->execute([$userId]);
             $kmPartages = $stmt->fetchColumn();
             
+            // Estimation CO2 : 120g CO2/km par passager
             $co2Economise = round($kmPartages * 0.12, 1);
             
             return [
                 'trajets_proposés' => $trajetsProposés,
                 'reservations_effectuées' => $reservationsEffectuées,
-                'credits_gagnés' => $creditsGagnés,
+                'credits_actuels' => $creditsActuels, // Modifié car plus de transactions
                 'co2_economise' => $co2Economise
             ];
             
@@ -267,267 +280,28 @@ class User
             return [
                 'trajets_proposés' => 0,
                 'reservations_effectuées' => 0,
-                'credits_gagnés' => 0,
+                'credits_actuels' => 0,
                 'co2_economise' => 0
             ];
         }
     }
 
-    // ========== NOUVELLES MÉTHODES POUR L'ADMINISTRATION ==========
-
     /**
-     * ADMIN : Récupérer tous les utilisateurs pour l'administration
-     * Utilisé par l'AdminController pour afficher la liste des utilisateurs
-     * @return array Tableau des utilisateurs avec leurs informations
+     * Met à jour la dernière connexion de l'utilisateur
+     * CORRIGÉ : utilisateurs + updated_at (pas last_login qui n'existe pas)
      */
-    public function getAllUsers()
+    private function mettreAJourDerniereConnexion($userId)
     {
         try {
-            $sql = "SELECT id, pseudo, nom, prenom, email, credit, permis_conduire, 
-                           telephone, ville, code_postal, role, created_at, updated_at, note
-                    FROM utilisateurs 
-                    ORDER BY created_at DESC";
-            
-            $stmt = $this->pdo->prepare($sql);
-            $stmt->execute();
-            
-            $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
-            
-            // Convertir permis_conduire en booléen pour chaque utilisateur
-            foreach ($users as &$user) {
-                $user['permis_conduire'] = (bool)$user['permis_conduire'];
-            }
-            
-            return $users;
-            
-        } catch (PDOException $e) {
-            error_log("Erreur getAllUsers : " . $e->getMessage());
-            return [];
-        }
-    }
-
-    /**
-     * ADMIN : Récupérer les utilisateurs actifs (connectés récemment)
-     * Utilisé pour les statistiques d'administration
-     * @param int $jours Nombre de jours pour considérer un utilisateur comme actif
-     * @return array Tableau des utilisateurs actifs
-     */
-    public function getActiveUsers($jours = 30)
-    {
-        try {
-            $sql = "SELECT id, pseudo, nom, prenom, email, updated_at 
-                    FROM utilisateurs 
-                    WHERE role != 'admin' 
-                    AND updated_at > DATE_SUB(NOW(), INTERVAL ? DAY)
-                    ORDER BY updated_at DESC";
-            
-            $stmt = $this->pdo->prepare($sql);
-            $stmt->execute([$jours]);
-            
-            return $stmt->fetchAll(PDO::FETCH_ASSOC);
-            
-        } catch (PDOException $e) {
-            error_log("Erreur getActiveUsers : " . $e->getMessage());
-            return [];
-        }
-    }
-
-    /**
-     * ADMIN : Mettre à jour les crédits d'un utilisateur
-     * Utilisé par l'admin pour ajuster les crédits des utilisateurs
-     * @param int $userId ID de l'utilisateur
-     * @param int $nouveauCredit Nouveau montant de crédits
-     * @return bool True si mise à jour réussie
-     */
-    public function updateCredits($userId, $nouveauCredit)
-    {
-        try {
-            // Récupérer l'ancien montant pour historique
-            $sql = "SELECT credit FROM utilisateurs WHERE id = ? AND role != 'admin'";
+            $sql = "UPDATE utilisateurs SET updated_at = NOW() WHERE id = ?";
             $stmt = $this->pdo->prepare($sql);
             $stmt->execute([$userId]);
-            $ancienCredit = $stmt->fetchColumn();
-            
-            if ($ancienCredit === false) {
-                return false; // Utilisateur non trouvé ou admin
-            }
-            
-            // Mettre à jour les crédits
-            $sql = "UPDATE utilisateurs 
-                    SET credit = ?, updated_at = NOW() 
-                    WHERE id = ? AND role != 'admin'";
-            
-            $stmt = $this->pdo->prepare($sql);
-            $result = $stmt->execute([$nouveauCredit, $userId]);
-            
-            if ($result && $stmt->rowCount() > 0) {
-                // Enregistrer la transaction pour historique
-                $difference = $nouveauCredit - $ancienCredit;
-                $type = $difference > 0 ? 'credit' : 'debit';
-                $this->enregistrerTransactionCredit(
-                    $userId,
-                    abs($difference),
-                    $type,
-                    'admin',
-                    'Ajustement administrateur'
-                );
-                
-                return true;
-            }
-            
-            return false;
-            
         } catch (PDOException $e) {
-            error_log("Erreur updateCredits : " . $e->getMessage());
-            return false;
+            error_log("Erreur mise à jour dernière connexion : " . $e->getMessage());
         }
     }
 
-    /**
-     * ADMIN : Obtenir les statistiques des utilisateurs
-     * Méthode utile pour l'AdminController
-     * @return array Statistiques générales des utilisateurs
-     */
-    public function getStatistiquesUsers()
-    {
-        try {
-            $stats = [];
-            
-            // Nombre total d'utilisateurs (sans admin)
-            $stmt = $this->pdo->query("SELECT COUNT(*) FROM utilisateurs WHERE role != 'admin'");
-            $stats['total_users'] = $stmt->fetchColumn();
-            
-            // Nombre d'utilisateurs avec permis
-            $stmt = $this->pdo->query("SELECT COUNT(*) FROM utilisateurs WHERE permis_conduire = 1 AND role != 'admin'");
-            $stats['users_avec_permis'] = $stmt->fetchColumn();
-            
-            // Crédits totaux en circulation
-            $stmt = $this->pdo->query("SELECT SUM(credit) FROM utilisateurs WHERE role != 'admin'");
-            $stats['credits_total'] = $stmt->fetchColumn() ?: 0;
-            
-            // Moyenne des crédits par utilisateur
-            if ($stats['total_users'] > 0) {
-                $stats['credits_moyenne'] = round($stats['credits_total'] / $stats['total_users'], 2);
-            } else {
-                $stats['credits_moyenne'] = 0;
-            }
-            
-            // Utilisateurs inscrits ce mois-ci
-            $stmt = $this->pdo->query("SELECT COUNT(*) FROM utilisateurs 
-                                      WHERE role != 'admin' 
-                                      AND created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)");
-            $stats['nouveaux_users_mois'] = $stmt->fetchColumn();
-            
-            return $stats;
-            
-        } catch (PDOException $e) {
-            error_log("Erreur getStatistiquesUsers : " . $e->getMessage());
-            return [
-                'total_users' => 0,
-                'users_avec_permis' => 0,
-                'credits_total' => 0,
-                'credits_moyenne' => 0,
-                'nouveaux_users_mois' => 0
-            ];
-        }
-    }
-
-    /**
-     * ADMIN : Rechercher des utilisateurs
-     * Permet à l'admin de rechercher par pseudo, nom, email
-     * @param string $recherche Terme de recherche
-     * @return array Utilisateurs correspondant à la recherche
-     */
-    public function rechercherUsers($recherche)
-    {
-        try {
-            $sql = "SELECT id, pseudo, nom, prenom, email, credit, created_at, role 
-                    FROM utilisateurs 
-                    WHERE role != 'admin' 
-                    AND (pseudo LIKE ? OR nom LIKE ? OR prenom LIKE ? OR email LIKE ?)
-                    ORDER BY created_at DESC";
-            
-            $terme = '%' . $recherche . '%';
-            $stmt = $this->pdo->prepare($sql);
-            $stmt->execute([$terme, $terme, $terme, $terme]);
-            
-            return $stmt->fetchAll(PDO::FETCH_ASSOC);
-            
-        } catch (PDOException $e) {
-            error_log("Erreur rechercherUsers : " . $e->getMessage());
-            return [];
-        }
-    }
-
-    /**
-     * ADMIN : Compter les trajets d'un utilisateur
-     * Utile pour les statistiques par utilisateur
-     * @param int $userId ID de l'utilisateur
-     * @return int Nombre de trajets créés
-     */
-    public function compterTrajetsUser($userId)
-    {
-        try {
-            $sql = "SELECT COUNT(*) FROM trajets WHERE conducteur_id = ?";
-            $stmt = $this->pdo->prepare($sql);
-            $stmt->execute([$userId]);
-            
-            return $stmt->fetchColumn();
-            
-        } catch (PDOException $e) {
-            error_log("Erreur compterTrajetsUser : " . $e->getMessage());
-            return 0;
-        }
-    }
-
-    /**
-     * ADMIN : Compter les réservations d'un utilisateur
-     * Utile pour les statistiques par utilisateur
-     * @param int $userId ID de l'utilisateur
-     * @return int Nombre de réservations effectuées
-     */
-    public function compterReservationsUser($userId)
-    {
-        try {
-            $sql = "SELECT COUNT(*) FROM reservations WHERE passager_id = ?";
-            $stmt = $this->pdo->prepare($sql);
-            $stmt->execute([$userId]);
-            
-            return $stmt->fetchColumn();
-            
-        } catch (PDOException $e) {
-            error_log("Erreur compterReservationsUser : " . $e->getMessage());
-            return 0;
-        }
-    }
-
-    /**
-     * ADMIN : Désactiver temporairement un utilisateur
-     * Permet de bloquer un utilisateur sans le supprimer
-     * @param int $userId ID de l'utilisateur
-     * @return bool True si succès
-     */
-    public function desactiverUtilisateur($userId)
-    {
-        try {
-            // Pour l'instant, on met à jour updated_at pour marquer l'action
-            // Tu peux ajouter un champ "statut" à la table utilisateurs si nécessaire
-            $sql = "UPDATE utilisateurs 
-                    SET updated_at = NOW() 
-                    WHERE id = ? AND role != 'admin'";
-            
-            $stmt = $this->pdo->prepare($sql);
-            $result = $stmt->execute([$userId]);
-            
-            return $result && $stmt->rowCount() > 0;
-            
-        } catch (PDOException $e) {
-            error_log("Erreur desactiverUtilisateur : " . $e->getMessage());
-            return false;
-        }
-    }
-
-    // ========== MÉTHODES PRIVÉES (inchangées) ==========
+    // ========== MÉTHODES PRIVÉES DE VALIDATION ==========
     
     private function validerDonneesInscription($data)
     {
@@ -553,12 +327,12 @@ class User
             $erreurs[] = 'Le mot de passe doit contenir au moins 6 caractères.';
         }
         
-        if (!empty($data['nom']) && strlen($data['nom']) > 100) {
-            $erreurs[] = 'Le nom ne peut pas dépasser 100 caractères.';
+        if (!empty($data['nom']) && strlen($data['nom']) > 50) {
+            $erreurs[] = 'Le nom ne peut pas dépasser 50 caractères.';
         }
         
-        if (!empty($data['prenom']) && strlen($data['prenom']) > 100) {
-            $erreurs[] = 'Le prénom ne peut pas dépasser 100 caractères.';
+        if (!empty($data['prenom']) && strlen($data['prenom']) > 50) {
+            $erreurs[] = 'Le prénom ne peut pas dépasser 50 caractères.';
         }
         
         if (!empty($data['telephone']) && !preg_match('/^[0-9+\-\s\.]{10,15}$/', $data['telephone'])) {
@@ -584,6 +358,7 @@ class User
         $erreurs = [];
         
         try {
+            // CORRIGÉ : utilisateurs (pas users)
             $sql = "SELECT COUNT(*) FROM utilisateurs WHERE pseudo = ? AND id != ?";
             $stmt = $this->pdo->prepare($sql);
             $stmt->execute([$pseudo, $userId]);
@@ -608,6 +383,7 @@ class User
     
     private function emailExiste($email)
     {
+        // CORRIGÉ : utilisateurs (pas users)
         $sql = "SELECT COUNT(*) FROM utilisateurs WHERE email = ?";
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute([$email]);
@@ -616,6 +392,7 @@ class User
     
     private function pseudoExiste($pseudo)
     {
+        // CORRIGÉ : utilisateurs (pas users)
         $sql = "SELECT COUNT(*) FROM utilisateurs WHERE pseudo = ?";
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute([$pseudo]);
@@ -625,8 +402,11 @@ class User
     private function enregistrerTransactionCredit($userId, $montant, $type, $source, $description)
     {
         try {
-            $sql = "INSERT INTO transactions_credits (
-                        utilisateur_id, montant, type_transaction, source, description, date_transaction
+            // CORRIGÉ : credits (pas transactions_credits) - À ADAPTER SELON TA STRUCTURE
+            // Si tu as une table credits avec une structure différente, modifie ici
+            
+            $sql = "INSERT INTO credits (
+                        utilisateur_id, montant, type_transaction, source, description, created_at
                     ) VALUES (?, ?, ?, ?, ?, NOW())";
             
             $stmt = $this->pdo->prepare($sql);
@@ -634,6 +414,7 @@ class User
             
         } catch (PDOException $e) {
             error_log("Erreur transaction crédit : " . $e->getMessage());
+            // Je ne fais pas échouer l'inscription si les transactions ne marchent pas
         }
     }
 }

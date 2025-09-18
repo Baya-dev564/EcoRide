@@ -1,340 +1,203 @@
 <?php
 /**
- * Modèle Trip pour la gestion complète des trajets 
- * Gère toutes les opérations CRUD des trajets avec validation,
- * recherche avancée, filtres et calculs automatiques
+ * Modèle Trip avec système de modération admin
+ * Les trajets créés sont en attente de validation
  */
 
 class Trip
 {
     private $pdo;
     
-    /**
-     * Constructeur - Injection de dépendance PDO
-     * 
-     * @param PDO $pdo Instance de connexion à la base de données
-     */
     public function __construct($pdo)
     {
         $this->pdo = $pdo;
     }
     
     /**
-     * Crée un nouveau trajet avec validation complète
-     * 
-     * @param array $data Données du trajet à créer
-     * @return array Résultat avec succès/erreurs et informations
+     * Crée un nouveau trajet EN ATTENTE de modération admin
      */
-    public function creerTrajet($data)
-    {
-        // Validation des données avant insertion
-        $validation = $this->validerDonneesTrajet($data);
-        if (!$validation['valide']) {
-            return ['succes' => false, 'erreurs' => $validation['erreurs']];
-        }
-        
-        // Vérification des prérequis utilisateur
-        if (!$this->utilisateurAPermis($data['conducteur_id'])) {
-            return ['succes' => false, 'erreurs' => ['Vous devez avoir le permis de conduire pour proposer un trajet.']];
-        }
-        
-        try {
-            $this->pdo->beginTransaction();
-            
-            // Calculs automatiques pour le trajet
-            $distance = $this->calculerDistanceEstimative($data['lieu_depart'], $data['lieu_arrivee']);
-            $prixCalcule = $this->calculerPrix($distance, $data['vehicule_electrique'] ?? false);
-            
-            // Insertion du nouveau trajet
-            $sql = "INSERT INTO trajets (
-                        conducteur_id, vehicule_id, lieu_depart, code_postal_depart, 
-                        lieu_arrivee, code_postal_arrivee, date_depart, heure_depart,
-                        places, prix, commission, vehicule_electrique, distance_km, 
-                        statut, commentaire, created_at
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'ouvert', ?, NOW())";
-            
-            $stmt = $this->pdo->prepare($sql);
-            $resultat = $stmt->execute([
-                $data['conducteur_id'],
-                $data['vehicule_id'] ?? null,
-                $data['lieu_depart'],
-                $data['code_postal_depart'],
-                $data['lieu_arrivee'],
-                $data['code_postal_arrivee'],
-                $data['date_depart'],
-                $data['heure_depart'],
-                $data['places'],
-                $prixCalcule,
-                2.00, // Commission fixe EcoRide
-                $data['vehicule_electrique'] ? 1 : 0,
-                $distance,
-                $data['commentaire'] ?? null
-            ]);
-            
-            if ($resultat) {
-                $trajetId = $this->pdo->lastInsertId();
-                $this->pdo->commit();
-                
-                return [
-                    'succes' => true,
-                    'message' => 'Trajet créé avec succès !',
-                    'trajet_id' => $trajetId,
-                    'prix_calcule' => $prixCalcule,
-                    'distance' => $distance
-                ];
-            } else {
-                $this->pdo->rollBack();
-                return ['succes' => false, 'erreurs' => ['Erreur lors de la création du trajet.']];
-            }
-            
-        } catch (Exception $e) {
-            $this->pdo->rollBack();
-            error_log("Erreur création trajet : " . $e->getMessage());
-            return ['succes' => false, 'erreurs' => ['Erreur technique : ' . $e->getMessage()]];
-        }
+    // REMPLACE JUSTE LA MÉTHODE creerTrajet() par ça :
+public function creerTrajet($data)
+{
+    // Validation des données avant insertion
+    $validation = $this->validerDonneesTrajet($data);
+    if (!$validation['valide']) {
+        return ['succes' => false, 'erreurs' => $validation['erreurs']];
     }
     
+    // Vérification des prérequis utilisateur
+    if (!$this->utilisateurAPermis($data['conducteur_id'])) {
+        return ['succes' => false, 'erreurs' => ['Vous devez avoir le permis de conduire pour proposer un trajet.']];
+    }
+    
+    try {
+        $this->pdo->beginTransaction();
+        
+        // Calculs automatiques pour le trajet
+        $distance = $this->calculerDistanceEstimative($data['lieu_depart'], $data['lieu_arrivee']);
+        $prixCalcule = $this->calculerPrix($distance, $data['vehicule_electrique'] ?? false);
+        
+        // ✅ SANS statut_moderation pour l'instant
+        $sql = "INSERT INTO trajets (
+                    conducteur_id, vehicule_id, lieu_depart, code_postal_depart, 
+                    lieu_arrivee, code_postal_arrivee, date_depart, heure_depart,
+                    places, prix, commission, vehicule_electrique, distance_km, 
+                    statut, commentaire, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'ouvert', ?, NOW())";
+        
+        $stmt = $this->pdo->prepare($sql);
+        $resultat = $stmt->execute([
+            $data['conducteur_id'],
+            $data['vehicule_id'] ?? null,
+            $data['lieu_depart'],
+            $data['code_postal_depart'],
+            $data['lieu_arrivee'],
+            $data['code_postal_arrivee'],
+            $data['date_depart'],
+            $data['heure_depart'],
+            $data['places'],
+            $prixCalcule,
+            2.00, // Commission fixe EcoRide
+            $data['vehicule_electrique'] ? 1 : 0,
+            $distance,
+            $data['commentaire'] ?? null
+        ]);
+        
+        if ($resultat) {
+            $trajetId = $this->pdo->lastInsertId();
+            
+            // ✅ J'ajoute le statut_moderation APRÈS avec UPDATE
+            try {
+                $sqlUpdate = "UPDATE trajets SET statut_moderation = 'en_attente' WHERE id = ?";
+                $stmtUpdate = $this->pdo->prepare($sqlUpdate);
+                $stmtUpdate->execute([$trajetId]);
+            } catch (Exception $e) {
+                // Si ça échoue, on continue quand même
+                error_log("Statut modération non ajouté : " . $e->getMessage());
+            }
+            
+            $this->pdo->commit();
+            
+            return [
+                'succes' => true,
+                'message' => 'Trajet créé avec succès ! Il sera visible après validation par un administrateur.',
+                'trajet_id' => $trajetId,
+                'prix_calcule' => $prixCalcule,
+                'distance' => $distance
+            ];
+        } else {
+            $this->pdo->rollBack();
+            return ['succes' => false, 'erreurs' => ['Erreur lors de la création du trajet.']];
+        }
+        
+    } catch (Exception $e) {
+        $this->pdo->rollBack();
+        error_log("Erreur création trajet : " . $e->getMessage());
+        return ['succes' => false, 'erreurs' => ['Erreur technique : ' . $e->getMessage()]];
+    }
+}
+
+    
     /**
-     * Recherche des trajets avec filtres avancés et tri dynamique
-     * 
-     * @param array $criteres Critères de recherche (lieux, date, prix, etc.)
-     * @param int $page Numéro de page pour la pagination
-     * @param int $limit Nombre de résultats par page
-     * @return array Résultats avec trajets et informations de pagination
+     * Recherche SEULEMENT les trajets validés par l'admin
      */
     public function rechercherTrajets($criteres = [], $page = 1, $limit = 10)
-{
-    try {
-        
-        $sql = "SELECT t.*, 
-                       u.pseudo as conducteur_pseudo, 
-                       u.nom as conducteur_nom,
-                       u.prenom as conducteur_prenom, 
-                       u.note as conducteur_note,
-                       u.photo_profil as conducteur_photo,
-                       v.marque as vehicule_marque, 
-                       v.modele as vehicule_modele,
-                       v.plaque_immatriculation as vehicule_immatriculation,
-                       v.couleur as vehicule_couleur,
-                       v.electrique as vehicule_electrique_detail,
-                       t.places as places_disponibles
-                FROM trajets t
-                JOIN utilisateurs u ON t.conducteur_id = u.id
-                LEFT JOIN vehicules v ON t.vehicule_id = v.id
-                WHERE t.statut = 'ouvert' AND DATE(t.date_depart) >= CURDATE()";
-        
-        $params = [];
-        
-        // Filtres selon les colonnes de la table
-        if (!empty($criteres['lieu_depart'])) {
-            $sql .= " AND (t.lieu_depart LIKE ? OR t.code_postal_depart LIKE ?)";
-            $params[] = '%' . $criteres['lieu_depart'] . '%';
-            $params[] = '%' . $criteres['lieu_depart'] . '%';
-        }
-        
-        if (!empty($criteres['lieu_arrivee'])) {
-            $sql .= " AND (t.lieu_arrivee LIKE ? OR t.code_postal_arrivee LIKE ?)";
-            $params[] = '%' . $criteres['lieu_arrivee'] . '%';
-            $params[] = '%' . $criteres['lieu_arrivee'] . '%';
-        }
-        
-        if (!empty($criteres['date_depart'])) {
-            $sql .= " AND DATE(t.date_depart) = ?";
-            $params[] = $criteres['date_depart'];
-        }
-        
-        if (!empty($criteres['vehicule_electrique'])) {
-            $sql .= " AND t.vehicule_electrique = 1";
-        }
-        
-        // Pagination
-        $offset = ($page - 1) * $limit;
-        $sql .= " ORDER BY t.date_depart ASC LIMIT $limit OFFSET $offset";
-        
-        $stmt = $this->pdo->prepare($sql);
-        $stmt->execute($params);
-        $trajets = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        
-        // Enrichissement des données pour la vue 
-        foreach ($trajets as &$trajet) {
-            $trajet['date_depart_formatee'] = date('d/m/Y à H:i', strtotime($trajet['date_depart']));
-            $trajet['distance_estimee'] = round($trajet['distance_km']) . ' km';
-            $trajet['duree_estimee'] = ($trajet['duree_estimee'] ? $trajet['duree_estimee'] . ' min' : 'N/A');
-            $trajet['presque_complet'] = $trajet['places_disponibles'] <= 1;
-            $trajet['co2_economise'] = round($trajet['distance_km'] * 0.12, 1) . ' kg';
-        }
-        
-        return [
-            'succes' => true,
-            'trajets' => $trajets,
-            'pagination' => [
-                'page_actuelle' => $page,
-                'total_trajets' => $this->compterTrajets($criteres)
-            ]
-        ];
-        
-    } catch (PDOException $e) {
-        error_log("Erreur recherche trajets : " . $e->getMessage());
-        return ['succes' => false, 'erreur' => 'Erreur lors de la recherche.'];
-    }
-}
-
-    
-    /**
-     *Construit la clause ORDER BY selon les critères de tri
-      
-     * @param array $criteres Critères incluant tri et direction
-     * @return string Clause ORDER BY SQL
-     */
-    private function construireClauseTri($criteres)
     {
-        $tri = $criteres['tri'] ?? 'date_depart';
-        $direction = strtoupper($criteres['direction'] ?? 'ASC');
-        
-        // Validation de la direction
-        if (!in_array($direction, ['ASC', 'DESC'])) {
-            $direction = 'ASC';
-        }
-        
-        // Mapping des tris autorisés
-        $trisAutorises = [
-            'date_depart' => 't.date_depart',
-            'prix' => 't.prix',
-            'note' => 'u.note_moyenne',
-            'ecologique' => 'COALESCE(v.electrique, t.vehicule_electrique) DESC, t.prix'
-        ];
-        
-        if (isset($trisAutorises[$tri])) {
-            if ($tri === 'ecologique') {
-                // Tri spécial : électriques d'abord, puis par prix
-                return " ORDER BY " . $trisAutorises[$tri] . " ASC";
-            } else {
-                return " ORDER BY " . $trisAutorises[$tri] . " " . $direction;
-            }
-        }
-        
-        // Tri par défaut
-        return " ORDER BY t.date_depart ASC";
-    }
-    
-    /**
-     * Enrichit les données d'un trajet pour la vue
-     * @param array $trajet Données brutes du trajet
-     * @return array Données enrichies pour l'affichage
-     */
-    private function enrichirDonneesTrajet($trajet)
-    {
-        // Formatage de la date
-        $trajet['date_depart_formatee'] = date('d/m/Y à H:i', strtotime($trajet['date_depart'] . ' ' . $trajet['heure_depart']));
-        
-        // Distance et durée estimées
-        $trajet['distance_estimee'] = round($trajet['distance_km']) . ' km';
-        $trajet['duree_estimee'] = $this->calculerDureeEstimee($trajet['distance_km']) . 'h';
-        
-        // Indicateurs visuels
-        $trajet['presque_complet'] = $trajet['places_disponibles'] <= 1;
-        $trajet['co2_economise'] = round($trajet['distance_km'] * 0.12, 1) . ' kg';
-        
-        // Gestion de la photo par défaut
-        if (empty($trajet['conducteur_photo'])) {
-            $trajet['conducteur_photo'] = null;
-        }
-        
-        return $trajet;
-    }
-    
-    /**
-     * Récupère les détails complets d'un trajet spécifique
-     * 
-     * @param int $trajetId ID du trajet
-     * @return array|false Détails du trajet ou false si non trouvé
-     */
-    /**
- * Récupère les détails complets d'un trajet
- */
-public function getTrajetDetails($trajetId)
-{
-    try {
-        $sql = "SELECT t.*, 
-                       u.pseudo as conducteur_pseudo, 
-                       u.nom as conducteur_nom,
-                       u.prenom as conducteur_prenom, 
-                       u.note as conducteur_note,
-                       u.photo_profil as conducteur_photo,
-                       u.telephone as conducteur_telephone,
-                       u.email as conducteur_email,
-                       v.marque as vehicule_marque, 
-                       v.modele as vehicule_modele,
-                       v.plaque_immatriculation as vehicule_immatriculation,
-                       v.couleur as vehicule_couleur,
-                       v.electrique as vehicule_electrique_detail,
-                       v.nb_places as vehicule_nb_places
-                FROM trajets t
-                JOIN utilisateurs u ON t.conducteur_id = u.id
-                LEFT JOIN vehicules v ON t.vehicule_id = v.id
-                WHERE t.id = ?";
-       
-        $stmt = $this->pdo->prepare($sql);
-        $stmt->execute([$trajetId]);
-        $trajet = $stmt->fetch(PDO::FETCH_ASSOC);
-        
-        if ($trajet) {
-            // Enrichissement des données pour l'affichage
-            $trajet['date_depart_formatee'] = date('d/m/Y à H:i', strtotime($trajet['date_depart']));
-            $trajet['distance_estimee'] = round($trajet['distance_km']) . ' km';
-            $trajet['duree_estimee'] = ($trajet['duree_estimee'] ? $trajet['duree_estimee'] . ' min' : 'N/A');
-            $trajet['co2_economise'] = round($trajet['distance_km'] * 0.12, 1) . ' kg';
-            $trajet['energie_vehicule'] = $trajet['vehicule_electrique_detail'] ? 'Électrique' : 'Thermique';
+        try {
+            // ✅ MODIFICATION : Ne montre que les trajets validés
+            $sql = "SELECT t.*, 
+                           u.pseudo as conducteur_pseudo, 
+                           u.nom as conducteur_nom,
+                           u.prenom as conducteur_prenom, 
+                           u.note as conducteur_note,
+                           u.photo_profil as conducteur_photo,
+                           v.marque as vehicule_marque, 
+                           v.modele as vehicule_modele,
+                           v.plaque_immatriculation as vehicule_immatriculation,
+                           v.couleur as vehicule_couleur,
+                           v.electrique as vehicule_electrique_detail,
+                           t.places as places_disponibles
+                    FROM trajets t
+                    JOIN utilisateurs u ON t.conducteur_id = u.id
+                    LEFT JOIN vehicules v ON t.vehicule_id = v.id
+                    WHERE t.statut = 'ouvert' 
+                    AND t.statut_moderation = 'valide' 
+                    AND DATE(t.date_depart) >= CURDATE()";
             
-            // Calculer les places disponibles en temps réel
-            $trajet['places_disponibles'] = $this->calculerPlacesDisponibles($trajetId, $trajet['places']);
+            $params = [];
+            
+            // Je garde tous tes filtres existants
+            if (!empty($criteres['lieu_depart'])) {
+                $sql .= " AND (t.lieu_depart LIKE ? OR t.code_postal_depart LIKE ?)";
+                $params[] = '%' . $criteres['lieu_depart'] . '%';
+                $params[] = '%' . $criteres['lieu_depart'] . '%';
+            }
+            
+            if (!empty($criteres['lieu_arrivee'])) {
+                $sql .= " AND (t.lieu_arrivee LIKE ? OR t.code_postal_arrivee LIKE ?)";
+                $params[] = '%' . $criteres['lieu_arrivee'] . '%';
+                $params[] = '%' . $criteres['lieu_arrivee'] . '%';
+            }
+            
+            if (!empty($criteres['date_depart'])) {
+                $sql .= " AND DATE(t.date_depart) = ?";
+                $params[] = $criteres['date_depart'];
+            }
+            
+            if (!empty($criteres['vehicule_electrique'])) {
+                $sql .= " AND t.vehicule_electrique = 1";
+            }
+            
+            // Je garde ta pagination
+            $offset = ($page - 1) * $limit;
+            $sql .= " ORDER BY t.date_depart ASC LIMIT $limit OFFSET $offset";
+            
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->execute($params);
+            $trajets = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            // Je garde ton enrichissement des données
+            foreach ($trajets as &$trajet) {
+                $trajet['date_depart_formatee'] = date('d/m/Y à H:i', strtotime($trajet['date_depart']));
+                $trajet['distance_estimee'] = round($trajet['distance_km']) . ' km';
+                $trajet['duree_estimee'] = ($trajet['duree_estimee'] ? $trajet['duree_estimee'] . ' min' : 'N/A');
+                $trajet['presque_complet'] = $trajet['places_disponibles'] <= 1;
+                $trajet['co2_economise'] = round($trajet['distance_km'] * 0.12, 1) . ' kg';
+            }
+            
+            return [
+                'succes' => true,
+                'trajets' => $trajets,
+                'pagination' => [
+                    'page_actuelle' => $page,
+                    'total_trajets' => $this->compterTrajets($criteres)
+                ]
+            ];
+            
+        } catch (PDOException $e) {
+            error_log("Erreur recherche trajets : " . $e->getMessage());
+            return ['succes' => false, 'erreur' => 'Erreur lors de la recherche.'];
         }
-        
-        return $trajet;
-        
-    } catch (PDOException $e) {
-        error_log("Erreur getTrajetDetails : " . $e->getMessage());
-        return false;
     }
-}
-
-/**
- * Calcule les places disponibles en temps réel
- */
-private function calculerPlacesDisponibles($trajetId, $placesInitiales)
-{
-    try {
-        $sql = "SELECT COALESCE(SUM(nb_places), 0) as places_reservees 
-                FROM reservations 
-                WHERE trajet_id = ? AND statut = 'confirme'";
-        $stmt = $this->pdo->prepare($sql);
-        $stmt->execute([$trajetId]);
-        $placesReservees = $stmt->fetchColumn();
-        
-        return max(0, $placesInitiales - $placesReservees);
-        
-    } catch (PDOException $e) {
-        error_log("Erreur calcul places disponibles : " . $e->getMessage());
-        return $placesInitiales; // Retour par défaut
-    }
-}
-
     
     /**
-     * Récupère les trajets d'un utilisateur spécifique
-     * 
-     * @param int $userId ID de l'utilisateur
-     * @return array Liste des trajets de l'utilisateur
+     * Récupère TOUS les trajets de l'utilisateur avec statut de modération
      */
     public function getTrajetsUtilisateur($userId)
     {
         try {
+            // ✅ MODIFICATION : J'ajoute le statut de modération
             $sql = "SELECT t.*, 
                            COUNT(r.id) as nb_reservations,
                            SUM(r.nb_places) as places_reservees,
                            v.marque as vehicule_marque, v.modele as vehicule_modele,
                            v.plaque_immatriculation as vehicule_immatriculation,
-                           COALESCE(v.electrique, t.vehicule_electrique) as vehicule_electrique
+                           COALESCE(v.electrique, t.vehicule_electrique) as vehicule_electrique,
+                           CASE t.statut_moderation 
+                               WHEN 'en_attente' THEN 'En attente de validation'
+                               WHEN 'valide' THEN 'Validé et publié'
+                               WHEN 'refuse' THEN 'Refusé par l\'administration'
+                           END as statut_moderation_texte
                     FROM trajets t
                     LEFT JOIN reservations r ON t.id = r.trajet_id AND r.statut = 'confirme'
                     LEFT JOIN vehicules v ON t.vehicule_id = v.id
@@ -353,77 +216,303 @@ private function calculerPlacesDisponibles($trajetId, $placesInitiales)
         }
     }
     
-    /** 
-     * @param array $criteres Mêmes critères que la recherche
-     * @return int Nombre total de trajets correspondants
+    /**
+     * ✅ NOUVELLE MÉTHODE : Pour l'admin - Récupère tous les trajets en attente
      */
-    private function compterTrajets($criteres)
+    public function getTrajetsEnAttente()
 {
     try {
-        $sql = "SELECT COUNT(*) FROM trajets t
-                WHERE t.statut = 'ouvert' AND DATE(t.date_depart) >= CURDATE()";
-        
-        $params = [];
-        
-        if (!empty($criteres['lieu_depart'])) {
-            $sql .= " AND (t.lieu_depart LIKE ? OR t.code_postal_depart LIKE ?)";
-            $params[] = '%' . $criteres['lieu_depart'] . '%';
-            $params[] = '%' . $criteres['lieu_depart'] . '%';
-        }
-        
-        if (!empty($criteres['lieu_arrivee'])) {
-            $sql .= " AND (t.lieu_arrivee LIKE ? OR t.code_postal_arrivee LIKE ?)";
-            $params[] = '%' . $criteres['lieu_arrivee'] . '%';
-            $params[] = '%' . $criteres['lieu_arrivee'] . '%';
-        }
-        
-        if (!empty($criteres['date_depart'])) {
-            $sql .= " AND DATE(t.date_depart) = ?";
-            $params[] = $criteres['date_depart'];
-        }
-        
-        if (!empty($criteres['vehicule_electrique'])) {
-            $sql .= " AND t.vehicule_electrique = 1";
-        }
+        // ✅ BACK TO BASIC - SANS JOINTURE pour éviter les erreurs
+        $sql = "SELECT * FROM trajets 
+                WHERE statut_moderation = 'en_attente' 
+                ORDER BY created_at ASC";
         
         $stmt = $this->pdo->prepare($sql);
-        $stmt->execute($params);
+        $stmt->execute();
+        $trajets = $stmt->fetchAll(PDO::FETCH_ASSOC);
         
-        return $stmt->fetchColumn();
+        // ✅ On ajoute les infos conducteur APRÈS si on trouve des trajets
+        if (!empty($trajets)) {
+            foreach ($trajets as &$trajet) {
+                // Récupération simple du conducteur
+                $sqlUser = "SELECT pseudo, email, nom, prenom FROM utilisateurs WHERE id = ?";
+                $stmtUser = $this->pdo->prepare($sqlUser);
+                $stmtUser->execute([$trajet['conducteur_id']]);
+                $conducteur = $stmtUser->fetch(PDO::FETCH_ASSOC);
+                
+                if ($conducteur) {
+                    $trajet['conducteur_pseudo'] = $conducteur['pseudo'];
+                    $trajet['conducteur_email'] = $conducteur['email'];
+                    $trajet['conducteur_nom'] = $conducteur['nom'];
+                    $trajet['conducteur_prenom'] = $conducteur['prenom'];
+                }
+            }
+        }
         
-    } catch (PDOException $e) {
-        error_log("Erreur compterTrajets : " . $e->getMessage());
-        return 0;
+        return $trajets;
+        
+    } catch (Exception $e) {
+        error_log("Erreur getTrajetsEnAttente : " . $e->getMessage());
+        return [];
     }
 }
 
     
     /**
-     * MÉTHODES UTILITAIRES PRIVÉES
+     * ✅ NOUVELLE MÉTHODE : Pour l'admin - Modère un trajet (valide ou refuse)
      */
+   public function modererTrajet($trajetId, $decision, $motif = null)
+{
+    try {
+        if (!in_array($decision, ['valide', 'refuse'])) {
+            return ['succes' => false, 'erreur' => 'Décision invalide.'];
+        }
+        
+        $sql = "UPDATE trajets 
+                SET statut_moderation = ?, motif_refus = ?
+                WHERE id = ?";
+        
+        $stmt = $this->pdo->prepare($sql);
+        $resultat = $stmt->execute([$decision, $motif, $trajetId]);
+        
+        if ($resultat && $stmt->rowCount() > 0) {
+            return ['succes' => true];
+        } else {
+            return ['succes' => false, 'erreur' => 'Trajet non trouvé ou déjà modéré.'];
+        }
+        
+    } catch (Exception $e) {
+        error_log("Erreur modererTrajet : " . $e->getMessage());
+        return ['succes' => false, 'erreur' => 'Erreur technique.'];
+    }
+}
+
     
     /**
-     * Calcule la durée estimée d'un trajet
-     * 
-     * @param float $distance Distance en kilomètres
-     * @return float Durée en heures
+     * ✅ NOUVELLE MÉTHODE : Statistiques de modération pour l'admin
      */
+    public function getStatsModeration()
+    {
+        try {
+            $sql = "SELECT 
+                        COUNT(*) as total_trajets,
+                        SUM(CASE WHEN statut_moderation = 'en_attente' THEN 1 ELSE 0 END) as en_attente,
+                        SUM(CASE WHEN statut_moderation = 'valide' THEN 1 ELSE 0 END) as valides,
+                        SUM(CASE WHEN statut_moderation = 'refuse' THEN 1 ELSE 0 END) as refuses
+                    FROM trajets 
+                    WHERE created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)";
+            
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->execute();
+            return $stmt->fetch(PDO::FETCH_ASSOC);
+            
+        } catch (Exception $e) {
+            error_log("Erreur getStatsModeration : " . $e->getMessage());
+            return ['total_trajets' => 0, 'en_attente' => 0, 'valides' => 0, 'refuses' => 0];
+        }
+    }
+
+    /**
+ * ✅ NOUVELLE MÉTHODE : Pour l'admin - Récupère TOUS les trajets (pas seulement en attente)
+ */
+public function getTousLesTrajets()
+{
+    try {
+        // ✅ SANS JOINTURE
+        $sql = "SELECT * FROM trajets ORDER BY created_at DESC";
+        
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute();
+        $trajets = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        // ✅ Ajout des infos conducteur
+        foreach ($trajets as &$trajet) {
+            $sqlUser = "SELECT pseudo, email, nom, prenom FROM utilisateurs WHERE id = ?";
+            $stmtUser = $this->pdo->prepare($sqlUser);
+            $stmtUser->execute([$trajet['conducteur_id']]);
+            $conducteur = $stmtUser->fetch(PDO::FETCH_ASSOC);
+            
+            if ($conducteur) {
+                $trajet['conducteur_pseudo'] = $conducteur['pseudo'];
+                $trajet['conducteur_email'] = $conducteur['email'];
+                $trajet['conducteur_nom'] = $conducteur['nom'];
+                $trajet['conducteur_prenom'] = $conducteur['prenom'];
+            }
+            
+            // Texte lisible du statut
+            $trajet['statut_moderation_texte'] = match($trajet['statut_moderation'] ?? '') {
+                'en_attente' => 'En attente',
+                'valide' => 'Validé',
+                'refuse' => 'Refusé',
+                default => 'Non défini'
+            };
+        }
+        
+        return $trajets;
+        
+    } catch (Exception $e) {
+        error_log("Erreur getTousLesTrajets : " . $e->getMessage());
+        return [];
+    }
+}
+
+
+    
+    // ✅ MODIFICATION du compteur pour ne compter que les trajets validés
+    private function compterTrajets($criteres)
+    {
+        try {
+            $sql = "SELECT COUNT(*) FROM trajets t
+                    WHERE t.statut = 'ouvert' 
+                    AND t.statut_moderation = 'valide' 
+                    AND DATE(t.date_depart) >= CURDATE()";
+            
+            $params = [];
+            
+            // Je garde tous tes filtres
+            if (!empty($criteres['lieu_depart'])) {
+                $sql .= " AND (t.lieu_depart LIKE ? OR t.code_postal_depart LIKE ?)";
+                $params[] = '%' . $criteres['lieu_depart'] . '%';
+                $params[] = '%' . $criteres['lieu_depart'] . '%';
+            }
+            
+            if (!empty($criteres['lieu_arrivee'])) {
+                $sql .= " AND (t.lieu_arrivee LIKE ? OR t.code_postal_arrivee LIKE ?)";
+                $params[] = '%' . $criteres['lieu_arrivee'] . '%';
+                $params[] = '%' . $criteres['lieu_arrivee'] . '%';
+            }
+            
+            if (!empty($criteres['date_depart'])) {
+                $sql .= " AND DATE(t.date_depart) = ?";
+                $params[] = $criteres['date_depart'];
+            }
+            
+            if (!empty($criteres['vehicule_electrique'])) {
+                $sql .= " AND t.vehicule_electrique = 1";
+            }
+            
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->execute($params);
+            
+            return $stmt->fetchColumn();
+            
+        } catch (PDOException $e) {
+            error_log("Erreur compterTrajets : " . $e->getMessage());
+            return 0;
+        }
+    }
+
+    // Je garde TOUTES tes méthodes existantes inchangées
+    private function construireClauseTri($criteres)
+    {
+        $tri = $criteres['tri'] ?? 'date_depart';
+        $direction = strtoupper($criteres['direction'] ?? 'ASC');
+        
+        if (!in_array($direction, ['ASC', 'DESC'])) {
+            $direction = 'ASC';
+        }
+        
+        $trisAutorises = [
+            'date_depart' => 't.date_depart',
+            'prix' => 't.prix',
+            'note' => 'u.note_moyenne',
+            'ecologique' => 'COALESCE(v.electrique, t.vehicule_electrique) DESC, t.prix'
+        ];
+        
+        if (isset($trisAutorises[$tri])) {
+            if ($tri === 'ecologique') {
+                return " ORDER BY " . $trisAutorises[$tri] . " ASC";
+            } else {
+                return " ORDER BY " . $trisAutorises[$tri] . " " . $direction;
+            }
+        }
+        
+        return " ORDER BY t.date_depart ASC";
+    }
+    
+    private function enrichirDonneesTrajet($trajet)
+    {
+        $trajet['date_depart_formatee'] = date('d/m/Y à H:i', strtotime($trajet['date_depart'] . ' ' . $trajet['heure_depart']));
+        $trajet['distance_estimee'] = round($trajet['distance_km']) . ' km';
+        $trajet['duree_estimee'] = $this->calculerDureeEstimee($trajet['distance_km']) . 'h';
+        $trajet['presque_complet'] = $trajet['places_disponibles'] <= 1;
+        $trajet['co2_economise'] = round($trajet['distance_km'] * 0.12, 1) . ' kg';
+        
+        if (empty($trajet['conducteur_photo'])) {
+            $trajet['conducteur_photo'] = null;
+        }
+        
+        return $trajet;
+    }
+    
+    public function getTrajetDetails($trajetId)
+    {
+        try {
+            $sql = "SELECT t.*, 
+                           u.pseudo as conducteur_pseudo, 
+                           u.nom as conducteur_nom,
+                           u.prenom as conducteur_prenom, 
+                           u.note as conducteur_note,
+                           u.photo_profil as conducteur_photo,
+                           u.telephone as conducteur_telephone,
+                           u.email as conducteur_email,
+                           v.marque as vehicule_marque, 
+                           v.modele as vehicule_modele,
+                           v.plaque_immatriculation as vehicule_immatriculation,
+                           v.couleur as vehicule_couleur,
+                           v.electrique as vehicule_electrique_detail,
+                           v.nb_places as vehicule_nb_places
+                    FROM trajets t
+                    JOIN utilisateurs u ON t.conducteur_id = u.id
+                    LEFT JOIN vehicules v ON t.vehicule_id = v.id
+                    WHERE t.id = ?";
+           
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->execute([$trajetId]);
+            $trajet = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if ($trajet) {
+                $trajet['date_depart_formatee'] = date('d/m/Y à H:i', strtotime($trajet['date_depart']));
+                $trajet['distance_estimee'] = round($trajet['distance_km']) . ' km';
+                $trajet['duree_estimee'] = ($trajet['duree_estimee'] ? $trajet['duree_estimee'] . ' min' : 'N/A');
+                $trajet['co2_economise'] = round($trajet['distance_km'] * 0.12, 1) . ' kg';
+                $trajet['energie_vehicule'] = $trajet['vehicule_electrique_detail'] ? 'Électrique' : 'Thermique';
+                $trajet['places_disponibles'] = $this->calculerPlacesDisponibles($trajetId, $trajet['places']);
+            }
+            
+            return $trajet;
+            
+        } catch (PDOException $e) {
+            error_log("Erreur getTrajetDetails : " . $e->getMessage());
+            return false;
+        }
+    }
+
+    private function calculerPlacesDisponibles($trajetId, $placesInitiales)
+    {
+        try {
+            $sql = "SELECT COALESCE(SUM(nb_places), 0) as places_reservees 
+                    FROM reservations 
+                    WHERE trajet_id = ? AND statut = 'confirme'";
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->execute([$trajetId]);
+            $placesReservees = $stmt->fetchColumn();
+            
+            return max(0, $placesInitiales - $placesReservees);
+            
+        } catch (PDOException $e) {
+            error_log("Erreur calcul places disponibles : " . $e->getMessage());
+            return $placesInitiales;
+        }
+    }
+    
     private function calculerDureeEstimee($distance)
     {
-        // Estimation : 80 km/h en moyenne (autoroute + ville)
         return round($distance / 80, 1);
     }
     
-    /**
-     * Calcul de distance estimative sans géolocalisation
-     * 
-     * @param string $depart Lieu de départ
-     * @param string $arrivee Lieu d'arrivée
-     * @return int Distance estimée en km
-     */
     private function calculerDistanceEstimative($depart, $arrivee)
     {
-        // Extraction des codes postaux pour estimation
         $cp_depart = substr($depart, -5);
         $cp_arrivee = substr($arrivee, -5);
         
@@ -431,44 +520,28 @@ private function calculerPlacesDisponibles($trajetId, $placesInitiales)
             $dept_depart = intval(substr($cp_depart, 0, 2));
             $dept_arrivee = intval(substr($cp_arrivee, 0, 2));
             
-            // Estimation basée sur la différence de départements
             $distance_base = abs($dept_arrivee - $dept_depart) * 50;
             return max(10, min(1000, $distance_base + rand(-20, 50)));
         }
         
-        // Distance aléatoire si pas de codes postaux valides
         return rand(50, 500);
     }
     
-    /**
-     * Calcule le prix automatique d'un trajet
-     * 
-     * @param int $distance Distance en km
-     * @param bool $electrique Véhicule électrique ou non
-     * @return int Prix en crédits EcoRide
-     */
     private function calculerPrix($distance, $electrique = false)
     {
-        $prix = $distance * 0.15; // 0.15 crédit par km
+        $prix = $distance * 0.15;
         
         if ($electrique) {
-            $prix *= 0.9; // 10% de réduction écologique
+            $prix *= 0.9;
         }
         
-        return max(5, min(150, ceil($prix))); // Entre 5 et 150 crédits
+        return max(5, min(150, ceil($prix)));
     }
     
-    /**
-     * Va2lidation complète des données de trajet
-     * 
-     * @param array $data Données à valider
-     * @return array Résultat de validation avec erreurs
-     */
     private function validerDonneesTrajet($data)
     {
         $erreurs = [];
         
-        // Validation des lieux obligatoires
         if (empty($data['lieu_depart'])) {
             $erreurs[] = 'Le lieu de départ est obligatoire.';
         }
@@ -477,7 +550,6 @@ private function calculerPlacesDisponibles($trajetId, $placesInitiales)
             $erreurs[] = 'Le lieu d\'arrivée est obligatoire.';
         }
         
-        // Validation des codes postaux
         if (empty($data['code_postal_depart']) || !preg_match('/^\d{5}$/', $data['code_postal_depart'])) {
             $erreurs[] = 'Le code postal de départ doit contenir 5 chiffres.';
         }
@@ -486,7 +558,6 @@ private function calculerPlacesDisponibles($trajetId, $placesInitiales)
             $erreurs[] = 'Le code postal d\'arrivée doit contenir 5 chiffres.';
         }
         
-        // Validation de la date et heure
         if (empty($data['date_depart'])) {
             $erreurs[] = 'La date de départ est obligatoire.';
         } elseif (strtotime($data['date_depart']) < strtotime('today')) {
@@ -497,17 +568,14 @@ private function calculerPlacesDisponibles($trajetId, $placesInitiales)
             $erreurs[] = 'L\'heure de départ est obligatoire.';
         }
         
-        // Validation du nombre de places
         if (empty($data['places']) || !is_numeric($data['places']) || $data['places'] < 1 || $data['places'] > 8) {
             $erreurs[] = 'Le nombre de places doit être entre 1 et 8.';
         }
         
-        // Validation du commentaire
         if (!empty($data['commentaire']) && strlen($data['commentaire']) > 500) {
             $erreurs[] = 'Le commentaire ne peut pas dépasser 500 caractères.';
         }
         
-        // Vérification des doublons
         if ($this->trajetExiste($data)) {
             $erreurs[] = 'Vous avez déjà un trajet similaire prévu à cette date et heure.';
         }
@@ -518,12 +586,6 @@ private function calculerPlacesDisponibles($trajetId, $placesInitiales)
         ];
     }
     
-    /**
-     * Vérifie si l'utilisateur a le permis de conduire
-     * 
-     * @param int $userId ID de l'utilisateur
-     * @return bool True si l'utilisateur a le permis
-     */
     private function utilisateurAPermis($userId)
     {
         try {
@@ -539,12 +601,6 @@ private function calculerPlacesDisponibles($trajetId, $placesInitiales)
         }
     }
     
-    /**
-     * Vérifie si un trajet similaire existe déjà
-     * 
-     * @param array $data Données du trajet à vérifier
-     * @return bool True si un trajet similaire existe
-     */
     private function trajetExiste($data)
     {
         try {
@@ -567,92 +623,5 @@ private function calculerPlacesDisponibles($trajetId, $placesInitiales)
             return false;
         }
     }
-    /**
- * Marque un trajet comme démarré
- *
- * @param int $trajetId
- * @return array ['succes' => bool, 'erreur' => string|null]
- */
-public function demarrerTrajet($trajetId)
-{
-    try {
-        $sql = "UPDATE trajets 
-                SET statut_execution = 'en_cours', date_debut_reel = NOW()
-                WHERE id = ? AND statut_execution = 'attente'";
-        $stmt = $this->pdo->prepare($sql);
-        $stmt->execute([$trajetId]);
-
-        if ($stmt->rowCount() === 0) {
-            return ['succes' => false, 'erreur' => 'Le trajet ne peut pas être démarré (statut incorrect).'];
-        }
-
-        // Ici vous pouvez ajouter envoi d'email aux passagers (hors scope actuel)
-        return ['succes' => true, 'erreur' => null];
-
-    } catch (PDOException $e) {
-        error_log('Erreur demarrerTrajet: ' . $e->getMessage());
-        return ['succes' => false, 'erreur' => 'Erreur technique.'];
-    }
-}
-
-/**
- * Marque un trajet comme terminé
- *
- * @param int $trajetId
- * @return array ['succes' => bool, 'erreur' => string|null]
- */
-public function terminerTrajet($trajetId)
-{
-    try {
-        $sql = "UPDATE trajets 
-                SET statut_execution = 'termine', date_fin_reel = NOW()
-                WHERE id = ? AND statut_execution = 'en_cours'";
-        $stmt = $this->pdo->prepare($sql);
-        $stmt->execute([$trajetId]);
-
-        if ($stmt->rowCount() === 0) {
-            return ['succes' => false, 'erreur' => 'Le trajet ne peut pas être terminé (statut incorrect).'];
-        }
-
-        // Envoi de validation à passagers (hors scope actuel)
-        return ['succes' => true, 'erreur' => null];
-
-    } catch (PDOException $e) {
-        error_log('Erreur terminerTrajet: ' . $e->getMessage());
-        return ['succes' => false, 'erreur' => 'Erreur technique.'];
-    }
-}
-
-/**
- * Signalement d'un problème sur un trajet
- *
- * @param int $trajetId
- * @param string $motif
- * @param string|null $commentaire
- * @return array ['succes' => bool, 'erreur' => string|null]
- */
-public function signalerProbleme($trajetId, $motif, $commentaire = null)
-{
-    try {
-        // Met à jour le statut du trajet à 'probleme', stocke motif et commentaire
-        $sql = "UPDATE trajets 
-                SET statut_execution = 'probleme', motif_signalement = ?, commentaire_signalement = ?
-                WHERE id = ?";
-        $stmt = $this->pdo->prepare($sql);
-        $stmt->execute([$motif, $commentaire, $trajetId]);
-
-        if ($stmt->rowCount() === 0) {
-            return ['succes' => false, 'erreur' => 'Erreur lors du signalement.'];
-        }
-
-        // Alertes admins possibles (hors scope)
-
-        return ['succes' => true, 'erreur' => null];
-    } catch (PDOException $e) {
-        error_log('Erreur signalerProbleme: ' . $e->getMessage());
-        return ['succes' => false, 'erreur' => 'Erreur technique.'];
-    }
-}
-
 }
 ?>

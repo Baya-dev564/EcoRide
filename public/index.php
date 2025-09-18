@@ -1,48 +1,109 @@
 <?php
-// public/index.php
-// Point d'entrée principal EcoRide avec routeur unifié
+/**
+ * Point d'entrée principal EcoRide avec routeur unifié
+ * Version RÉPARÉE avec chargement direct des contrôleurs
+ */
 
+// J'active l'affichage des erreurs pour le développement
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
-// Démarrage de session
+// Je démarre la session pour toute l'application
 session_start();
 
-// Inclusion de la base de données
+// J'inclus la configuration de base de données et crée la connexion PDO globale
 require_once __DIR__ . '/../config/database.php';
 
-// Récupération de l'URI sans modification
+// J'instancie la classe DatabaseConfig pour créer $pdo global
+$databaseConfig = new DatabaseConfig();
+$pdo = $databaseConfig->getConnection();
+
+// ✅ JE CHARGE DIRECTEMENT TOUS LES CONTRÔLEURS (PAS D'AUTOLOADER)
+require_once __DIR__ . '/../app/Controllers/TripController.php';
+require_once __DIR__ . '/../app/Controllers/UserController.php';
+require_once __DIR__ . '/../app/Controllers/AuthController.php';
+require_once __DIR__ . '/../app/Controllers/AdminController.php';
+require_once __DIR__ . '/../app/Controllers/ReservationController.php';
+require_once __DIR__ . '/../app/Controllers/AvisController.php';
+require_once __DIR__ . '/../app/Controllers/HomeController.php';
+
+// Je récupère l'URI sans modification
 $uri = $_SERVER['REQUEST_URI'] ?? '/';
 $path = str_replace('/EcoRide/public', '', $uri);
 $path = strtok($path, '?') ?: '/';
 
-// Préservation de la méthode HTTP
+// Je préserve la méthode HTTP pour les APIs
 $method = $_SERVER['REQUEST_METHOD'];
 
-// Routage principal
+// ✅ JE GÈRE LES ROUTES ADMIN EN PREMIER (AVANT LE SWITCH)
+if (strpos($path, '/admin') === 0) {
+    $controller = new AdminController();
+    
+    // Routes admin spécifiques
+    if ($path === '/admin' || $path === '/admin/dashboard') {
+        $controller->dashboard();
+    } elseif ($path === '/admin/trajets') {
+        // ✅ ROUTE MANQUANTE AJOUTÉE !
+        $controller->trajets();
+    } elseif ($path === '/admin/utilisateurs') {
+        $controller->utilisateurs();
+    } elseif ($path === '/admin/avis') {
+        $controller->avis();
+    } elseif ($path === '/admin/support') {
+        $controller->support();
+    } elseif ($path === '/admin/test') {
+        $controller->testConnexions();
+    } elseif ($path === '/admin/api/moderer-trajet' && $method === 'POST') {
+        // ✅ API MODÉRATION TRAJETS
+        header('Content-Type: application/json');
+        $controller->modererTrajet();
+    } elseif ($path === '/admin/api/credits' && $method === 'POST') {
+        header('Content-Type: application/json');
+        $controller->modifierCredits();
+    } elseif ($path === '/admin/api/user-status' && $method === 'POST') {
+        header('Content-Type: application/json');
+        $controller->toggleUserStatus();
+    } elseif ($path === '/admin/api/avis-status' && $method === 'POST') {
+        header('Content-Type: application/json');
+        $controller->modifierStatutAvis();
+    } elseif ($path === '/admin/api/stats-moderation' && $method === 'GET') {
+        header('Content-Type: application/json');
+        $controller->getStatsModeration();
+    } elseif ($path === '/admin/export') {
+        $controller->exportRapport();
+        } elseif (preg_match('/^\/admin\/trajets\/(\d+)$/', $path, $matches)) {
+    // ✅ PAGE DÉTAILS TRAJET : /admin/trajets/123
+    $controller->detailsTrajet($matches[1]);
+
+
+    } else {
+        // 404 pour routes admin inconnues
+        http_response_code(404);
+        echo "Page admin non trouvée";
+    }
+    exit; // ✅ IMPORTANT : Sortir après traitement admin
+}
+
+// Je démarre le routage principal pour les routes publiques
 switch ($path) {
     // === PAGE D'ACCUEIL ===
     case '/':
-        require_once __DIR__ . '/../app/Controllers/HomeController.php';
         $controller = new HomeController();
         $controller->index();
         break;
         
     // === AUTHENTIFICATION ===
     case '/inscription':
-        require_once __DIR__ . '/../app/Controllers/AuthController.php';
         $controller = new AuthController();
         $controller->inscription();
         break;
         
     case '/connexion':
-        require_once __DIR__ . '/../app/Controllers/AuthController.php';
         $controller = new AuthController();
         $controller->connexion();
         break;
 
     case '/deconnexion':
-        require_once __DIR__ . '/../app/Controllers/AuthController.php';
         $controller = new AuthController();
         $controller->deconnexion();
         break;
@@ -50,7 +111,6 @@ switch ($path) {
     case '/api/inscription':
         header('Content-Type: application/json');
         if ($method === 'POST') {
-            require_once __DIR__ . '/../app/Controllers/AuthController.php';
             $controller = new AuthController();
             $controller->apiInscription();
         } else {
@@ -62,7 +122,6 @@ switch ($path) {
     case '/api/connexion':
         header('Content-Type: application/json');
         if ($method === 'POST') {
-            require_once __DIR__ . '/../app/Controllers/AuthController.php';
             $controller = new AuthController();
             $controller->apiConnexion();
         } else {
@@ -73,13 +132,11 @@ switch ($path) {
         
     // === TRAJETS ===
     case '/trajets':
-        require_once __DIR__ . '/../app/Controllers/TripController.php';
         $controller = new TripController();
         $controller->index();
         break;
 
     case '/nouveau-trajet':
-        require_once __DIR__ . '/../app/Controllers/TripController.php';
         $controller = new TripController();
         if ($method === 'POST') {
             $controller->creerTrajet();
@@ -89,34 +146,49 @@ switch ($path) {
         break;
 
     case '/mes-trajets':
-        require_once __DIR__ . '/../app/Controllers/TripController.php';
         $controller = new TripController();
         $controller->mesTrajets();
         break;
 
+    case '/demarrer-trajet':
+        $controller = new TripController();
+        $controller->demarrerTrajet();
+        break;
+
+    case '/terminer-trajet':
+        $controller = new TripController();
+        $controller->terminerTrajet();
+        break;
+
+    case '/signaler-probleme':
+        $controller = new TripController();
+        $controller->signalerProbleme();
+        break;
+
     // === RÉSERVATIONS ===
     case '/mes-reservations':
-        require_once __DIR__ . '/../app/Controllers/ReservationController.php';
         $controller = new ReservationController();
         $controller->mesReservations();
         break;
 
     case '/reserver-trajet':
-        require_once __DIR__ . '/../app/Controllers/ReservationController.php';
         $controller = new ReservationController();
         $controller->reserver();
         break;
 
     case '/annuler-reservation':
-        require_once __DIR__ . '/../app/Controllers/ReservationController.php';
         $controller = new ReservationController();
         $controller->annuler();
+        break;
+
+    case '/valider-trajet':
+        $controller = new ReservationController();
+        $controller->validerTrajet();
         break;
 
     case '/api/reserver':
         header('Content-Type: application/json');
         if ($method === 'POST') {
-            require_once __DIR__ . '/../app/Controllers/ReservationController.php';
             $controller = new ReservationController();
             $controller->reserver();
         } else {
@@ -127,7 +199,6 @@ switch ($path) {
 
     // === PROFIL UTILISATEUR ===
     case '/profil':
-        require_once __DIR__ . '/../app/Controllers/UserController.php';
         $controller = new UserController();
         $controller->profil();
         break;
@@ -135,7 +206,6 @@ switch ($path) {
     case '/api/modifier-profil':
         header('Content-Type: application/json');
         if ($method === 'POST') {
-            require_once __DIR__ . '/../app/Controllers/UserController.php';
             $controller = new UserController();
             $controller->modifierProfil();
         } else {
@@ -147,143 +217,98 @@ switch ($path) {
     case '/api/ajouter-vehicule':
         header('Content-Type: application/json');
         if ($method === 'POST') {
-            require_once __DIR__ . '/../app/Controllers/UserController.php';
             $controller = new UserController();
             $controller->ajouterVehicule();
+        } else {
+            http_response_code(405);
+            echo json_encode(['succes' => false, 'erreur' => 'Méthode non autorisée']);
         }
         break;
 
     case '/api/mes-vehicules':
         header('Content-Type: application/json');
-        require_once __DIR__ . '/../app/Controllers/UserController.php';
         $controller = new UserController();
         $controller->mesVehicules();
         break;
 
-    // === AVIS (NOSQL JSON) ===
+    // === AVIS (NOSQL MONGODB) ===
     case '/avis':
     case '/mes-avis':
-        require_once __DIR__ . '/../app/Controllers/AvisController.php';
         $controller = new AvisController();
         $controller->index();
         break;
 
     case '/donner-avis':
-        require_once __DIR__ . '/../app/Controllers/AvisController.php';
         $controller = new AvisController();
         $controller->create();
         break;
 
-     case '/api/avis':
-    header('Content-Type: application/json');
-    if ($method === 'POST') {
-        require_once __DIR__ . '/../app/Controllers/AvisController.php';
-        $controller = new AvisController();
-        $controller->apiStore();
-    } else {
-        http_response_code(405);
-        echo json_encode(['succes' => false, 'erreur' => 'Méthode non autorisée']);
-    }
-    break;
-
-
-    // === ADMINISTRATION ===
-    case '/admin':
-    case '/admin/dashboard':
-        require_once __DIR__ . '/../app/Controllers/AdminController.php';
-        $controller = new AdminController();
-        $controller->dashboard();
-        break;
-
-    case '/admin/utilisateurs':
-        require_once __DIR__ . '/../app/Controllers/AdminController.php';
-        $controller = new AdminController();
-        $controller->utilisateurs();
-        break;
-
-    case '/admin/avis':
-        require_once __DIR__ . '/../app/Controllers/AdminController.php';
-        $controller = new AdminController();
-        $controller->avis();
+    case '/api/avis':
+        header('Content-Type: application/json');
+        if ($method === 'POST') {
+            $controller = new AvisController();
+            $controller->ajouterAvis();
+        } else {
+            http_response_code(405);
+            echo json_encode(['succes' => false, 'erreur' => 'Méthode non autorisée']);
+        }
         break;
 
     // === ROUTES DYNAMIQUES ===
     default:
         // Route détail trajet : /trajet/123
         if (preg_match('/^\/trajet\/(\d+)$/', $path, $matches)) {
-            require_once __DIR__ . '/../app/Controllers/TripController.php';
             $controller = new TripController();
             $controller->details($matches[1]);
         } 
         // Route réserver trajet : /reserver/123
         elseif (preg_match('/^\/reserver\/(\d+)$/', $path, $matches)) {
-            require_once __DIR__ . '/../app/Controllers/ReservationController.php';
             $controller = new ReservationController();
             $controller->reserver($matches[1]);
-        }
-        // Route voir avis d'un utilisateur : /avis/123
-        elseif (preg_match('/^\/avis\/(\d+)$/', $path, $matches)) {
-            require_once __DIR__ . '/../app/Controllers/AvisController.php';
-            $controller = new AvisController();
-            $controller->show($matches[1]);
-        }
-        // Route création avis : /avis/create
-        elseif (preg_match('/^\/avis\/create$/', $path)) {
-            require_once __DIR__ . '/../app/Controllers/AvisController.php';
-            $controller = new AvisController();
-            $controller->create();
-        }
-        // Route détail réservation : /reservation/123
-        elseif (preg_match('/^\/reservation\/(\d+)$/', $path, $matches)) {
-            require_once __DIR__ . '/../app/Controllers/ReservationController.php';
-            $controller = new ReservationController();
-            $controller->details($matches[1]);
-        }
-        // Route API supprimer véhicule : /api/supprimer-vehicule/123
-        elseif (preg_match('/^\/api\/supprimer-vehicule\/(\d+)$/', $path, $matches)) {
-            header('Content-Type: application/json');
-            require_once __DIR__ . '/../app/Controllers/UserController.php';
-            $controller = new UserController();
-            $controller->supprimerVehicule($matches[1]);
-        }
-        // Route API annuler réservation : /api/annuler-reservation/123
-        elseif (preg_match('/^\/api\/annuler-reservation\/(\d+)$/', $path, $matches)) {
-            header('Content-Type: application/json');
-            require_once __DIR__ . '/../app/Controllers/ReservationController.php';
-            $controller = new ReservationController();
-            $controller->annuler();
         }
         // Page 404
         else {
             http_response_code(404);
-            echo "<h1>Page non trouvée</h1>";
-            echo "<p>Chemin demandé : " . htmlspecialchars($path) . "</p>";
-            echo '<a href="/">← Retour accueil</a>';
+            
+            $title = "Page non trouvée | EcoRide";
+            $error404 = true;
+            
+            ob_start();
+            ?>
+            <div class="container py-5">
+                <div class="row justify-content-center">
+                    <div class="col-md-6 text-center">
+                        <h1 class="display-1 text-primary">404</h1>
+                        <h2 class="mb-4">Page non trouvée</h2>
+                        <p class="lead text-muted mb-4">
+                            Désolé, la page que vous recherchez n'existe pas ou a été déplacée.
+                        </p>
+                        <div class="alert alert-info">
+                            <strong>Chemin demandé :</strong> 
+                            <code><?= htmlspecialchars($path) ?></code>
+                        </div>
+                        <div class="d-grid gap-2 d-sm-flex justify-content-sm-center">
+                            <a href="/" class="btn btn-primary">
+                                <i class="fas fa-home me-2"></i>
+                                Retour à l'accueil
+                            </a>
+                            <a href="/trajets" class="btn btn-outline-primary">
+                                <i class="fas fa-route me-2"></i>
+                                Voir les trajets
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <?php
+            $content = ob_get_clean();
+            
+            if (file_exists(__DIR__ . '/../app/Views/layouts/main.php')) {
+                include __DIR__ . '/../app/Views/layouts/main.php';
+            } else {
+                echo $content;
+            }
         }
         break;
-        case '/demarrer-trajet':
-    require_once __DIR__ . '/../app/Controllers/TripController.php';
-    $controller = new TripController();
-    $controller->demarrerTrajet();
-    break;
-
-case '/terminer-trajet':
-    require_once __DIR__ . '/../app/Controllers/TripController.php';
-    $controller = new TripController();
-    $controller->terminerTrajet();
-    break;
-
-case '/valider-trajet':
-    require_once __DIR__ . '/../app/Controllers/ReservationController.php';
-    $controller = new ReservationController();
-    $controller->validerTrajet();
-    break;
-
-case '/signaler-probleme':
-    require_once __DIR__ . '/../app/Controllers/TripController.php';
-    $controller = new TripController();
-    $controller->signalerProbleme();
-    break;
-
 }
 ?>
