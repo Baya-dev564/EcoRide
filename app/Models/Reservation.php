@@ -110,13 +110,14 @@ class Reservation
     }
     
     /**
-     * Récupère les réservations d'un utilisateur avec enrichissement des données
+     * ✅ MÉTHODE CORRIGÉE : Récupère les réservations d'un utilisateur avec enrichissement des données
      */
     public function getReservationsUtilisateur($userId)
     {
         try {
             $sql = "SELECT r.*, 
                            t.lieu_depart, t.lieu_arrivee, t.date_depart, t.prix,
+                           t.conducteur_id,
                            u.pseudo as conducteur_pseudo, u.telephone as conducteur_telephone
                     FROM reservations r
                     JOIN trajets t ON r.trajet_id = t.id
@@ -129,7 +130,7 @@ class Reservation
             
             $reservations = $stmt->fetchAll(PDO::FETCH_ASSOC);
             
-            //  Enrichir les données pour l'affichage
+            // Enrichir les données pour l'affichage
             foreach ($reservations as &$reservation) {
                 $reservation['date_depart_formatee'] = date('d/m/Y à H:i', strtotime($reservation['date_depart']));
                 $reservation['date_reservation_formatee'] = date('d/m/Y à H:i', strtotime($reservation['date_reservation']));
@@ -209,6 +210,7 @@ class Reservation
             return ['succes' => false, 'erreur' => 'Erreur lors de l\'annulation.'];
         }
     }
+    
     /**
  * Valide un trajet effectué par un passager, libère les crédits au conducteur
  *
@@ -256,6 +258,95 @@ public function validerTrajet($reservationId, $userId)
         return ['succes' => false, 'erreur' => 'Erreur technique.'];
     }
 }
+
+/**
+ * ✅ NOUVEAU : Je démarre toutes les réservations d'un trajet
+ * Le conducteur clique "Démarrer trajet" → date_debut_trajet renseignée
+ * 
+ * @param int $trajetId ID du trajet
+ * @return array Résultat de l'opération
+ */
+public function demarrerReservationsTrajet($trajetId)
+{
+    try {
+        $this->pdo->beginTransaction();
+        
+        // Je vérifie qu'il y a des réservations confirmées non encore démarrées
+        $sqlCheck = "SELECT COUNT(*) FROM reservations 
+                     WHERE trajet_id = ? AND statut = 'confirme' AND date_debut_trajet IS NULL";
+        $stmtCheck = $this->pdo->prepare($sqlCheck);
+        $stmtCheck->execute([$trajetId]);
+        $nbReservations = $stmtCheck->fetchColumn();
+        
+        if ($nbReservations == 0) {
+            $this->pdo->rollBack();
+            return ['succes' => false, 'erreur' => 'Aucune réservation à démarrer trouvée.'];
+        }
+        
+        // Je marque le début du trajet pour toutes les réservations confirmées
+        $sql = "UPDATE reservations 
+                SET date_debut_trajet = NOW() 
+                WHERE trajet_id = ? AND statut = 'confirme' AND date_debut_trajet IS NULL";
+        
+        $stmt = $this->pdo->prepare($sql);
+        $resultat = $stmt->execute([$trajetId]);
+        
+        if ($resultat) {
+            $nbMisesAJour = $stmt->rowCount();
+            $this->pdo->commit();
+            
+            return [
+                'succes' => true, 
+                'nb_reservations' => $nbMisesAJour,
+                'message' => "Trajet démarré ! {$nbMisesAJour} réservation(s) en cours."
+            ];
+        } else {
+            $this->pdo->rollBack();
+            return ['succes' => false, 'erreur' => 'Erreur lors du démarrage.'];
+        }
+        
+    } catch (PDOException $e) {
+        $this->pdo->rollBack();
+        error_log("Erreur demarrerReservationsTrajet : " . $e->getMessage());
+        return ['succes' => false, 'erreur' => 'Erreur technique lors du démarrage.'];
+    }
+}
+
+public function terminerReservationsTrajet($trajetId)
+{
+    try {
+        $this->pdo->beginTransaction();
+        
+        // ✅ Je termine TOUTES les réservations confirmées (démarrées ou pas)
+        $sql = "UPDATE reservations 
+                SET statut = 'termine', date_fin_trajet = NOW() 
+                WHERE trajet_id = ? AND statut = 'confirme'";
+        
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute([$trajetId]);
+        $nbMisesAJour = $stmt->rowCount();
+        
+        // ✅ Je ferme le trajet
+        $sqlTrajet = "UPDATE trajets SET statut = 'termine' WHERE id = ?";
+        $stmtTrajet = $this->pdo->prepare($sqlTrajet);
+        $stmtTrajet->execute([$trajetId]);
+        
+        $this->pdo->commit();
+        
+        return [
+            'succes' => true, 
+            'nb_reservations' => $nbMisesAJour,
+            'message' => "Trajet terminé ! $nbMisesAJour réservation(s) finalisée(s)."
+        ];
+        
+    } catch (PDOException $e) {
+        $this->pdo->rollBack();
+        error_log("Erreur terminerReservationsTrajet : " . $e->getMessage());
+        return ['succes' => false, 'erreur' => 'Erreur technique.'];
+    }
+}
+
+
 
 }
 ?>

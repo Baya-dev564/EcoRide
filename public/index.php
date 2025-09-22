@@ -1,10 +1,10 @@
 <?php
 /**
  * Point d'entrée principal EcoRide avec routeur unifié
- * Version COMPLÈTE avec interface Admin + Messagerie NoSQL MongoDB + NOUVELLES FONCTIONNALITÉS USER ADMIN
+ * Version COMPLÈTE avec interface Admin + Messagerie NoSQL MongoDB + NOUVELLES FONCTIONNALITÉS USER ADMIN + WORKFLOW NOTATION
  * 
  * 🚀 FONCTIONNALITÉS INCLUSES :
- * ✅ Authentification complète
+ * ✅ Authentification complète + VÉRIFICATION EMAIL ⭐ NOUVEAU
  * ✅ Gestion des trajets
  * ✅ Système de réservations
  * ✅ Interface administration MongoDB
@@ -15,6 +15,8 @@
  * 🆕 Statistiques utilisateur avancées (AdminUserController séparé)
  * 🆕 Modification utilisateur complète (AdminUserController séparé)
  * 🆕 APIs AJAX pour gestion utilisateurs (AdminUserController séparé)
+ * ⭐ NOUVEAU : Workflow complet de notation post-trajet
+ * ⭐ NOUVEAU : Système de vérification email complet
  */
 
 // J'active l'affichage des erreurs pour le développement
@@ -170,14 +172,30 @@ switch ($path) {
         $controller->index();
         break;
         
+    case '/mentions-legales':
+        $title = "Mentions Légales | EcoRide";
+        ob_start();
+        include __DIR__ . '/../app/Views/legal/mentions-legales.php';
+        $content = ob_get_clean();
+        require __DIR__ . '/../app/Views/layouts/main.php';
+        break;
+
+    case '/confidentialite':
+        $title = "Politique de Confidentialité | EcoRide";
+        ob_start();
+        include __DIR__ . '/../app/Views/legal/confidentialite.php';
+        $content = ob_get_clean();
+        require __DIR__ . '/../app/Views/layouts/main.php';
+        break;
+
     // ==========================================================================
-    // 🔐 SYSTÈME D'AUTHENTIFICATION
+    // 🔐 SYSTÈME D'AUTHENTIFICATION + ⭐ VÉRIFICATION EMAIL
     // ==========================================================================
     case '/inscription':
         $controller = new AuthController();
         $controller->inscription();
         break;
-        
+
     case '/connexion':
         $controller = new AuthController();
         $controller->connexion();
@@ -186,6 +204,13 @@ switch ($path) {
     case '/deconnexion':
         $controller = new AuthController();
         $controller->deconnexion();
+        break;
+
+    // ⭐ NOUVELLES ROUTES POUR LA VÉRIFICATION EMAIL
+    case '/inscription-confirmation':
+        // Page de confirmation après inscription
+        $controller = new AuthController();
+        $controller->inscriptionConfirmation();
         break;
 
     case '/api/inscription':
@@ -213,7 +238,7 @@ switch ($path) {
         break;
         
     // ==========================================================================
-    // 🚗 GESTION DES TRAJETS
+    // 🚗 GESTION DES TRAJETS + ⭐ WORKFLOW NOTATION
     // ==========================================================================
     case '/trajets':
         // Je liste tous les trajets disponibles
@@ -237,22 +262,11 @@ switch ($path) {
         $controller->mesTrajets();
         break;
 
-    case '/demarrer-trajet':
-        // Je démarre un trajet (conducteur)
+    // ⭐ NOUVELLES ROUTES POUR LE WORKFLOW DE NOTATION
+    case '/mes-trajets-a-noter':
+        // Page listant tous les trajets terminés que l'utilisateur peut noter
         $controller = new TripController();
-        $controller->demarrerTrajet();
-        break;
-
-    case '/terminer-trajet':
-        // Je termine un trajet (conducteur)
-        $controller = new TripController();
-        $controller->terminerTrajet();
-        break;
-
-    case '/signaler-probleme':
-        // Je signale un problème sur un trajet
-        $controller = new TripController();
-        $controller->signalerProbleme();
+        $controller->trajetsANoter();
         break;
 
     // ==========================================================================
@@ -430,12 +444,43 @@ switch ($path) {
         $controller->apiPlaceDetails();
         break;
 
+    case '/demarrer-trajet-reservations':
+        $controller = new ReservationController();
+        $controller->demarrerTrajetReservations();
+        break;
+
+    case '/terminer-trajet-reservations':
+        $controller = new ReservationController();
+        $controller->terminerTrajetReservations();
+        break;
+
     // ==========================================================================
-    // 🔄 ROUTES DYNAMIQUES AVEC REGEX
+    // 🔄 ROUTES DYNAMIQUES AVEC REGEX + ⭐ WORKFLOW NOTATION
     // ==========================================================================
     default:
+        // ⭐ NOUVELLE ROUTE : Vérifier le token email : /verifier-email/{token}
+        if (preg_match('/^\/verifier-email\/([a-f0-9]{64})$/', $path, $matches)) {
+            $token = $matches[1]; // Récupère le token de l'URL
+            $controller = new AuthController();
+            $controller->verifierEmail($token);
+        }
+        // ⭐ NOUVELLE ROUTE : Terminer un trajet (POST) : /trajet/123/terminer
+        elseif (preg_match('/^\/trajet\/(\d+)\/terminer$/', $path, $matches)) {
+            if ($method === 'POST') {
+                $controller = new TripController();
+                $controller->terminerTrajet($matches[1]);
+            } else {
+                // Si ce n'est pas POST, je redirige vers les détails du trajet
+                header("Location: /trajet/{$matches[1]}");
+            }
+        }
+        // ⭐ NOUVELLE ROUTE : Noter un trajet (GET) : /noter-trajet/123
+        elseif (preg_match('/^\/noter-trajet\/(\d+)$/', $path, $matches)) {
+            $controller = new TripController();
+            $controller->noterTrajet($matches[1]);
+        }
         // Route détail trajet : /trajet/123
-        if (preg_match('/^\/trajet\/(\d+)$/', $path, $matches)) {
+        elseif (preg_match('/^\/trajet\/(\d+)$/', $path, $matches)) {
             $controller = new TripController();
             $controller->details($matches[1]);
         } 
@@ -505,5 +550,4 @@ switch ($path) {
         }
         break;
 }
-
 ?>

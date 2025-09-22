@@ -60,34 +60,39 @@ class ReservationController
         exit;
     }
     
-    /**
-     * Affiche les réservations de l'utilisateur
-     */
-    public function mesReservations()
-    {
-        if (!isset($_SESSION['user'])) {
-            $_SESSION['message'] = 'Vous devez être connecté pour voir vos réservations.';
-            header('Location: /connexion');
-            exit;
-        }
-        
-        require_once __DIR__ . '/../../config/database.php';
-        require_once __DIR__ . '/../Models/Reservation.php';
-        
-        global $pdo;
-        $reservationModel = new Reservation($pdo);
-        
-        $reservations = $reservationModel->getReservationsUtilisateur($_SESSION['user']['id']);
-        
-        $title = "Mes réservations | EcoRide - Gestion de vos réservations";
-        $user = $_SESSION['user'];
-        $message = $_SESSION['message'] ?? '';
-        $erreur = $_SESSION['erreur'] ?? '';
-        unset($_SESSION['message'], $_SESSION['erreur']);
-        
-        require __DIR__ . '/../Views/reservations/mes-reservations.php';
+   /**
+ * ✅ MÉTHODE CORRIGÉE : J'affiche les réservations avec la méthode qui fonctionne
+ */
+public function mesReservations()
+{
+    // Je vérifie l'authentification
+    if (!isset($_SESSION['user'])) {
+        $_SESSION['erreur'] = 'Vous devez être connecté pour voir vos réservations.';
+        header('Location: /EcoRide/public/connexion');
+        exit;
     }
     
+    require_once __DIR__ . '/../Models/Reservation.php';
+    require_once __DIR__ . '/../../config/database.php';
+    global $pdo;
+    
+    $reservationModel = new Reservation($pdo);
+    
+    // ✅ J'utilise la méthode corrigée qui fonctionne
+    $reservations = $reservationModel->getReservationsUtilisateur($_SESSION['user']['id']);
+    
+    // Je prépare les variables pour la vue
+    $title = "Mes réservations | EcoRide";
+    $user = $_SESSION['user'];
+    $message = $_SESSION['message'] ?? '';
+    $erreur = $_SESSION['erreur'] ?? '';
+    
+    // Je nettoie les messages de session
+    unset($_SESSION['message'], $_SESSION['erreur']);
+    
+    require __DIR__ . '/../Views/reservations/mes-reservations.php';
+}
+
    /**
  * Annule une réservation avec validation renforcée
  */
@@ -235,6 +240,7 @@ public function annuler()
             exit;
         }
     }
+    
     /**
  * Validation du trajet par le passager après fin du trajet
  */
@@ -272,6 +278,130 @@ public function validerTrajet()
     }
 
     header('Location: /mes-reservations');
+    exit;
+}
+
+/**
+ * ✅ NOUVEAU : Le conducteur démarre toutes les réservations d'un trajet
+ * Route : POST /demarrer-trajet-reservations
+ */
+public function demarrerTrajetReservations()
+{
+    if (!isset($_SESSION['user'])) {
+        $_SESSION['erreur'] = 'Vous devez être connecté.';
+        header('Location: /connexion');
+        exit;
+    }
+    
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+        header('Location: /mes-trajets');
+        exit;
+    }
+    
+    $trajetId = $_POST['trajet_id'] ?? null;
+    
+    if (!$trajetId) {
+        $_SESSION['erreur'] = 'Trajet non trouvé.';
+        header('Location: /mes-trajets');
+        exit;
+    }
+    
+    try {
+        require_once __DIR__ . '/../../config/database.php';
+        global $pdo;
+        
+        // Je vérifie que l'utilisateur est le conducteur
+        $sql = "SELECT conducteur_id FROM trajets WHERE id = ?";
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute([$trajetId]);
+        $trajet = $stmt->fetch();
+        
+        if (!$trajet || $trajet['conducteur_id'] != $_SESSION['user']['id']) {
+            $_SESSION['erreur'] = 'Vous n\'êtes pas le conducteur de ce trajet.';
+            header('Location: /mes-trajets');
+            exit;
+        }
+        
+        require_once __DIR__ . '/../Models/Reservation.php';
+        $reservationModel = new Reservation($pdo);
+        
+        // Je démarre toutes les réservations confirmées de ce trajet
+        $resultat = $reservationModel->demarrerReservationsTrajet($trajetId);
+        
+        if ($resultat['succes']) {
+            $_SESSION['message'] = $resultat['message'];
+        } else {
+            $_SESSION['erreur'] = $resultat['erreur'];
+        }
+        
+    } catch (Exception $e) {
+        error_log("Erreur demarrerTrajetReservations : " . $e->getMessage());
+        $_SESSION['erreur'] = 'Erreur technique.';
+    }
+    
+    header('Location: /mes-trajets');
+    exit;
+}
+
+/**
+ * ✅ NOUVEAU : Le conducteur termine toutes les réservations d'un trajet
+ * Route : POST /terminer-trajet-reservations
+ */
+public function terminerTrajetReservations()
+{
+    if (!isset($_SESSION['user'])) {
+        $_SESSION['erreur'] = 'Vous devez être connecté.';
+        header('Location: /connexion');
+        exit;
+    }
+    
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+        header('Location: /mes-trajets');
+        exit;
+    }
+    
+    $trajetId = $_POST['trajet_id'] ?? null;
+    
+    if (!$trajetId) {
+        $_SESSION['erreur'] = 'Trajet non trouvé.';
+        header('Location: /mes-trajets');
+        exit;
+    }
+    
+    try {
+        require_once __DIR__ . '/../../config/database.php';
+        global $pdo;
+        
+        // Je vérifie que l'utilisateur est le conducteur
+        $sql = "SELECT conducteur_id FROM trajets WHERE id = ?";
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute([$trajetId]);
+        $trajet = $stmt->fetch();
+        
+        if (!$trajet || $trajet['conducteur_id'] != $_SESSION['user']['id']) {
+            $_SESSION['erreur'] = 'Vous n\'êtes pas le conducteur de ce trajet.';
+            header('Location: /mes-trajets');
+            exit;
+        }
+        
+        require_once __DIR__ . '/../Models/Reservation.php';
+        $reservationModel = new Reservation($pdo);
+        
+        // Je termine toutes les réservations en cours de ce trajet
+        $resultat = $reservationModel->terminerReservationsTrajet($trajetId);
+        
+        if ($resultat['succes']) {
+            $_SESSION['message'] = $resultat['message'];
+        } else {
+            $_SESSION['erreur'] = $resultat['erreur'];
+        }
+        
+    } catch (Exception $e) {
+        error_log("Erreur terminerTrajetReservations : " . $e->getMessage());
+        $_SESSION['erreur'] = 'Erreur technique.';
+    }
+    
+    header('Location: /mes-trajets');
     exit;
 }
 

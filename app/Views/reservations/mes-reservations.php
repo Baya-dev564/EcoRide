@@ -134,7 +134,7 @@ $jsFiles = ['js/mes-reservations.js'];
                             <!-- En-tête de la carte -->
                             <header class="card-header bg-white d-flex justify-content-between align-items-center">
                                 <div class="d-flex align-items-center">
-                                    <span class="badge bg-<?= $reservation['statut'] === 'confirme' ? 'success' : ($reservation['statut'] === 'annule' ? 'danger' : 'warning') ?> me-2" role="img" aria-label="Statut : <?= ucfirst($reservation['statut']) ?>">
+                                    <span class="badge bg-<?= $reservation['statut'] === 'confirme' ? 'success' : ($reservation['statut'] === 'annule' ? 'danger' : ($reservation['statut'] === 'termine' ? 'primary' : 'warning')) ?> me-2" role="img" aria-label="Statut : <?= ucfirst($reservation['statut']) ?>">
                                         <?= ucfirst($reservation['statut']) ?>
                                     </span>
                                     <small class="text-muted">
@@ -251,6 +251,10 @@ $jsFiles = ['js/mes-reservations.js'];
                                                             </small>
                                                         <?php endif; ?>
                                                     </span>
+                                                <?php elseif ($reservation['statut'] === 'termine'): ?>
+                                                    <span class="text-primary">
+                                                        <i class="fas fa-flag-checkered me-1" aria-hidden="true"></i>Trajet terminé
+                                                    </span>
                                                 <?php endif; ?>
                                             </div>
                                             <nav>
@@ -264,21 +268,58 @@ $jsFiles = ['js/mes-reservations.js'];
                                     </div>
                                 </footer>
 
-                                <!-- AJOUT BOUTON : Validation trajet -->
-                                <?php // Ce bloc affiche le bouton "Confirmer mon trajet" si trajets terminé et validation en attente. ?>
-                                <?php if (
-                                    isset($reservation['statut_validation'], $reservation['trajet_statut_execution']) &&
-                                    $reservation['statut_validation'] === 'attente' &&
-                                    $reservation['trajet_statut_execution'] === 'termine'
-                                ): ?>
-                                    <form method="POST" action="/valider-trajet" class="mt-3">
-                                        <input type="hidden" name="reservation_id" value="<?= $reservation['id'] ?>">
-                                        <button type="submit" class="btn btn-primary w-100">
-                                            ✅ Confirmer mon trajet
-                                        </button>
-                                    </form>
+                                <!-- ✅ NOUVEAU WORKFLOW : NOTATION DES TRAJETS TERMINÉS -->
+                                <?php if ($reservation['statut'] === 'termine'): ?>
+                                    <!-- 🌟 TRAJET TERMINÉ - BOUTON DE NOTATION -->
+                                    <div class="alert alert-success mt-3" role="alert">
+                                        <div class="d-flex align-items-center justify-content-between">
+                                            <div>
+                                                <i class="fas fa-check-circle me-2"></i>
+                                                <strong>Trajet terminé !</strong> Comment s'est passé ce voyage ?
+                                            </div>
+                                            <a href="/EcoRide/public/donner-avis?trajet_id=<?= $reservation['trajet_id'] ?>&conducteur_id=<?= $reservation['conducteur_id'] ?>" 
+                                               class="btn btn-warning btn-sm">
+                                                <i class="fas fa-star me-1"></i>
+                                                Noter ce trajet
+                                            </a>
+                                        </div>
+                                    </div>
+                                    
+                                <?php elseif ($reservation['statut'] === 'confirme'): ?>
+                                    <!-- 📋 LOGIQUE POUR LES TRAJETS EN COURS -->
+                                    <?php if (
+                                        isset($reservation['statut_validation'], $reservation['trajet_statut_execution']) &&
+                                        $reservation['statut_validation'] === 'attente' &&
+                                        $reservation['trajet_statut_execution'] === 'termine'
+                                    ): ?>
+                                        <!-- ✅ VALIDATION DU TRAJET -->
+                                        <form method="POST" action="/EcoRide/public/valider-trajet" class="mt-3">
+                                            <input type="hidden" name="reservation_id" value="<?= $reservation['id'] ?>">
+                                            <button type="submit" class="btn btn-primary w-100">
+                                                <i class="fas fa-check-circle me-1"></i>
+                                                Confirmer que le trajet s'est bien passé
+                                            </button>
+                                        </form>
+                                        
+                                    <?php elseif (isset($reservation['date_debut_trajet']) && $reservation['date_debut_trajet']): ?>
+                                        <!-- 🚗 TRAJET EN COURS -->
+                                        <div class="alert alert-info mt-3" role="alert">
+                                            <div class="d-flex align-items-center">
+                                                <i class="fas fa-road me-2"></i>
+                                                <span><strong>Trajet en cours</strong> - Démarré le <?= date('d/m/Y à H:i', strtotime($reservation['date_debut_trajet'])) ?></span>
+                                            </div>
+                                        </div>
+                                        
+                                    <?php else: ?>
+                                        <!-- ⏳ EN ATTENTE DU DÉMARRAGE -->
+                                        <div class="alert alert-secondary mt-3" role="alert">
+                                            <div class="d-flex align-items-center">
+                                                <i class="fas fa-hourglass-half me-2"></i>
+                                                <span>Trajet confirmé - En attente du démarrage par le conducteur</span>
+                                            </div>
+                                        </div>
+                                    <?php endif; ?>
                                 <?php endif; ?>
-                                <!-- FIN AJOUT -->
                             </div>
                         </article>
                     </div>

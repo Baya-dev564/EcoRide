@@ -1,8 +1,10 @@
 <?php
 /**
- * Contrôleur pour la gestion des trajets de covoiturage EcoRide avec géolocalisation
+ * Contrôleur pour la gestion des trajets de covoiturage EcoRide avec géolocalisation + SYSTÈME DE NOTATION
  * Je gère tous les trajets avec coordonnées GPS et calcul automatique des distances
+ * ✅ NOUVEAU : Workflow complet de notation post-trajet intégré
  */
+
 
 class TripController
 {
@@ -135,6 +137,7 @@ class TripController
     
     /**
      * J'affiche les détails complets d'un trajet
+     * ✅ AMÉLIORÉ : Avec bouton "Noter ce trajet" si trajet terminé
      */
     public function details($trajetId = null)
     {
@@ -166,11 +169,22 @@ class TripController
         $userConnecte = $_SESSION['user'] ?? null;
         $peutReserver = false;
         
+        // ✅ NOUVEAU : Je vérifie si l'utilisateur peut noter ce trajet
+        $peutNoter = false;
+        $dejaNote = false;
+        
         if ($userConnecte) {
             $peutReserver = ($userConnecte['id'] != $trajet['conducteur_id']) 
                          && ($trajet['places_disponibles'] > 0)
                          && ($userConnecte['credit'] >= $trajet['prix'])
                          && !$this->aDejaReserve($trajetId, $userConnecte['id']);
+            
+            // ✅ NOUVEAU : Je vérifie les conditions pour noter
+            if ($trajet['statut'] === 'termine') {
+                // Je peux noter si : passager de ce trajet OU conducteur peut noter les passagers
+                $peutNoter = $this->aParticiipeAuTrajet($trajetId, $userConnecte['id']);
+                $dejaNote = $this->aDejaNote($trajetId, $userConnecte['id']);
+            }
         }
         
         $message = $_SESSION['message'] ?? '';
@@ -183,58 +197,279 @@ class TripController
     }
 
     /**
-     * Je vérifie si l'utilisateur peut réserver un trajet
-     * 
-     * @param array $trajet Données du trajet
-     * @param array|null $user Utilisateur connecté
-     * @return bool True si la réservation est possible
+     * ✅ NOUVEAU : J'affiche les trajets que l'utilisateur peut noter
+     * Route : GET /mes-trajets-a-noter
+     * Je montre tous les trajets terminés où l'utilisateur était passager/conducteur et n'a pas encore noté
      */
-    private function peutReserverTrajet($trajet, $user)
+    public function trajetsANoter()
     {
-        if (!$user) {
-            return false; // Je refuse si utilisateur non connecté
-        }
-        
-        if ($user['id'] == $trajet['conducteur_id']) {
-            return false; // Je refuse si conducteur veut réserver son propre trajet
-        }
-        
-        if ($trajet['places_disponibles'] <= 0) {
-            return false; // Je refuse si plus de places disponibles
-        }
-        
-        if ($this->aDejaReserve($trajet['id'], $user['id'])) {
-            return false; // Je refuse si déjà réservé
-        }
-        
-        return true;
-    }
-    
-    /**
-     * J'affiche les trajets de l'utilisateur connecté
-     * Je gère la page de gestion personnelle des trajets proposés
-     */
-    public function mesTrajets()
-    {
-        // Je vérifie l'authentification
         if (!isset($_SESSION['user'])) {
-            $_SESSION['message'] = 'Vous devez être connecté pour voir vos trajets.';
+            $_SESSION['message'] = 'Vous devez être connecté pour voir vos trajets à noter.';
             header('Location: /EcoRide/public/connexion');
             exit;
         }
         
-        // Je récupère les trajets de l'utilisateur
-        $trajets = $this->tripModel->getTrajetsUtilisateur($_SESSION['user']['id']);
+        $userId = $_SESSION['user']['id'];
         
-        // Je prépare les variables pour la vue
-        $title = "Mes trajets | EcoRide - Gestion de vos trajets proposés";
-        $user = $_SESSION['user'];
-        $message = $_SESSION['message'] ?? '';
-        unset($_SESSION['message']);
+        try {
+            // Je récupère les trajets terminés que l'utilisateur peut noter
+            $trajets = $this->tripModel->getTrajetsANoter($userId);
+            
+            // Je prépare les variables pour la vue
+            $title = "Trajets à noter | EcoRide - Donnez votre avis";
+            $user = $_SESSION['user'];
+            $message = $_SESSION['message'] ?? '';
+            $erreur = $_SESSION['erreur'] ?? '';
+            unset($_SESSION['message'], $_SESSION['erreur']);
+            
+            require __DIR__ . '/../Views/trips/trajets-a-noter.php';
+            
+        } catch (Exception $e) {
+            error_log("Erreur trajetsANoter : " . $e->getMessage());
+            $_SESSION['erreur'] = 'Erreur lors de la récupération des trajets à noter.';
+            header('Location: /EcoRide/public/mes-trajets');
+            exit;
+        }
+    }
+
+    /**
+     * ✅ NOUVEAU : Je marque un trajet comme terminé (pour le conducteur)
+     * Route : POST /trajet/{id}/terminer
+     * Le conducteur peut marquer son trajet comme terminé pour déclencher les notifications
+     */
+    public function terminerTrajet($trajetId = null)
+    {
+        if (!isset($_SESSION['user'])) {
+            $_SESSION['erreur'] = 'Vous devez être connecté.';
+            header('Location: /EcoRide/public/connexion');
+            exit;
+        }
         
-        require __DIR__ . '/../Views/trips/mes-trajets.php';
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: /EcoRide/public/mes-trajets');
+            exit;
+        }
+        
+        if ($trajetId === null) {
+            $trajetId = $this->extraireIdDepuisUrl('trajet');
+        }
+        
+        if (!$trajetId) {
+            $_SESSION['erreur'] = 'Trajet non trouvé.';
+            header('Location: /EcoRide/public/mes-trajets');
+            exit;
+        }
+        
+        try {
+            // Je vérifie que c'est bien le conducteur du trajet
+            $trajet = $this->tripModel->getTrajetDetails($trajetId);
+            
+            if (!$trajet || $trajet['conducteur_id'] != $_SESSION['user']['id']) {
+                $_SESSION['erreur'] = 'Trajet non trouvé ou vous n\'êtes pas le conducteur.';
+                header('Location: /EcoRide/public/mes-trajets');
+                exit;
+            }
+            
+            if ($trajet['statut'] === 'termine') {
+                $_SESSION['message'] = 'Ce trajet est déjà marqué comme terminé.';
+                header('Location: /EcoRide/public/mes-trajets');
+                exit;
+            }
+            
+            // Je marque le trajet comme terminé
+            $resultat = $this->tripModel->marquerCommeTermine($trajetId);
+            
+            if ($resultat['succes']) {
+                $_SESSION['message'] = 'Trajet marqué comme terminé ! Les passagers peuvent maintenant vous noter.';
+            } else {
+                $_SESSION['erreur'] = $resultat['erreur'] ?? 'Erreur lors de la terminaison du trajet.';
+            }
+            
+        } catch (Exception $e) {
+            error_log("Erreur terminerTrajet : " . $e->getMessage());
+            $_SESSION['erreur'] = 'Erreur technique lors de la terminaison du trajet.';
+        }
+        
+        header('Location: /EcoRide/public/mes-trajets');
+        exit;
+    }
+
+    /**
+     * ✅ NOUVEAU : Je redirige vers le formulaire de notation avec les bonnes données
+     * Route : GET /noter-trajet/{id}
+     * Je pré-remplis le formulaire d'avis avec les infos du trajet
+     */
+    public function noterTrajet($trajetId = null)
+    {
+        if (!isset($_SESSION['user'])) {
+            $_SESSION['message'] = 'Vous devez être connecté pour noter un trajet.';
+            header('Location: /EcoRide/public/connexion');
+            exit;
+        }
+        
+        if ($trajetId === null) {
+            $trajetId = $this->extraireIdDepuisUrl('noter-trajet');
+        }
+        
+        if (!$trajetId) {
+            $_SESSION['erreur'] = 'Trajet non trouvé.';
+            header('Location: /EcoRide/public/mes-trajets-a-noter');
+            exit;
+        }
+        
+        try {
+            $userId = $_SESSION['user']['id'];
+            
+            // Je vérifie que l'utilisateur peut noter ce trajet
+            $trajet = $this->tripModel->getTrajetDetails($trajetId);
+            
+            if (!$trajet) {
+                $_SESSION['erreur'] = 'Trajet non trouvé.';
+                header('Location: /EcoRide/public/mes-trajets-a-noter');
+                exit;
+            }
+            
+            if ($trajet['statut'] !== 'termine') {
+                $_SESSION['erreur'] = 'Ce trajet n\'est pas encore terminé.';
+                header('Location: /EcoRide/public/trajet/' . $trajetId);
+                exit;
+            }
+            
+            // Je vérifie que l'utilisateur a participé à ce trajet
+            if (!$this->aParticiipeAuTrajet($trajetId, $userId)) {
+                $_SESSION['erreur'] = 'Vous n\'avez pas participé à ce trajet.';
+                header('Location: /EcoRide/public/mes-trajets-a-noter');
+                exit;
+            }
+            
+            // Je vérifie qu'il n'a pas déjà noté
+            if ($this->aDejaNote($trajetId, $userId)) {
+                $_SESSION['message'] = 'Vous avez déjà noté ce trajet.';
+                header('Location: /EcoRide/public/mes-trajets-a-noter');
+                exit;
+            }
+            
+            // Je détermine qui il doit noter (conducteur ou passager)
+            $conducteur_id = ($userId == $trajet['conducteur_id']) ? null : $trajet['conducteur_id'];
+            
+            // Je redirige vers le formulaire d'avis avec les paramètres
+            $params = http_build_query([
+                'trajet_id' => $trajetId,
+                'conducteur_id' => $conducteur_id,
+                'lieu_depart' => $trajet['lieu_depart'],
+                'lieu_arrivee' => $trajet['lieu_arrivee'],
+                'date_trajet' => $trajet['date_depart']
+            ]);
+            
+            header('Location: /EcoRide/public/donner-avis?' . $params);
+            exit;
+            
+        } catch (Exception $e) {
+            error_log("Erreur noterTrajet : " . $e->getMessage());
+            $_SESSION['erreur'] = 'Erreur technique lors de l\'accès au formulaire de notation.';
+            header('Location: /EcoRide/public/mes-trajets-a-noter');
+            exit;
+        }
+    }
+
+    /**
+     * ✅ NOUVEAU : Je vérifie si un utilisateur a participé à un trajet
+     * (Soit conducteur, soit passager avec réservation confirmée)
+     * 
+     * @param int $trajetId ID du trajet
+     * @param int $userId ID de l'utilisateur
+     * @return bool True si il a participé
+     */
+    private function aParticiipeAuTrajet($trajetId, $userId)
+    {
+        try {
+            require_once __DIR__ . '/../../config/database.php';
+            global $pdo;
+            
+            // Je vérifie s'il est conducteur
+            $sql = "SELECT conducteur_id FROM trajets WHERE id = ?";
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute([$trajetId]);
+            $trajet = $stmt->fetch();
+            
+            if ($trajet && $trajet['conducteur_id'] == $userId) {
+                return true; // Il est le conducteur
+            }
+            
+            // Je vérifie s'il est passager avec réservation confirmée
+            $sql = "SELECT COUNT(*) FROM reservations 
+                    WHERE trajet_id = ? AND passager_id = ? AND statut = 'confirme'";
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute([$trajetId, $userId]);
+            
+            return $stmt->fetchColumn() > 0;
+            
+        } catch (Exception $e) {
+            error_log("Erreur aParticiipeAuTrajet : " . $e->getMessage());
+            return false;
+        }
+    }
+
+/**
+ * ✅ SOLUTION SIMPLE : Je vérifie si un utilisateur a déjà noté un trajet
+ * Version simplifiée qui utilise les méthodes existantes d'AvisMongo
+ * 
+ * @param int $trajetId ID du trajet
+ * @param int $userId ID de l'utilisateur
+ * @return bool True s'il a déjà noté
+ */
+private function aDejaNote($trajetId, $userId)
+{
+    try {
+        // J'inclus le modèle MongoDB pour les avis
+        require_once __DIR__ . '/../Models/avis-mongo.php';
+        
+        $avisMongo = new AvisMongo();
+        
+        // ✅ J'utilise getAvisParTrajet pour voir s'il y a des avis
+        $resultats = $avisMongo->getAvisParTrajet($trajetId);
+        
+        if ($resultats['success']) {
+            // Je cherche si cet utilisateur a déjà noté ce trajet
+            foreach ($resultats['avis'] as $avis) {
+                if (isset($avis['utilisateur_id']) && $avis['utilisateur_id'] == $userId) {
+                    return true; // Il a déjà noté ce trajet
+                }
+            }
+        }
+        
+        return false; // Pas d'avis trouvé de cet utilisateur pour ce trajet
+        
+    } catch (Exception $e) {
+        error_log("Erreur aDejaNote : " . $e->getMessage());
+        return false; // En cas d'erreur, je permets la notation
+    }
+}
+
+   /**
+ * ✅ MÉTHODE PROPRE : J'affiche les trajets avec les statuts des réservations
+ */
+public function mesTrajets()
+{
+    // Je vérifie l'authentification
+    if (!isset($_SESSION['user'])) {
+        $_SESSION['message'] = 'Vous devez être connecté pour voir vos trajets.';
+        header('Location: /EcoRide/public/connexion');
+        exit;
     }
     
+    // ✅ J'appelle la NOUVELLE méthode du model Trip.php
+    $trajets = $this->tripModel->getTrajetsUtilisateurAvecStatuts($_SESSION['user']['id']);
+    
+    // Je prépare les variables pour la vue
+    $title = "Mes trajets | EcoRide - Gestion de vos trajets proposés";
+    $user = $_SESSION['user'];
+    $message = $_SESSION['message'] ?? '';
+    unset($_SESSION['message']);
+    
+    require __DIR__ . '/../Views/trips/mes-trajets.php';
+}
+
     /**
      * J'affiche le formulaire de création avec gestion des véhicules
      * Je montre le formulaire de création d'un nouveau trajet
@@ -272,70 +507,68 @@ class TripController
     }
 
     /**
- * API : Je recherche des lieux pour l'autocomplete
- * Endpoint : /api/places/search
- */
-public function apiSearchPlaces(): void
-{
-    $query = $_GET['q'] ?? '';
-    
-    if (empty($query)) {
-        http_response_code(400);
-        echo json_encode(['error' => 'Paramètre q manquant']);
-        return;
-    }
-    
-    try {
-        $placesService = new \App\Services\PlacesService();
-        $places = $placesService->searchPlaces($query);
+     * API : Je recherche des lieux pour l'autocomplete
+     * Endpoint : /api/places/search
+     */
+    public function apiSearchPlaces(): void
+    {
+        $query = $_GET['q'] ?? '';
         
-        header('Content-Type: application/json');
-        echo json_encode($places);
-        
-    } catch (Exception $e) {
-        http_response_code(500);
-        echo json_encode(['error' => 'Erreur serveur']);
-    }
-}
-
-
-/**
- * API : Je récupère les détails d'un lieu spécifique
- * Endpoint : /api/places/details
- */
-public function apiPlaceDetails()
-{
-    header('Content-Type: application/json');
-    
-    try {
-        $placeId = $_GET['id'] ?? '';
-        
-        if (empty($placeId)) {
+        if (empty($query)) {
             http_response_code(400);
-            echo json_encode(['error' => 'ID manquant']);
-            exit;
+            echo json_encode(['error' => 'Paramètre q manquant']);
+            return;
         }
         
-        // Pour les lieux API, je retourne les infos de base
-        // (Dans un vrai projet, on pourrait faire un appel détaillé)
-        if (strpos($placeId, 'api_') === 0) {
-            echo json_encode([
-                'id' => $placeId,
-                'status' => 'API place - détails limités'
-            ]);
-        } else {
-            echo json_encode(['error' => 'Lieu non trouvé']);
+        try {
+            $placesService = new \App\Services\PlacesService();
+            $places = $placesService->searchPlaces($query);
+            
+            header('Content-Type: application/json');
+            echo json_encode($places);
+            
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(['error' => 'Erreur serveur']);
         }
-        
-    } catch (Exception $e) {
-        error_log("Erreur API détails lieu : " . $e->getMessage());
-        http_response_code(500);
-        echo json_encode(['error' => 'Erreur technique']);
     }
-    
-    exit;
-}
 
+    /**
+     * API : Je récupère les détails d'un lieu spécifique
+     * Endpoint : /api/places/details
+     */
+    public function apiPlaceDetails()
+    {
+        header('Content-Type: application/json');
+        
+        try {
+            $placeId = $_GET['id'] ?? '';
+            
+            if (empty($placeId)) {
+                http_response_code(400);
+                echo json_encode(['error' => 'ID manquant']);
+                exit;
+            }
+            
+            // Pour les lieux API, je retourne les infos de base
+            // (Dans un vrai projet, on pourrait faire un appel détaillé)
+            if (strpos($placeId, 'api_') === 0) {
+                echo json_encode([
+                    'id' => $placeId,
+                    'status' => 'API place - détails limités'
+                ]);
+            } else {
+                echo json_encode(['error' => 'Lieu non trouvé']);
+            }
+            
+        } catch (Exception $e) {
+            error_log("Erreur API détails lieu : " . $e->getMessage());
+            http_response_code(500);
+            echo json_encode(['error' => 'Erreur technique']);
+        }
+        
+        exit;
+    }
     
     /**
      * Je récupère les véhicules d'un utilisateur
@@ -620,6 +853,34 @@ public function apiPlaceDetails()
     }
     
     /**
+     * Je vérifie si l'utilisateur peut réserver un trajet
+     * 
+     * @param array $trajet Données du trajet
+     * @param array|null $user Utilisateur connecté
+     * @return bool True si la réservation est possible
+     */
+    private function peutReserverTrajet($trajet, $user)
+    {
+        if (!$user) {
+            return false; // Je refuse si utilisateur non connecté
+        }
+        
+        if ($user['id'] == $trajet['conducteur_id']) {
+            return false; // Je refuse si conducteur veut réserver son propre trajet
+        }
+        
+        if ($trajet['places_disponibles'] <= 0) {
+            return false; // Je refuse si plus de places disponibles
+        }
+        
+        if ($this->aDejaReserve($trajet['id'], $user['id'])) {
+            return false; // Je refuse si déjà réservé
+        }
+        
+        return true;
+    }
+    
+    /**
      * Je valide et nettoie un lieu de recherche
      * 
      * @param string $lieu Lieu à valider
@@ -644,8 +905,5 @@ public function apiPlaceDetails()
         $timestamp = strtotime($date);
         return $timestamp && $timestamp >= strtotime('today') ? $date : '';
     }
-
-    
-
 }
 ?>
