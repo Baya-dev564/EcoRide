@@ -251,44 +251,42 @@ public function dashboard()
     /**
      * Gestion des utilisateurs
      */
-    public function utilisateurs()
-    {
-        if (!$this->verifierAdminConnecte()) {
-            return;
+    /**
+ * ✅ CORRIGÉ : Gestion des utilisateurs - INCLUDE DIRECT (pas de main.php)
+ */
+public function utilisateurs()
+{
+    if (!$this->verifierAdminConnecte()) {
+        return;
+    }
+    
+    try {
+        $filtres = [];
+        
+        if (!empty($_GET['recherche'])) {
+            $filtres['recherche'] = $_GET['recherche'];
         }
         
-        try {
-            $filtres = [];
-            
-            if (!empty($_GET['recherche'])) {
-                $filtres['recherche'] = $_GET['recherche'];
-            }
-            
-            if (!empty($_GET['role'])) {
-                $filtres['role'] = $_GET['role'];
-            }
-            
-            // ✅ Je récupère directement avec PDO
-            $utilisateurs = $this->obtenirTousLesUtilisateurs($filtres);
-            
-            $title = "Gestion des utilisateurs | Admin EcoRide";
-            $isAdminPage = true;
-            $cssFiles = ['/css/admin.css'];
-            $jsFiles = ['/js/admin.js', '/js/admin-users.js'];
-            
-            ob_start();
-            include __DIR__ . '/../Views/admin/utilisateurs.php';
-            $content = ob_get_clean();
-            
-            include __DIR__ . '/../Views/layouts/main.php';
-            
-        } catch (Exception $e) {
-            error_log("Erreur gestion utilisateurs: " . $e->getMessage());
-            $_SESSION['message'] = "Erreur lors du chargement des utilisateurs.";
-            header('Location: /EcoRide/public/admin/dashboard');
-            exit;
+        if (!empty($_GET['role'])) {
+            $filtres['role'] = $_GET['role'];
         }
+        
+        // ✅ Je récupère directement avec PDO
+        $utilisateurs = $this->obtenirTousLesUtilisateurs($filtres);
+        
+        // ✅ Variables pour la vue
+        $pageTitle = "Gestion des utilisateurs | Admin EcoRide";
+        
+        // ✅ INCLUDE DIRECT - PAS DE ob_start() + main.php
+        include __DIR__ . '/../Views/admin/utilisateurs.php';
+        
+    } catch (Exception $e) {
+        error_log("Erreur gestion utilisateurs: " . $e->getMessage());
+        $_SESSION['message'] = "Erreur lors du chargement des utilisateurs.";
+        header('Location: /admin/dashboard');
+        exit;
     }
+}
 
 
 

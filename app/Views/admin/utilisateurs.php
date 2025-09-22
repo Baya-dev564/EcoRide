@@ -307,6 +307,5 @@
     <script src="/js/admin.js"></script>
     
     <!-- JavaScript spécifique aux utilisateurs -->
-    <script src="/js/admin-users.js"></script>
 </body>
 </html>
