@@ -124,7 +124,7 @@
                 </div>
             </nav>
         <?php else: ?>
-            <!-- Navigation utilisateur normale (ton code existant) -->
+            <!-- Navigation utilisateur normale -->
             <nav class="navbar navbar-expand-lg navbar-dark bg-success shadow" role="navigation" aria-label="Navigation principale EcoRide">
                 <div class="container">
                     <!-- Logo et nom de l'application -->
@@ -150,6 +150,16 @@
                             <li class="nav-item" role="none">
                                 <a class="nav-link" href="/" role="menuitem" aria-current="<?= $_SERVER['REQUEST_URI'] === '/' ? 'page' : 'false' ?>">
                                     <i class="fas fa-home" aria-hidden="true"></i> Accueil
+                                </a>
+                            </li>
+                            <!-- 🔔 MESSAGES AVEC NOTIFICATION PROPRE -->
+                            <li class="nav-item">
+                                <a class="nav-link d-flex align-items-center" href="/messages">
+                                    <i class="fas fa-comments me-1"></i> 
+                                    Messages
+                                    <span id="unreadBadge" class="badge message-notification-badge ms-2" style="display: none;">
+                                        <span id="unreadCount">0</span>
+                                    </span>
                                 </a>
                             </li>
                             <li class="nav-item" role="none">
@@ -286,7 +296,7 @@
         <?php if (isset($content)) echo $content; ?>
     </main>
 
-    <!-- Pied de page (inchangé pour l'admin) -->
+    <!-- Pied de page -->
     <footer class="footer bg-light py-4 mt-5 border-top" role="contentinfo" aria-label="Informations du site">
         <div class="container">
             <div class="row">
@@ -345,6 +355,12 @@
     
     <!-- JavaScript global EcoRide -->
     <script src="/js/app.js"></script>
+    <script src="/js/notifications.js"></script>
+
+    <!-- Variable pour le JS -->
+    <script>
+    const userConnected = <?= isset($_SESSION['user_id']) ? 'true' : 'false' ?>;
+    </script>
 
     <!-- JavaScript spécifique à la page -->
     <?php if (!empty($jsFiles)): ?>

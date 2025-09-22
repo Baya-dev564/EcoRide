@@ -105,6 +105,31 @@ body {
     border-color: var(--primary-green);
 }
 
+/* 🔔 Badges de notification pour les messages */
+.message-notification-badge {
+    background-color: #ffc107 !important; /* Même couleur que les avis */
+    color: #212529 !important;
+    font-size: 0.75rem;
+    min-width: 20px;
+    height: 20px;
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    animation: messageNotifPulse 2s infinite;
+}
+
+@keyframes messageNotifPulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+}
+
+.message-notification-badge[style*="display: none"] {
+    display: none !important;
+}
+
+
 /* Footer */
 .footer {
     background: linear-gradient(135deg, var(--light-green) 0%, #d4edda 100%);

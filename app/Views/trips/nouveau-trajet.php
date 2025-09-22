@@ -1,11 +1,8 @@
 <?php
 // app/Views/trips/nouveau-trajet.php
-// Vue pour le formulaire de création d'un nouveau trajet 
+// Vue pour le formulaire de création d'un nouveau trajet avec autocomplete de lieux
 
 ob_start();
-
-// Inclusion du fichier JavaScript spécifique
-$jsFiles = ['/public/js/nouveau-trajet.js'];
 ?>
 
 <!-- Messages d'alerte -->
@@ -76,30 +73,44 @@ $jsFiles = ['/public/js/nouveau-trajet.js'];
                 <div class="card-body">
                     <form id="formNouveauTrajet" method="POST" action="/EcoRide/public/nouveau-trajet" role="form" aria-labelledby="form-titre">
                         
-                        <!-- Section itinéraire -->
+                        <!-- Section itinéraire avec autocomplete -->
                         <fieldset class="row mb-4">
                             <legend class="col-12">
                                 <h3 class="text-success mb-3">
-                                    <i class="fas fa-map-marked-alt me-2" aria-hidden="true"></i>Itinéraire
+                                    <i class="fas fa-map-marked-alt me-2" aria-hidden="true"></i>Points de rendez-vous
                                 </h3>
                             </legend>
                             
+                            <!-- Point de départ -->
                             <div class="col-md-6 mb-3">
-                                <label for="lieu_depart" class="form-label">Lieu de départ *</label>
+                                <label for="lieu_depart" class="form-label">
+                                    <i class="fas fa-map-marker-alt text-success me-1"></i>
+                                    Point de départ *
+                                </label>
                                 <input type="text" 
-                                       class="form-control" 
+                                       class="form-control autocomplete-place" 
                                        id="lieu_depart" 
                                        name="lieu_depart" 
-                                       value="<?= htmlspecialchars($donnees['lieu_depart'] ?? '') ?>" 
-                                       placeholder="Paris, Lyon, Marseille..." 
+                                       value="<?= htmlspecialchars($donnees['lieu_depart'] ?? '') ?>"
+                                       placeholder="Tapez pour rechercher un lieu..."
                                        required
                                        aria-describedby="depart-help">
-                                <div id="depart-help" class="form-text">Ville ou adresse de départ</div>
+                                <div id="depart-help" class="form-text">
+                                    <i class="fas fa-lightbulb text-warning me-1"></i>
+                                    Gare, parking, centre commercial...
+                                </div>
+                                
+                                <!-- Je stocke les coordonnées GPS du départ -->
+                                <input type="hidden" id="depart_latitude" name="depart_latitude" value="<?= htmlspecialchars($donnees['depart_latitude'] ?? '') ?>">
+                                <input type="hidden" id="depart_longitude" name="depart_longitude" value="<?= htmlspecialchars($donnees['depart_longitude'] ?? '') ?>">
+                                <input type="hidden" id="depart_place_id" name="depart_place_id" value="<?= htmlspecialchars($donnees['depart_place_id'] ?? '') ?>">
+                                
                                 <div class="invalid-feedback"></div>
                             </div>
                             
+                            <!-- Code postal départ (maintenant optionnel) -->
                             <div class="col-md-6 mb-3">
-                                <label for="code_postal_depart" class="form-label">Code postal départ *</label>
+                                <label for="code_postal_depart" class="form-label">Code postal départ</label>
                                 <input type="text" 
                                        class="form-control" 
                                        id="code_postal_depart" 
@@ -108,28 +119,44 @@ $jsFiles = ['/public/js/nouveau-trajet.js'];
                                        placeholder="75001" 
                                        maxlength="5" 
                                        pattern="\d{5}"
-                                       required
                                        aria-describedby="cp-depart-help">
-                                <div id="cp-depart-help" class="form-text">Code postal français (5 chiffres)</div>
+                                <div id="cp-depart-help" class="form-text">
+                                    <i class="fas fa-info-circle text-info me-1"></i>
+                                    Optionnel - aide à préciser la zone
+                                </div>
                                 <div class="invalid-feedback"></div>
                             </div>
                             
+                            <!-- Point d'arrivée -->
                             <div class="col-md-6 mb-3">
-                                <label for="lieu_arrivee" class="form-label">Lieu d'arrivée *</label>
+                                <label for="lieu_arrivee" class="form-label">
+                                    <i class="fas fa-flag-checkered text-danger me-1"></i>
+                                    Point d'arrivée *
+                                </label>
                                 <input type="text" 
-                                       class="form-control" 
+                                       class="form-control autocomplete-place" 
                                        id="lieu_arrivee" 
                                        name="lieu_arrivee" 
-                                       value="<?= htmlspecialchars($donnees['lieu_arrivee'] ?? '') ?>" 
-                                       placeholder="Paris, Lyon, Marseille..." 
+                                       value="<?= htmlspecialchars($donnees['lieu_arrivee'] ?? '') ?>"
+                                       placeholder="Tapez pour rechercher un lieu..."
                                        required
                                        aria-describedby="arrivee-help">
-                                <div id="arrivee-help" class="form-text">Ville ou adresse d'arrivée</div>
+                                <div id="arrivee-help" class="form-text">
+                                    <i class="fas fa-lightbulb text-warning me-1"></i>
+                                    Gare, parking, centre commercial...
+                                </div>
+                                
+                                <!-- Je stocke les coordonnées GPS de l'arrivée -->
+                                <input type="hidden" id="arrivee_latitude" name="arrivee_latitude" value="<?= htmlspecialchars($donnees['arrivee_latitude'] ?? '') ?>">
+                                <input type="hidden" id="arrivee_longitude" name="arrivee_longitude" value="<?= htmlspecialchars($donnees['arrivee_longitude'] ?? '') ?>">
+                                <input type="hidden" id="arrivee_place_id" name="arrivee_place_id" value="<?= htmlspecialchars($donnees['arrivee_place_id'] ?? '') ?>">
+                                
                                 <div class="invalid-feedback"></div>
                             </div>
                             
+                            <!-- Code postal arrivée (maintenant optionnel) -->
                             <div class="col-md-6 mb-3">
-                                <label for="code_postal_arrivee" class="form-label">Code postal arrivée *</label>
+                                <label for="code_postal_arrivee" class="form-label">Code postal arrivée</label>
                                 <input type="text" 
                                        class="form-control" 
                                        id="code_postal_arrivee" 
@@ -138,9 +165,11 @@ $jsFiles = ['/public/js/nouveau-trajet.js'];
                                        placeholder="69001" 
                                        maxlength="5" 
                                        pattern="\d{5}"
-                                       required
                                        aria-describedby="cp-arrivee-help">
-                                <div id="cp-arrivee-help" class="form-text">Code postal français (5 chiffres)</div>
+                                <div id="cp-arrivee-help" class="form-text">
+                                    <i class="fas fa-info-circle text-info me-1"></i>
+                                    Optionnel - aide à préciser la zone
+                                </div>
                                 <div class="invalid-feedback"></div>
                             </div>
                         </fieldset>
@@ -177,69 +206,69 @@ $jsFiles = ['/public/js/nouveau-trajet.js'];
                                        required
                                        aria-describedby="heure-help">
                                 <div id="heure-help" class="form-text">Heure de départ prévue</div>
-                                <div class="2invalid-feedback"></div>
+                                <div class="invalid-feedback"></div>
                             </div>
                         </fieldset>
 
                         <!-- Section véhicule et places -->
-<fieldset class="row mb-4">
-    <legend class="col-12">
-        <h3 class="text-success mb-3">
-            <i class="fas fa-car me-2" aria-hidden="true"></i>Véhicule et places
-        </h3>
-    </legend>
-    
-    <div class="col-md-6 mb-3">
-        <label for="places" class="form-label">Nombre de places disponibles *</label>
-        <select class="form-select" 
-                id="places" 
-                name="places" 
-                required
-                aria-describedby="places-help">
-            <option value="">Choisir...</option>
-            <?php for($i = 1; $i <= 8; $i++): ?>
-                <option value="<?= $i ?>" <?= ($donnees['places'] ?? '') == $i ? 'selected' : '' ?>>
-                    <?= $i ?> place<?= $i > 1 ? 's' : '' ?>
-                </option>
-            <?php endfor; ?>
-        </select>
-        <div id="places-help" class="form-text">Places disponibles pour les passagers</div>
-        <div class="invalid-feedback"></div>
-    </div>
-    
-    <div class="col-md-6 mb-3">
-        <label for="vehicule_id" class="form-label">Véhicule (optionnel)</label>
-        <select class="form-select" 
-                id="vehicule_id" 
-                name="vehicule_id"
-                aria-describedby="vehicule-help">
-            <option value="">Sélectionner un véhicule...</option>
-            <?php if (!empty($vehicules) && is_array($vehicules)): ?>
-                <?php foreach ($vehicules as $vehicule): ?>
-                    <option value="<?= htmlspecialchars($vehicule['id']) ?>" 
-                            data-electrique="<?= $vehicule['electrique'] ? 'true' : 'false' ?>"
-                            <?= ($donnees['vehicule_id'] ?? '') == $vehicule['id'] ? 'selected' : '' ?>>
-                        <?= htmlspecialchars($vehicule['marque']) ?> <?= htmlspecialchars($vehicule['modele']) ?>
-                        <?= $vehicule['electrique'] ? ' 🌱' : '' ?>
-                        (<?= htmlspecialchars($vehicule['plaque_immatriculation']) ?>)
-                    </option>
-                <?php endforeach; ?>
-            <?php else: ?>
-                <option value="" disabled>Aucun véhicule enregistré</option>
-            <?php endif; ?>
-        </select>
-        <div id="vehicule-help" class="form-text">
-            <?php if (empty($vehicules)): ?>
-                <a href="/EcoRide/public/profil" class="text-decoration-none">
-                    <i class="fas fa-plus me-1" aria-hidden="true"></i>
-                    Ajoutez vos véhicules dans votre profil
-                </a>
-            <?php else: ?>
-                Sélectionnez le véhicule pour ce trajet (<?= count($vehicules) ?> véhicule<?= count($vehicules) > 1 ? 's' : '' ?> disponible<?= count($vehicules) > 1 ? 's' : '' ?>)
-            <?php endif; ?>
-        </div>
-    </div>
-</fieldset>
+                        <fieldset class="row mb-4">
+                            <legend class="col-12">
+                                <h3 class="text-success mb-3">
+                                    <i class="fas fa-car me-2" aria-hidden="true"></i>Véhicule et places
+                                </h3>
+                            </legend>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="places" class="form-label">Nombre de places disponibles *</label>
+                                <select class="form-select" 
+                                        id="places" 
+                                        name="places" 
+                                        required
+                                        aria-describedby="places-help">
+                                    <option value="">Choisir...</option>
+                                    <?php for($i = 1; $i <= 8; $i++): ?>
+                                        <option value="<?= $i ?>" <?= ($donnees['places'] ?? '') == $i ? 'selected' : '' ?>>
+                                            <?= $i ?> place<?= $i > 1 ? 's' : '' ?>
+                                        </option>
+                                    <?php endfor; ?>
+                                </select>
+                                <div id="places-help" class="form-text">Places disponibles pour les passagers</div>
+                                <div class="invalid-feedback"></div>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="vehicule_id" class="form-label">Véhicule (optionnel)</label>
+                                <select class="form-select" 
+                                        id="vehicule_id" 
+                                        name="vehicule_id"
+                                        aria-describedby="vehicule-help">
+                                    <option value="">Sélectionner un véhicule...</option>
+                                    <?php if (!empty($vehicules) && is_array($vehicules)): ?>
+                                        <?php foreach ($vehicules as $vehicule): ?>
+                                            <option value="<?= htmlspecialchars($vehicule['id']) ?>" 
+                                                    data-electrique="<?= $vehicule['electrique'] ? 'true' : 'false' ?>"
+                                                    <?= ($donnees['vehicule_id'] ?? '') == $vehicule['id'] ? 'selected' : '' ?>>
+                                                <?= htmlspecialchars($vehicule['marque']) ?> <?= htmlspecialchars($vehicule['modele']) ?>
+                                                <?= $vehicule['electrique'] ? ' 🌱' : '' ?>
+                                                (<?= htmlspecialchars($vehicule['plaque_immatriculation']) ?>)
+                                            </option>
+                                        <?php endforeach; ?>
+                                    <?php else: ?>
+                                        <option value="" disabled>Aucun véhicule enregistré</option>
+                                    <?php endif; ?>
+                                </select>
+                                <div id="vehicule-help" class="form-text">
+                                    <?php if (empty($vehicules)): ?>
+                                        <a href="/EcoRide/public/profil" class="text-decoration-none">
+                                            <i class="fas fa-plus me-1" aria-hidden="true"></i>
+                                            Ajoutez vos véhicules dans votre profil
+                                        </a>
+                                    <?php else: ?>
+                                        Sélectionnez le véhicule pour ce trajet (<?= count($vehicules) ?> véhicule<?= count($vehicules) > 1 ? 's' : '' ?> disponible<?= count($vehicules) > 1 ? 's' : '' ?>)
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+                        </fieldset>
 
                         <!-- Section options écologiques -->
                         <fieldset class="row mb-4">
@@ -282,9 +311,9 @@ $jsFiles = ['/public/js/nouveau-trajet.js'];
                                           name="commentaire" 
                                           rows="3" 
                                           maxlength="500"
-                                          placeholder="Informations supplémentaires pour les passagers..."
+                                          placeholder="Point de rendez-vous précis, conditions particulières, bagages acceptés..."
                                           aria-describedby="commentaire-help"><?= htmlspecialchars($donnees['commentaire'] ?? '') ?></textarea>
-                                <div id="commentaire-help" class="form-text">Précisez les conditions particulières, points de rendez-vous, etc. (max 500 caractères)</div>
+                                <div id="commentaire-help" class="form-text">Précisez le lieu exact de rendez-vous, les conditions particulières, etc. (max 500 caractères)</div>
                             </div>
                         </fieldset>
 
@@ -298,7 +327,7 @@ $jsFiles = ['/public/js/nouveau-trajet.js'];
                             </button>
                         </footer>
                     </form>
-                </div>2
+                </div>
             </article>
         </section>
 
@@ -317,7 +346,7 @@ $jsFiles = ['/public/js/nouveau-trajet.js'];
                             <i class="fas fa-coins" aria-hidden="true"></i> --
                         </div>
                         <p class="text-muted mb-0">crédits par passager</p>
-                        <small class="text-muted">Basé sur la distance et le type de véhicule</small>
+                        <small class="text-muted">Basé sur la distance entre les points</small>
                     </div>
                 </div>
             </section>
@@ -326,26 +355,26 @@ $jsFiles = ['/public/js/nouveau-trajet.js'];
             <section class="card border-0 shadow-sm mb-4" aria-labelledby="conseils-titre">
                 <header class="card-header bg-light">
                     <h2 id="conseils-titre" class="h6 mb-0">
-                        <i class="fas fa-lightbulb text-warning me-2" aria-hidden="true"></i>Conseils EcoRide
+                        <i class="fas fa-lightbulb text-warning me-2" aria-hidden="true"></i>Conseils Points de RDV
                     </h2>
                 </header>
                  <div class="card-body">
                     <ul class="list-unstyled mb-0">
                         <li class="mb-2">
                             <i class="fas fa-check text-success me-2" aria-hidden="true"></i>
-                            <small>Proposez des horaires flexibles</small>
+                            <small>🚂 Privilégiez les gares (faciles d'accès)</small>
                         </li>
                         <li class="mb-2">
                             <i class="fas fa-check text-success me-2" aria-hidden="true"></i>
-                            <small>Précisez le point de rendez-vous</small>
+                            <small>🅿️ Centres commerciaux (parking gratuit)</small>
                         </li>
                         <li class="mb-2">
                             <i class="fas fa-check text-success me-2" aria-hidden="true"></i>
-                            <small>Mentionnez si vous acceptez les bagages</small>
+                            <small>🏢 Lieux sécurisés et bien éclairés</small>
                         </li>
                         <li class="mb-0">
                             <i class="fas fa-leaf text-success me-2" aria-hidden="true"></i>
-                            <small>Les véhicules électriques sont mis en avant</small>
+                            <small>🌱 Les véhicules électriques sont mis en avant</small>
                         </li>
                     </ul>
                 </div>
@@ -377,5 +406,10 @@ $jsFiles = ['/public/js/nouveau-trajet.js'];
 
 <?php
 $content = ob_get_clean();
+$cssFiles = ['css/trips.css', 'css/accessibility.css'];
+$jsFiles = ['js/places-autocomplete.js', 'js/nouveau-trajet.js'];
+
+
+
 require __DIR__ . '/../layouts/main.php';
 ?>
