@@ -1,17 +1,55 @@
-// Script pour la page trajets EcoRide
+// Script pour la page trajets EcoRide avec autocomplete
 document.addEventListener('DOMContentLoaded', function() {
-    // S'assurer que tous les trajets sont visibles
+    // Je m'assure que tous les trajets sont visibles
     const tripCards = document.querySelectorAll('.trip-card, .card');
     tripCards.forEach(card => {
         card.style.display = 'block';
         card.style.visibility = 'visible';
     });
     
-    // Gestion du formulaire de recherche
+    // Je gère le formulaire de recherche
     const formRecherche = document.getElementById('formRechercheTrajet');
     if (formRecherche) {
         formRecherche.addEventListener('submit', function(e) {
             // Traitement de la recherche
+        });
+    }
+
+    // ========================================
+    // AUTOCOMPLETE POUR LA RECHERCHE DE TRAJETS
+    // ========================================
+    
+    // J'initialise l'autocomplete pour le départ de recherche
+    if (document.getElementById('lieu_depart') && typeof PlacesAutocomplete !== 'undefined') {
+        new PlacesAutocomplete(document.getElementById('lieu_depart'), {
+            onSelect: function(place, input) {
+                // Je remplis les champs cachés avec les coordonnées GPS
+                if (document.getElementById('search_depart_lat')) {
+                    document.getElementById('search_depart_lat').value = place.latitude;
+                }
+                if (document.getElementById('search_depart_lng')) {
+                    document.getElementById('search_depart_lng').value = place.longitude;
+                }
+                
+                console.log('🟢 Point de départ recherche sélectionné:', place.name);
+            }
+        });
+    }
+    
+    // J'initialise l'autocomplete pour l'arrivée de recherche
+    if (document.getElementById('lieu_arrivee') && typeof PlacesAutocomplete !== 'undefined') {
+        new PlacesAutocomplete(document.getElementById('lieu_arrivee'), {
+            onSelect: function(place, input) {
+                // Je remplis les champs cachés avec les coordonnées GPS
+                if (document.getElementById('search_arrivee_lat')) {
+                    document.getElementById('search_arrivee_lat').value = place.latitude;
+                }
+                if (document.getElementById('search_arrivee_lng')) {
+                    document.getElementById('search_arrivee_lng').value = place.longitude;
+                }
+                
+                console.log('🔴 Point d\'arrivée recherche sélectionné:', place.name);
+            }
         });
     }
 
@@ -24,52 +62,52 @@ document.addEventListener('DOMContentLoaded', function() {
     const modalElement = document.getElementById('modalConfirmation');
     const btnConfirmerReservation = document.getElementById('btnConfirmerReservation');
     
-    // Vérification de l'existence des éléments (uniquement sur page détails)
+    // Je vérifie l'existence des éléments (uniquement sur page détails)
     if (!formReservation || !btnReserver || !modalElement || !btnConfirmerReservation) {
-        return; // Sortir si les éléments n'existent pas (pas sur la page détails)
+        return; // Je sors si les éléments n'existent pas (pas sur la page détails)
     }
     
-    // Initialisation de la modal Bootstrap
+    // J'initialise la modal Bootstrap
     const modalConfirmation = new bootstrap.Modal(modalElement, {
         keyboard: true,
         backdrop: true
     });
     
-    // Gestion de la soumission du formulaire
+    // Je gère la soumission du formulaire
     formReservation.addEventListener('submit', function(event) {
         event.preventDefault();
         
-        // Désactiver le bouton pour éviter les doubles clics
+        // Je désactive le bouton pour éviter les doubles clics
         btnReserver.disabled = true;
         btnReserver.innerHTML = '<i class="fas fa-spinner fa-spin me-2" aria-hidden="true"></i>Préparation...';
         
-        // Afficher la modal après un court délai
+        // J'affiche la modal après un court délai
         setTimeout(function() {
             modalConfirmation.show();
             
-            // Réactiver le bouton
+            // Je réactive le bouton
             btnReserver.disabled = false;
             btnReserver.innerHTML = '<i class="fas fa-check me-2" aria-hidden="true"></i>Réserver ce trajet';
         }, 500);
     });
     
-    // Gestion de la confirmation finale
+    // Je gère la confirmation finale
     btnConfirmerReservation.addEventListener('click', function() {
-        // Désactiver le bouton de confirmation
+        // Je désactive le bouton de confirmation
         btnConfirmerReservation.disabled = true;
         btnConfirmerReservation.innerHTML = '<i class="fas fa-spinner fa-spin me-2" aria-hidden="true"></i>Réservation...';
         
-        // Soumettre le formulaire
+        // Je soumets le formulaire
         formReservation.submit();
     });
     
-    // Réinitialiser le bouton si la modal est fermée sans confirmation
+    // Je réinitialise le bouton si la modal est fermée sans confirmation
     modalElement.addEventListener('hidden.bs.modal', function() {
         btnConfirmerReservation.disabled = false;
         btnConfirmerReservation.innerHTML = '<i class="fas fa-check me-2" aria-hidden="true"></i>Confirmer la réservation';
     });
     
-    // Gestion du focus pour l'accessibilité
+    // Je gère le focus pour l'accessibilité
     modalElement.addEventListener('shown.bs.modal', function() {
         btnConfirmerReservation.focus();
     });

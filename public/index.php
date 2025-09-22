@@ -1,7 +1,17 @@
 <?php
 /**
  * Point d'entrée principal EcoRide avec routeur unifié
- * Version RÉPARÉE avec chargement direct des contrôleurs
+ * Version COMPLÈTE avec interface Admin + Messagerie NoSQL MongoDB
+ * 
+ * 🚀 FONCTIONNALITÉS INCLUSES :
+ * ✅ Authentification complète
+ * ✅ Gestion des trajets
+ * ✅ Système de réservations
+ * ✅ Interface administration MongoDB
+ * ✅ Messagerie temps réel NoSQL
+ * ✅ Système d'avis MongoDB
+ * ✅ Gestion des profils utilisateurs
+ * ✅ Notifications de messages non lus - NOUVEAU !
  */
 
 // J'active l'affichage des erreurs pour le développement
@@ -18,7 +28,9 @@ require_once __DIR__ . '/../config/database.php';
 $databaseConfig = new DatabaseConfig();
 $pdo = $databaseConfig->getConnection();
 
-// ✅ JE CHARGE DIRECTEMENT TOUS LES CONTRÔLEURS (PAS D'AUTOLOADER)
+// =============================================================================
+// ✅ JE CHARGE DIRECTEMENT TOUS LES CONTRÔLEURS (APPROCHE SIMPLE)
+// =============================================================================
 require_once __DIR__ . '/../app/Controllers/TripController.php';
 require_once __DIR__ . '/../app/Controllers/UserController.php';
 require_once __DIR__ . '/../app/Controllers/AuthController.php';
@@ -26,8 +38,9 @@ require_once __DIR__ . '/../app/Controllers/AdminController.php';
 require_once __DIR__ . '/../app/Controllers/ReservationController.php';
 require_once __DIR__ . '/../app/Controllers/AvisController.php';
 require_once __DIR__ . '/../app/Controllers/HomeController.php';
+require_once __DIR__ . '/../app/Controllers/MessagerieController.php'; // 💬 NOUVEAU : Messagerie MongoDB
 
-// Je récupère l'URI sans modification
+// Je récupère l'URI et nettoie le chemin
 $uri = $_SERVER['REQUEST_URI'] ?? '/';
 $path = str_replace('/EcoRide/public', '', $uri);
 $path = strtok($path, '?') ?: '/';
@@ -35,64 +48,79 @@ $path = strtok($path, '?') ?: '/';
 // Je préserve la méthode HTTP pour les APIs
 $method = $_SERVER['REQUEST_METHOD'];
 
-// ✅ JE GÈRE LES ROUTES ADMIN EN PREMIER (AVANT LE SWITCH)
+// =============================================================================
+// 🛡️ JE GÈRE LES ROUTES ADMIN EN PREMIER (SÉCURITÉ PRIORITAIRE)
+// =============================================================================
 if (strpos($path, '/admin') === 0) {
     $controller = new AdminController();
     
-    // Routes admin spécifiques
+    // Je route toutes les pages admin
     if ($path === '/admin' || $path === '/admin/dashboard') {
         $controller->dashboard();
     } elseif ($path === '/admin/trajets') {
-        // ✅ ROUTE MANQUANTE AJOUTÉE !
+        // Page de gestion des trajets
         $controller->trajets();
     } elseif ($path === '/admin/utilisateurs') {
+        // Page de gestion des utilisateurs
         $controller->utilisateurs();
     } elseif ($path === '/admin/avis') {
+        // Page de modération des avis MongoDB
         $controller->avis();
     } elseif ($path === '/admin/support') {
+        // Page de support et FAQ
         $controller->support();
     } elseif ($path === '/admin/test') {
+        // Page de test des connexions (développement)
         $controller->testConnexions();
     } elseif ($path === '/admin/api/moderer-trajet' && $method === 'POST') {
-        // ✅ API MODÉRATION TRAJETS
+        // API : Modérer un trajet (valider/refuser)
         header('Content-Type: application/json');
         $controller->modererTrajet();
     } elseif ($path === '/admin/api/credits' && $method === 'POST') {
+        // API : Modifier les crédits d'un utilisateur
         header('Content-Type: application/json');
         $controller->modifierCredits();
     } elseif ($path === '/admin/api/user-status' && $method === 'POST') {
+        // API : Suspendre/Activer un utilisateur
         header('Content-Type: application/json');
         $controller->toggleUserStatus();
     } elseif ($path === '/admin/api/avis-status' && $method === 'POST') {
+        // API : Modérer un avis (approuver/rejeter)
         header('Content-Type: application/json');
         $controller->modifierStatutAvis();
     } elseif ($path === '/admin/api/stats-moderation' && $method === 'GET') {
+        // API : Récupérer les statistiques de modération
         header('Content-Type: application/json');
         $controller->getStatsModeration();
     } elseif ($path === '/admin/export') {
+        // Exporter un rapport admin (PDF/CSV)
         $controller->exportRapport();
-        } elseif (preg_match('/^\/admin\/trajets\/(\d+)$/', $path, $matches)) {
-    // ✅ PAGE DÉTAILS TRAJET : /admin/trajets/123
-    $controller->detailsTrajet($matches[1]);
-
-
+    } elseif (preg_match('/^\/admin\/trajets\/(\d+)$/', $path, $matches)) {
+        // Page détails d'un trajet pour admin : /admin/trajets/123
+        $controller->detailsTrajet($matches[1]);
     } else {
         // 404 pour routes admin inconnues
         http_response_code(404);
         echo "Page admin non trouvée";
     }
-    exit; // ✅ IMPORTANT : Sortir après traitement admin
+    exit; // ✅ IMPORTANT : Je sors après traitement admin
 }
 
-// Je démarre le routage principal pour les routes publiques
+// =============================================================================
+// 🌐 JE DÉMARRE LE ROUTAGE PRINCIPAL POUR LES ROUTES PUBLIQUES
+// =============================================================================
 switch ($path) {
-    // === PAGE D'ACCUEIL ===
+    // ==========================================================================
+    // 🏠 PAGE D'ACCUEIL
+    // ==========================================================================
     case '/':
         $controller = new HomeController();
         $controller->index();
         break;
         
-    // === AUTHENTIFICATION ===
+    // ==========================================================================
+    // 🔐 SYSTÈME D'AUTHENTIFICATION
+    // ==========================================================================
     case '/inscription':
         $controller = new AuthController();
         $controller->inscription();
@@ -109,6 +137,7 @@ switch ($path) {
         break;
 
     case '/api/inscription':
+        // API : Créer un nouveau compte utilisateur
         header('Content-Type: application/json');
         if ($method === 'POST') {
             $controller = new AuthController();
@@ -120,6 +149,7 @@ switch ($path) {
         break;
 
     case '/api/connexion':
+        // API : Connexion utilisateur
         header('Content-Type: application/json');
         if ($method === 'POST') {
             $controller = new AuthController();
@@ -130,13 +160,17 @@ switch ($path) {
         }
         break;
         
-    // === TRAJETS ===
+    // ==========================================================================
+    // 🚗 GESTION DES TRAJETS
+    // ==========================================================================
     case '/trajets':
+        // Je liste tous les trajets disponibles
         $controller = new TripController();
         $controller->index();
         break;
 
     case '/nouveau-trajet':
+        // Je gère la création de trajet (GET = formulaire, POST = création)
         $controller = new TripController();
         if ($method === 'POST') {
             $controller->creerTrajet();
@@ -146,47 +180,58 @@ switch ($path) {
         break;
 
     case '/mes-trajets':
+        // Je liste les trajets de l'utilisateur connecté
         $controller = new TripController();
         $controller->mesTrajets();
         break;
 
     case '/demarrer-trajet':
+        // Je démarre un trajet (conducteur)
         $controller = new TripController();
         $controller->demarrerTrajet();
         break;
 
     case '/terminer-trajet':
+        // Je termine un trajet (conducteur)
         $controller = new TripController();
         $controller->terminerTrajet();
         break;
 
     case '/signaler-probleme':
+        // Je signale un problème sur un trajet
         $controller = new TripController();
         $controller->signalerProbleme();
         break;
 
-    // === RÉSERVATIONS ===
+    // ==========================================================================
+    // 📅 SYSTÈME DE RÉSERVATIONS
+    // ==========================================================================
     case '/mes-reservations':
+        // Je liste les réservations de l'utilisateur
         $controller = new ReservationController();
         $controller->mesReservations();
         break;
 
     case '/reserver-trajet':
+        // Je réserve une place sur un trajet
         $controller = new ReservationController();
         $controller->reserver();
         break;
 
     case '/annuler-reservation':
+        // J'annule une réservation
         $controller = new ReservationController();
         $controller->annuler();
         break;
 
     case '/valider-trajet':
+        // Je valide qu'un trajet s'est bien passé
         $controller = new ReservationController();
         $controller->validerTrajet();
         break;
 
     case '/api/reserver':
+        // API : Réserver un trajet
         header('Content-Type: application/json');
         if ($method === 'POST') {
             $controller = new ReservationController();
@@ -197,13 +242,17 @@ switch ($path) {
         }
         break;
 
-    // === PROFIL UTILISATEUR ===
+    // ==========================================================================
+    // 👤 GESTION DU PROFIL UTILISATEUR
+    // ==========================================================================
     case '/profil':
+        // Je gère le profil utilisateur
         $controller = new UserController();
         $controller->profil();
         break;
 
     case '/api/modifier-profil':
+        // API : Modifier les infos du profil
         header('Content-Type: application/json');
         if ($method === 'POST') {
             $controller = new UserController();
@@ -215,6 +264,7 @@ switch ($path) {
         break;
 
     case '/api/ajouter-vehicule':
+        // API : Ajouter un véhicule au profil
         header('Content-Type: application/json');
         if ($method === 'POST') {
             $controller = new UserController();
@@ -226,24 +276,30 @@ switch ($path) {
         break;
 
     case '/api/mes-vehicules':
+        // API : Lister les véhicules de l'utilisateur
         header('Content-Type: application/json');
         $controller = new UserController();
         $controller->mesVehicules();
         break;
 
-    // === AVIS (NOSQL MONGODB) ===
+    // ==========================================================================
+    // ⭐ SYSTÈME D'AVIS (NOSQL MONGODB)
+    // ==========================================================================
     case '/avis':
     case '/mes-avis':
+        // Je gère les avis utilisateurs (stockés en MongoDB)
         $controller = new AvisController();
         $controller->index();
         break;
 
     case '/donner-avis':
+        // Je donne un avis sur un trajet/utilisateur
         $controller = new AvisController();
         $controller->create();
         break;
 
     case '/api/avis':
+        // API : Ajouter un nouvel avis
         header('Content-Type: application/json');
         if ($method === 'POST') {
             $controller = new AvisController();
@@ -254,7 +310,77 @@ switch ($path) {
         }
         break;
 
-    // === ROUTES DYNAMIQUES ===
+    // ==========================================================================
+    // 💬 MESSAGERIE TEMPS RÉEL (NOSQL MONGODB) - NOUVEAU !
+    // ==========================================================================
+    case '/messages':
+        // Je gère la page principale de messagerie
+        $controller = new MessagerieController();
+        $controller->index();
+        break;
+
+    case '/api/messages/send':
+        // API : Envoyer un message dans une conversation
+        header('Content-Type: application/json');
+        if ($method === 'POST') {
+            $controller = new MessagerieController();
+            $controller->envoyerMessage();
+        } else {
+            http_response_code(405);
+            echo json_encode(['succes' => false, 'erreur' => 'Méthode non autorisée']);
+        }
+        break;
+
+    case '/api/messages/new':
+        // API : Créer une nouvelle conversation
+        header('Content-Type: application/json');
+        if ($method === 'POST') {
+            $controller = new MessagerieController();
+            $controller->nouvelleConversation();
+        } else {
+            http_response_code(405);
+            echo json_encode(['succes' => false, 'erreur' => 'Méthode non autorisée']);
+        }
+        break;
+
+    // 🔔 API NOUVELLE : Compter les messages non lus
+    case '/api/messages/unread-count':
+        header('Content-Type: application/json');
+        $controller = new MessagerieController();
+        $controller->getUnreadCount();
+        break;
+
+    // === NOUVELLES ROUTES MESSAGERIE ===
+    case '/api/users/search':
+        // API : Rechercher des utilisateurs par pseudo
+        header('Content-Type: application/json');
+        $controller = new MessagerieController();
+        $controller->rechercherUtilisateurs();
+        break;
+
+    case '/api/messages/motifs':
+        // API : Obtenir les motifs de contact
+        header('Content-Type: application/json');
+        $controller = new MessagerieController();
+        $controller->getMotifs();
+        break;
+
+    // === API RECHERCHE DE LIEUX ===
+    case '/api/places/search':
+        // J'ajoute cette nouvelle route API
+        header('Content-Type: application/json');
+        $controller = new TripController();
+        $controller->apiSearchPlaces();
+        break;
+        
+    case '/api/places/details':
+        $controller = new TripController();
+        $controller->apiPlaceDetails();
+        break;
+
+    // ==========================================================================
+    // 🔄 ROUTES DYNAMIQUES AVEC REGEX
+    // ==========================================================================
     default:
         // Route détail trajet : /trajet/123
         if (preg_match('/^\/trajet\/(\d+)$/', $path, $matches)) {
@@ -266,7 +392,18 @@ switch ($path) {
             $controller = new ReservationController();
             $controller->reserver($matches[1]);
         }
-        // Page 404
+        // 💬 Route conversation messagerie : /messages/conversation/abc123
+        elseif (preg_match('/^\/messages\/conversation\/([a-zA-Z0-9]+)$/', $path, $matches)) {
+            $controller = new MessagerieController();
+            $controller->conversation($matches[1]);
+        }
+        // 💬 API nouveaux messages : /messages/conversation/abc123/new
+        elseif (preg_match('/^\/messages\/conversation\/([a-zA-Z0-9]+)\/new$/', $path, $matches)) {
+            header('Content-Type: application/json');
+            $controller = new MessagerieController();
+            $controller->getNewMessages($matches[1]);
+        }
+       // 📄 PAGE 404 PERSONNALISÉE
         else {
             http_response_code(404);
             
@@ -274,14 +411,14 @@ switch ($path) {
             $error404 = true;
             
             ob_start();
-            ?>
+           ?>
             <div class="container py-5">
                 <div class="row justify-content-center">
                     <div class="col-md-6 text-center">
                         <h1 class="display-1 text-primary">404</h1>
                         <h2 class="mb-4">Page non trouvée</h2>
                         <p class="lead text-muted mb-4">
-                            Désolé, la page que vous recherchez n'existe pas ou a été déplacée.
+                            Désolé, la page que je recherche n'existe pas ou a été déplacée.
                         </p>
                         <div class="alert alert-info">
                             <strong>Chemin demandé :</strong> 
@@ -296,6 +433,10 @@ switch ($path) {
                                 <i class="fas fa-route me-2"></i>
                                 Voir les trajets
                             </a>
+                            <a href="/messages" class="btn btn-outline-success">
+                                <i class="fas fa-comments me-2"></i>
+                                Mes messages
+                            </a>
                         </div>
                     </div>
                 </div>
@@ -303,12 +444,14 @@ switch ($path) {
             <?php
             $content = ob_get_clean();
             
+            // Je charge le layout principal si il existe
             if (file_exists(__DIR__ . '/../app/Views/layouts/main.php')) {
                 include __DIR__ . '/../app/Views/layouts/main.php';
             } else {
                 echo $content;
-            }
+           }
         }
         break;
 }
+
 ?>

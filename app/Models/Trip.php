@@ -33,17 +33,18 @@ public function creerTrajet($data)
     try {
         $this->pdo->beginTransaction();
         
-        // Calculs automatiques pour le trajet
-        $distance = $this->calculerDistanceEstimative($data['lieu_depart'], $data['lieu_arrivee']);
+        // ✅ JE UTILISE LA DISTANCE CALCULÉE PAR LE CONTROLLER OU JE LA CALCULE
+        $distance = $data['distance_km'] ?? $this->calculerDistanceEstimative($data['lieu_depart'], $data['lieu_arrivee']);
         $prixCalcule = $this->calculerPrix($distance, $data['vehicule_electrique'] ?? false);
         
-        // ✅ SANS statut_moderation pour l'instant
+        // ✅ REQUÊTE SQL AVEC LES NOUVELLES COLONNES GPS
         $sql = "INSERT INTO trajets (
                     conducteur_id, vehicule_id, lieu_depart, code_postal_depart, 
                     lieu_arrivee, code_postal_arrivee, date_depart, heure_depart,
                     places, prix, commission, vehicule_electrique, distance_km, 
-                    statut, commentaire, created_at
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'ouvert', ?, NOW())";
+                    statut, commentaire, depart_latitude, depart_longitude, 
+                    arrivee_latitude, arrivee_longitude, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'ouvert', ?, ?, ?, ?, ?, NOW())";
         
         $stmt = $this->pdo->prepare($sql);
         $resultat = $stmt->execute([
@@ -60,7 +61,12 @@ public function creerTrajet($data)
             2.00, // Commission fixe EcoRide
             $data['vehicule_electrique'] ? 1 : 0,
             $distance,
-            $data['commentaire'] ?? null
+            $data['commentaire'] ?? null,
+            // ✅ NOUVELLES COLONNES GPS
+            $data['depart_latitude'] ?? null,
+            $data['depart_longitude'] ?? null,
+            $data['arrivee_latitude'] ?? null,
+            $data['arrivee_longitude'] ?? null
         ]);
         
         if ($resultat) {
@@ -95,6 +101,7 @@ public function creerTrajet($data)
         error_log("Erreur création trajet : " . $e->getMessage());
         return ['succes' => false, 'erreurs' => ['Erreur technique : ' . $e->getMessage()]];
     }
+    
 }
 
     
