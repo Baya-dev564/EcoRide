@@ -1,7 +1,7 @@
 <?php
 /**
  * Point d'entrée principal EcoRide avec routeur unifié
- * Version COMPLÈTE avec interface Admin + Messagerie NoSQL MongoDB
+ * Version COMPLÈTE avec interface Admin + Messagerie NoSQL MongoDB + NOUVELLES FONCTIONNALITÉS USER ADMIN
  * 
  * 🚀 FONCTIONNALITÉS INCLUSES :
  * ✅ Authentification complète
@@ -11,7 +11,10 @@
  * ✅ Messagerie temps réel NoSQL
  * ✅ Système d'avis MongoDB
  * ✅ Gestion des profils utilisateurs
- * ✅ Notifications de messages non lus - NOUVEAU !
+ * ✅ Notifications de messages non lus
+ * 🆕 Statistiques utilisateur avancées (AdminUserController séparé)
+ * 🆕 Modification utilisateur complète (AdminUserController séparé)
+ * 🆕 APIs AJAX pour gestion utilisateurs (AdminUserController séparé)
  */
 
 // J'active l'affichage des erreurs pour le développement
@@ -35,10 +38,11 @@ require_once __DIR__ . '/../app/Controllers/TripController.php';
 require_once __DIR__ . '/../app/Controllers/UserController.php';
 require_once __DIR__ . '/../app/Controllers/AuthController.php';
 require_once __DIR__ . '/../app/Controllers/AdminController.php';
+require_once __DIR__ . '/../app/Controllers/AdminUserController.php'; // 🆕 NOUVEAU CONTRÔLEUR SÉPARÉ
 require_once __DIR__ . '/../app/Controllers/ReservationController.php';
 require_once __DIR__ . '/../app/Controllers/AvisController.php';
 require_once __DIR__ . '/../app/Controllers/HomeController.php';
-require_once __DIR__ . '/../app/Controllers/MessagerieController.php'; // 💬 NOUVEAU : Messagerie MongoDB
+require_once __DIR__ . '/../app/Controllers/MessagerieController.php'; // 💬 Messagerie MongoDB
 
 // Je récupère l'URI et nettoie le chemin
 $uri = $_SERVER['REQUEST_URI'] ?? '/';
@@ -52,57 +56,105 @@ $method = $_SERVER['REQUEST_METHOD'];
 // 🛡️ JE GÈRE LES ROUTES ADMIN EN PREMIER (SÉCURITÉ PRIORITAIRE)
 // =============================================================================
 if (strpos($path, '/admin') === 0) {
-    $controller = new AdminController();
     
-    // Je route toutes les pages admin
-    if ($path === '/admin' || $path === '/admin/dashboard') {
-        $controller->dashboard();
-    } elseif ($path === '/admin/trajets') {
-        // Page de gestion des trajets
-        $controller->trajets();
-    } elseif ($path === '/admin/utilisateurs') {
-        // Page de gestion des utilisateurs
-        $controller->utilisateurs();
-    } elseif ($path === '/admin/avis') {
-        // Page de modération des avis MongoDB
-        $controller->avis();
-    } elseif ($path === '/admin/support') {
-        // Page de support et FAQ
-        $controller->support();
-    } elseif ($path === '/admin/test') {
-        // Page de test des connexions (développement)
-        $controller->testConnexions();
-    } elseif ($path === '/admin/api/moderer-trajet' && $method === 'POST') {
-        // API : Modérer un trajet (valider/refuser)
-        header('Content-Type: application/json');
-        $controller->modererTrajet();
-    } elseif ($path === '/admin/api/credits' && $method === 'POST') {
+    // 🎯 JE SÉPARE LES NOUVELLES FONCTIONNALITÉS DES ANCIENNES
+    
+    // 🆕 NOUVELLES ROUTES POUR LA GESTION AVANCÉE DES UTILISATEURS (CONTRÔLEUR SÉPARÉ)
+    if (preg_match('/^\/admin\/user-stats\/(\d+)$/', $path, $matches)) {
+        // Page statistiques d'un utilisateur : /admin/user-stats/123
+        $userController = new AdminUserController();
+        $userController->userStats($matches[1]);
+    } 
+    elseif (preg_match('/^\/admin\/user-edit\/(\d+)$/', $path, $matches)) {
+        // Page modification d'un utilisateur : /admin/user-edit/123
+        $userController = new AdminUserController();
+        $userController->editUser($matches[1]);
+    } 
+    elseif (preg_match('/^\/admin\/user-update\/(\d+)$/', $path, $matches)) {
+        // Traitement modification utilisateur : /admin/user-update/123
+        if ($method === 'POST') {
+            $userController = new AdminUserController();
+            $userController->updateUser($matches[1]);
+        } else {
+            header('Location: /admin/utilisateurs');
+        }
+    }
+    // 🆕 NOUVELLES APIs AJAX POUR LA GESTION UTILISATEURS (CONTRÔLEUR SÉPARÉ)
+    elseif ($path === '/admin/modifier-credits' && $method === 'POST') {
         // API : Modifier les crédits d'un utilisateur
         header('Content-Type: application/json');
-        $controller->modifierCredits();
-    } elseif ($path === '/admin/api/user-status' && $method === 'POST') {
+        $userController = new AdminUserController();
+        $userController->modifierCredits();
+    } 
+    elseif ($path === '/admin/toggle-user-status' && $method === 'POST') {
         // API : Suspendre/Activer un utilisateur
         header('Content-Type: application/json');
-        $controller->toggleUserStatus();
-    } elseif ($path === '/admin/api/avis-status' && $method === 'POST') {
-        // API : Modérer un avis (approuver/rejeter)
-        header('Content-Type: application/json');
-        $controller->modifierStatutAvis();
-    } elseif ($path === '/admin/api/stats-moderation' && $method === 'GET') {
-        // API : Récupérer les statistiques de modération
-        header('Content-Type: application/json');
-        $controller->getStatsModeration();
-    } elseif ($path === '/admin/export') {
-        // Exporter un rapport admin (PDF/CSV)
-        $controller->exportRapport();
-    } elseif (preg_match('/^\/admin\/trajets\/(\d+)$/', $path, $matches)) {
-        // Page détails d'un trajet pour admin : /admin/trajets/123
-        $controller->detailsTrajet($matches[1]);
-    } else {
-        // 404 pour routes admin inconnues
-        http_response_code(404);
-        echo "Page admin non trouvée";
+        $userController = new AdminUserController();
+        $userController->toggleUserStatus();
     }
+    
+    // 📌 ROUTES ADMIN EXISTANTES (TON AdminController ORIGINAL NON MODIFIÉ)
+    else {
+        $controller = new AdminController();
+        
+        // Je route toutes les pages admin existantes
+        if ($path === '/admin' || $path === '/admin/dashboard') {
+            $controller->dashboard();
+        } elseif ($path === '/admin/trajets') {
+            // Page de gestion des trajets
+            $controller->trajets();
+        } elseif ($path === '/admin/utilisateurs') {
+            // Page de gestion des utilisateurs
+            $controller->utilisateurs();
+        } elseif ($path === '/admin/avis') {
+            // Page de modération des avis MongoDB
+            $controller->avis();
+        } elseif ($path === '/admin/support') {
+            // Page de support et FAQ
+            $controller->support();
+        } elseif ($path === '/admin/test') {
+            // Page de test des connexions (développement)
+            $controller->testConnexions();
+        } 
+        elseif ($path === '/admin/moderer-trajet' && $method === 'POST') {
+            // API : Modérer un trajet (valider/refuser) - Ton code existant
+            header('Content-Type: application/json');
+            $controller->modererTrajet();
+        }
+        // ROUTES ADMIN EXISTANTES CONSERVÉES INTACTES
+        elseif ($path === '/admin/api/moderer-trajet' && $method === 'POST') {
+            // API : Modérer un trajet (valider/refuser) - Route alternative
+            header('Content-Type: application/json');
+            $controller->modererTrajet();
+        } elseif ($path === '/admin/api/credits' && $method === 'POST') {
+            // API : Modifier les crédits d'un utilisateur - Route alternative (si tu l'as)
+            header('Content-Type: application/json');
+            $controller->modifierCredits();
+        } elseif ($path === '/admin/api/user-status' && $method === 'POST') {
+            // API : Suspendre/Activer un utilisateur - Route alternative (si tu l'as)
+            header('Content-Type: application/json');
+            $controller->toggleUserStatus();
+        } elseif ($path === '/admin/api/avis-status' && $method === 'POST') {
+            // API : Modérer un avis (approuver/rejeter)
+            header('Content-Type: application/json');
+            $controller->modifierStatutAvis();
+        } elseif ($path === '/admin/api/stats-moderation' && $method === 'GET') {
+            // API : Récupérer les statistiques de modération
+            header('Content-Type: application/json');
+            $controller->getStatsModeration();
+        } elseif ($path === '/admin/export') {
+            // Exporter un rapport admin (PDF/CSV)
+            $controller->exportRapport();
+        } elseif (preg_match('/^\/admin\/trajets\/(\d+)$/', $path, $matches)) {
+            // Page détails d'un trajet pour admin : /admin/trajets/123
+            $controller->detailsTrajet($matches[1]);
+        } else {
+            // 404 pour routes admin inconnues
+            http_response_code(404);
+            echo "Page admin non trouvée : " . htmlspecialchars($path);
+        }
+    }
+    
     exit; // ✅ IMPORTANT : Je sors après traitement admin
 }
 
@@ -311,7 +363,7 @@ switch ($path) {
         break;
 
     // ==========================================================================
-    // 💬 MESSAGERIE TEMPS RÉEL (NOSQL MONGODB) - NOUVEAU !
+    // 💬 MESSAGERIE TEMPS RÉEL (NOSQL MONGODB)
     // ==========================================================================
     case '/messages':
         // Je gère la page principale de messagerie
@@ -343,14 +395,14 @@ switch ($path) {
         }
         break;
 
-    // 🔔 API NOUVELLE : Compter les messages non lus
+    // 🔔 API : Compter les messages non lus
     case '/api/messages/unread-count':
         header('Content-Type: application/json');
         $controller = new MessagerieController();
         $controller->getUnreadCount();
         break;
 
-    // === NOUVELLES ROUTES MESSAGERIE ===
+    // === ROUTES MESSAGERIE SUPPLÉMENTAIRES ===
     case '/api/users/search':
         // API : Rechercher des utilisateurs par pseudo
         header('Content-Type: application/json');
@@ -403,7 +455,7 @@ switch ($path) {
             $controller = new MessagerieController();
             $controller->getNewMessages($matches[1]);
         }
-       // 📄 PAGE 404 PERSONNALISÉE
+        // 📄 PAGE 404 PERSONNALISÉE
         else {
             http_response_code(404);
             
@@ -418,7 +470,7 @@ switch ($path) {
                         <h1 class="display-1 text-primary">404</h1>
                         <h2 class="mb-4">Page non trouvée</h2>
                         <p class="lead text-muted mb-4">
-                            Désolé, la page que je recherche n'existe pas ou a été déplacée.
+                            Désolé, la page que tu recherches n'existe pas ou a été déplacée.
                         </p>
                         <div class="alert alert-info">
                             <strong>Chemin demandé :</strong> 
