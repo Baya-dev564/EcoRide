@@ -8,7 +8,6 @@ ob_start();
 $jsFiles = ['/EcoRide/public/js/mes-trajets.js'];
 ?>
 
-
 <!-- Messages d'alerte -->
 <?php if (!empty($message)): ?>
     <aside class="container mt-3" role="alert" aria-live="polite">
@@ -21,7 +20,6 @@ $jsFiles = ['/EcoRide/public/js/mes-trajets.js'];
         </div>
     </aside>
 <?php endif; ?>
-
 
 <main class="container py-4" role="main">
     <!-- En-tête -->
@@ -42,7 +40,6 @@ $jsFiles = ['/EcoRide/public/js/mes-trajets.js'];
             </div>
         </div>
     </header>
-
 
     <!-- Statistiques rapides -->
     <section class="row mb-4" aria-labelledby="stats-titre">
@@ -90,7 +87,6 @@ $jsFiles = ['/EcoRide/public/js/mes-trajets.js'];
             </div>
         </article>
     </section>
-
 
     <!-- Liste des trajets -->
     <section aria-labelledby="liste-titre">
@@ -279,29 +275,81 @@ $jsFiles = ['/EcoRide/public/js/mes-trajets.js'];
                                     </div>
                                 </footer>
 
-                                <!-- ====== AJOUT DES BOUTONS DÉMARRER / ARRÊTER ====== -->
+                                <!-- ✅ NOUVEAU WORKFLOW : DÉMARRER → TERMINER → NOTER -->
                                 <div class="col-12 mt-3">
-                                    <?php if (isset($trajet['statut_execution'])): ?>
-                                        <?php if ($trajet['statut_execution'] === 'attente'): ?>
-                                            <form method="POST" action="/demarrer-trajet" class="mb-2">
+                                    <div class="border-top pt-3">
+                                        <?php 
+                                        // Je détermine le statut du workflow basé sur les réservations
+                                        $nbReservationsConfirmees = $trajet['nb_reservations_confirmees'] ?? 0;
+                                        $nbReservationsEnCours = $trajet['nb_reservations_en_cours'] ?? 0; 
+                                        $nbReservationsTerminees = $trajet['nb_reservations_terminees'] ?? 0;
+                                        $peutDemarrer = $nbReservationsConfirmees > 0 && $nbReservationsEnCours == 0 && $nbReservationsTerminees == 0;
+                                        $peutTerminer = $nbReservationsEnCours > 0;
+                                        $estTermine = $nbReservationsTerminees > 0;
+                                        ?>
+
+                                        <?php if ($peutDemarrer): ?>
+                                            <!-- 🟢 BOUTON DÉMARRER LE TRAJET -->
+                                            <div class="alert alert-info mb-2" role="alert">
+                                                <div class="d-flex align-items-center">
+                                                    <i class="fas fa-info-circle me-2"></i>
+                                                    <span>Vos passagers vous attendent ! Démarrez le trajet quand vous êtes prêt.</span>
+                                                </div>
+                                            </div>
+                                            <form method="POST" action="/EcoRide/public/demarrer-trajet-reservations" class="mb-2">
                                                 <input type="hidden" name="trajet_id" value="<?= $trajet['id'] ?>">
-                                                <button type="submit" class="btn btn-success w-100" aria-label="Démarrer le trajet">
-                                                    <i class="fas fa-play me-1"></i> Démarrer le trajet
+                                                <button type="submit" class="btn btn-success btn-lg w-100" 
+                                                        onclick="return confirm('Êtes-vous sûr de vouloir démarrer ce trajet maintenant ?')"
+                                                        aria-label="Démarrer le trajet avec <?= $nbReservationsConfirmees ?> passager(s)">
+                                                    <i class="fas fa-play me-2"></i>
+                                                    Démarrer le trajet (<?= $nbReservationsConfirmees ?> passager<?= $nbReservationsConfirmees > 1 ? 's' : '' ?>)
                                                 </button>
                                             </form>
-                                        <?php elseif ($trajet['statut_execution'] === 'en_cours'): ?>
-                                            <form method="POST" action="/terminer-trajet" class="mb-2">
+                                            
+                                        <?php elseif ($peutTerminer): ?>
+                                            <!-- 🟡 BOUTON TERMINER LE TRAJET -->
+                                            <div class="alert alert-warning mb-2" role="alert">
+                                                <div class="d-flex align-items-center">
+                                                    <i class="fas fa-road me-2"></i>
+                                                    <span><strong>Trajet en cours</strong> - Terminez quand vous arrivez à destination.</span>
+                                                </div>
+                                            </div>
+                                            <form method="POST" action="/EcoRide/public/terminer-trajet-reservations" class="mb-2">
                                                 <input type="hidden" name="trajet_id" value="<?= $trajet['id'] ?>">
-                                                <button type="submit" class="btn btn-warning w-100" aria-label="Arrêter le trajet">
-                                                    <i class="fas fa-flag-checkered me-1"></i> Arrêter le trajet
+                                                <button type="submit" class="btn btn-warning btn-lg w-100" 
+                                                        onclick="return confirm('Confirmez-vous que le trajet est terminé et que les passagers sont arrivés ?')"
+                                                        aria-label="Terminer le trajet avec <?= $nbReservationsEnCours ?> passager(s)">
+                                                    <i class="fas fa-flag-checkered me-2"></i>
+                                                    Terminer le trajet (<?= $nbReservationsEnCours ?> passager<?= $nbReservationsEnCours > 1 ? 's' : '' ?>)
                                                 </button>
                                             </form>
-                                        <?php elseif ($trajet['statut_execution'] === 'termine'): ?>
-                                            <span class="badge bg-success">Trajet terminé</span>
-                                        <?php elseif ($trajet['statut_execution'] === 'probleme'): ?>
-                                            <span class="badge bg-danger">Trajet signalé</span>
+                                            
+                                        <?php elseif ($estTermine): ?>
+                                            <!-- ✅ TRAJET TERMINÉ -->
+                                            <div class="alert alert-success mb-0" role="alert">
+                                                <div class="d-flex align-items-center justify-content-between">
+                                                    <div>
+                                                        <i class="fas fa-check-circle me-2"></i>
+                                                        <strong>Trajet terminé</strong> - Les passagers peuvent maintenant vous noter.
+                                                    </div>
+                                                    <span class="badge bg-success">
+                                                        <i class="fas fa-star me-1"></i>
+                                                        Notations ouvertes
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            
+                                        <?php elseif ($trajet['statut'] === 'ouvert' && $nbReservationsConfirmees == 0): ?>
+                                            <!-- ⏳ EN ATTENTE DE RÉSERVATIONS -->
+                                            <div class="alert alert-secondary mb-0" role="alert">
+                                                <div class="d-flex align-items-center">
+                                                    <i class="fas fa-hourglass-half me-2"></i>
+                                                    <span>En attente de réservations - Votre trajet est visible par tous les utilisateurs.</span>
+                                                </div>
+                                            </div>
+                                            
                                         <?php endif; ?>
-                                    <?php endif; ?>
+                                    </div>
                                 </div>
                             </div>
                         </article>

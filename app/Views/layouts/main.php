@@ -152,21 +152,26 @@
                                     <i class="fas fa-home" aria-hidden="true"></i> Accueil
                                 </a>
                             </li>
-                            <!-- 🔔 MESSAGES AVEC NOTIFICATION PROPRE -->
-                            <li class="nav-item">
-                                <a class="nav-link d-flex align-items-center" href="/messages">
-                                    <i class="fas fa-comments me-1"></i> 
-                                    Messages
-                                    <span id="unreadBadge" class="badge message-notification-badge ms-2" style="display: none;">
-                                        <span id="unreadCount">0</span>
-                                    </span>
-                                </a>
-                            </li>
+                            
+                            <?php if ($userConnecte): ?>
+                                <!-- 🔔 MESSAGES AVEC NOTIFICATION PROPRE - SEULEMENT POUR CONNECTÉS -->
+                                <li class="nav-item">
+                                    <a class="nav-link d-flex align-items-center" href="/messages">
+                                        <i class="fas fa-comments me-1"></i> 
+                                        Messages
+                                        <span id="unreadBadge" class="badge message-notification-badge ms-2" style="display: none;">
+                                            <span id="unreadCount">0</span>
+                                        </span>
+                                    </a>
+                                </li>
+                            <?php endif; ?>
+                            
                             <li class="nav-item" role="none">
                                 <a class="nav-link" href="/trajets" role="menuitem" aria-current="<?= strpos($_SERVER['REQUEST_URI'], '/trajets') === 0 ? 'page' : 'false' ?>">
                                     <i class="fas fa-car" aria-hidden="true"></i> Covoiturages
                                 </a>
                             </li>
+                            
                             <?php if ($userConnecte): ?>
                                 <li class="nav-item" role="none">
                                     <a class="nav-link" href="/mes-trajets" role="menuitem" aria-current="<?= strpos($_SERVER['REQUEST_URI'], '/mes-trajets') === 0 ? 'page' : 'false' ?>">
