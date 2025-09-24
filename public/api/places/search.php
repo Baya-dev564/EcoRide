@@ -3,7 +3,7 @@
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
 
-// CORRECTION : bon chemin pour l'autoloader
+// Je corrige le chemin pour l'autoloader
 require_once __DIR__ . '/../../../app/Services/PlacesService.php';
 
 $query = $_GET['q'] ?? '';

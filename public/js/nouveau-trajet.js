@@ -27,7 +27,7 @@ function initAutocomplete() {
                     document.getElementById('depart_place_id').value = place.id;
                 }
                 
-                console.log('🟢 Point de départ création sélectionné:', place.name);
+                console.log('Point de départ création sélectionné:', place.name);
                 
                 // Je recalcule le prix si les deux points sont sélectionnés
                 calculateTripPrice();
@@ -50,7 +50,7 @@ function initAutocomplete() {
                     document.getElementById('arrivee_place_id').value = place.id;
                 }
                 
-                console.log('🔴 Point d\'arrivée création sélectionné:', place.name);
+                console.log('Point d\'arrivée création sélectionné:', place.name);
                 
                 // Je recalcule le prix si les deux points sont sélectionnés
                 calculateTripPrice();
@@ -91,7 +91,7 @@ function calculateTripPrice() {
             `;
         }
         
-        console.log(`💰 Prix calculé: ${distance}km = ${prix} crédits`);
+        console.log(`Prix calculé: ${distance}km = ${prix} crédits`);
     }
 }
 

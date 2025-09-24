@@ -1,4 +1,4 @@
-// ✅ Gestion des notifications de messages - EcoRide
+// Gestion des notifications de messages - EcoRide
 document.addEventListener('DOMContentLoaded', function() {
     // Je vérifie s'il y a un utilisateur connecté
     if (typeof userConnected !== 'undefined' && userConnected) {
@@ -9,7 +9,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-// ✅ Fonction pour mettre à jour le compteur
+// Fonction pour mettre à jour le compteur
 function updateUnreadCount() {
     fetch('/api/messages/unread-count')
         .then(response => response.json())

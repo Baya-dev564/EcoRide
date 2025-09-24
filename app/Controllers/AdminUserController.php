@@ -1,7 +1,7 @@
 <?php
 /**
- * Contrôleur séparé pour les nouvelles fonctionnalités utilisateur admin
- * Version corrigée - pas d'include direct, utilisation du système de layout
+ * AdminUserController - Contrôleur pour les fonctionnalités avancées de gestion des utilisateurs
+ * Contrôleur séparé pour les statistiques et modifications utilisateur depuis l'administration
  */
 
 class AdminUserController
@@ -19,6 +19,9 @@ class AdminUserController
         $this->adminModel = new Admin();
     }
     
+    /**
+     * Je vérifie que l'utilisateur connecté est un administrateur
+     */
     private function verifierAdminConnecte()
     {
         if (session_status() === PHP_SESSION_NONE) {
@@ -34,7 +37,7 @@ class AdminUserController
     }
     
     /**
-     * Nettoie et sécurise les données statistiques pour éviter les erreurs number_format()
+     * Je nettoie et sécurise les données statistiques pour éviter les erreurs
      */
     private function nettoyerDonneesStats($stats)
     {
@@ -47,7 +50,7 @@ class AdminUserController
             'nb_reservations_terminees' => (int)($stats['nb_reservations_terminees'] ?? 0),
             'places_totales' => (int)($stats['places_totales'] ?? 0),
             
-            // Valeurs financières - TOUJOURS en float pour number_format()
+            // Valeurs financières - toujours en float pour number_format()
             'distance_totale' => (float)($stats['distance_totale'] ?? 0.0),
             'revenus_totaux' => (float)($stats['revenus_totaux'] ?? 0.0),
             'credits_depenses' => (int)($stats['credits_depenses'] ?? 0),
@@ -58,11 +61,11 @@ class AdminUserController
             'taux_completion' => (float)($stats['taux_completion'] ?? 0.0),
             'places_moyenne_par_trajet' => (float)($stats['places_moyenne_par_trajet'] ?? 0.0),
             
-            // Dates (si présentes)
+            // Dates si présentes
             'dernier_trajet' => $stats['dernier_trajet'] ?? null,
             'membre_depuis' => $stats['membre_depuis'] ?? null,
             
-            // Evolution mensuelle (tableau vide si pas de données)
+            // Evolution mensuelle avec tableau vide par défaut
             'evolution' => [
                 'trajets' => $stats['evolution']['trajets'] ?? [],
                 'reservations' => $stats['evolution']['reservations'] ?? []
@@ -78,7 +81,7 @@ class AdminUserController
     }
     
     /**
-     * ✅ CORRIGÉ : Statistiques d'un utilisateur (SANS include direct)
+     * J'affiche les statistiques détaillées d'un utilisateur
      */
     public function userStats($userId)
     {
@@ -94,28 +97,20 @@ class AdminUserController
                 exit;
             }
             
-            // Je récupère les stats brutes
+            // Je récupère les statistiques brutes
             $statsRaw = $this->adminModel->calculerStatistiquesUtilisateur($userId);
             
             // Je nettoie et sécurise les données
             $stats = $this->nettoyerDonneesStats($statsRaw);
             
-            // ✅ JE PRÉPARE LES VARIABLES POUR TON SYSTÈME DE LAYOUT/TEMPLATE
+            // Je prépare les variables pour la vue
             $title = "Statistiques de " . htmlspecialchars($user['pseudo']) . " - Admin EcoRide";
             $currentPage = 'utilisateurs';
             $userData = $user;
             $userStats = $stats;
             
-            // ✅ AU LIEU DE FAIRE include DIRECT, JE CHARGE TA VUE COMME LES AUTRES CONTRÔLEURS
-            // Remplace cette ligne selon ton système :
-            // Option 1: Si tu utilises un système de template
-            // $this->render('admin/utilisateurs-stat', compact('title', 'currentPage', 'userData', 'userStats'));
-            
-            // Option 2: Si tu utilises le système include classique SANS layout automatique
+            // Je charge la vue avec le système de template
             $content = $this->renderView('admin/utilisateurs-stat', compact('userData', 'userStats'));
-            
-            // Option 3: Si tu as un layout admin spécifique
-            // include __DIR__ . '/../Views/layouts/admin.php';
             
         } catch (Exception $e) {
             error_log("Erreur stats admin: " . $e->getMessage());
@@ -126,7 +121,7 @@ class AdminUserController
     }
     
     /**
-     * ✅ MÉTHODE HELPER POUR RENDRE UNE VUE SANS LAYOUT COMPLET
+     * Je rends une vue sans layout complet
      */
     private function renderView($viewPath, $variables = [])
     {
@@ -136,14 +131,13 @@ class AdminUserController
         // Je démarre le buffer de sortie
         ob_start();
         
-        // J'inclus seulement la vue (pas de layout complet)
+        // J'inclus seulement la vue
         include __DIR__ . "/../Views/{$viewPath}.php";
         
         // Je retourne le contenu
         $content = ob_get_clean();
         
-        // ✅ ICI TU PEUX UTILISER TON SYSTÈME DE LAYOUT ADMIN SI TU EN AS UN
-        // Par exemple si tu as un admin-layout.php :
+        // Je vérifie si un layout admin existe
         if (file_exists(__DIR__ . '/../Views/layouts/admin-layout.php')) {
             include __DIR__ . '/../Views/layouts/admin-layout.php';
         } else {
@@ -153,7 +147,7 @@ class AdminUserController
     }
 
     /**
-     * Formulaire de modification d'un utilisateur
+     * J'affiche le formulaire de modification d'un utilisateur
      */
     public function editUser($userId)
     {
@@ -195,7 +189,7 @@ class AdminUserController
                 'note' => (float)($user['note_moyenne'] ?? 0.0)
             ];
             
-            // ✅ MÊME SYSTÈME QUE userStats()
+            // J'utilise le même système de rendu que pour les statistiques
             $this->renderView('admin/utilisateurs-edit', compact('userData'));
             
         } catch (Exception $e) {
@@ -207,7 +201,7 @@ class AdminUserController
     }
 
     /**
-     * Traitement de la modification
+     * Je traite la modification d'un utilisateur
      */
     public function updateUser($userId)
     {
@@ -242,7 +236,7 @@ class AdminUserController
     }
     
     /**
-     * Valide et nettoie les données de modification utilisateur
+     * Je valide et nettoie les données de modification utilisateur
      */
     private function validerDonneesModification($donnees)
     {
@@ -264,7 +258,7 @@ class AdminUserController
     }
 
     /**
-     * API : Modifier crédits
+     * Je modifie les crédits d'un utilisateur via API
      */
     public function modifierCredits()
     {
@@ -310,7 +304,7 @@ class AdminUserController
     }
 
     /**
-     * API : Changer statut utilisateur
+     * Je change le statut d'un utilisateur via API
      */
     public function toggleUserStatus()
     {
@@ -375,7 +369,7 @@ class AdminUserController
     }
     
     /**
-     * Méthode utilitaire pour logger les actions admin
+     * Je log les actions administrateur pour traçabilité
      */
     private function loggerActionAdmin($action, $userId, $details = '')
     {

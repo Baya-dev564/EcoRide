@@ -10,10 +10,7 @@ class PlacesAutocomplete {
             minLength: 2,
             delay: 300,
             maxResults: 8,
-        apiUrl: '/api/places/search.php', // NOUVEAU (avec .php)
-
-
-
+            apiUrl: '/api/places/search.php',
             onSelect: () => {},
             ...options
         };
@@ -31,7 +28,7 @@ class PlacesAutocomplete {
         // J'écoute les événements
         this.bindEvents();
         
-        console.log('🔍 Autocomplete initialisé pour', this.input.id);
+        console.log('Autocomplete initialisé pour', this.input.id);
     }
     
     createSuggestionContainer() {
@@ -63,7 +60,7 @@ class PlacesAutocomplete {
         // Je recherche au clavier
         this.input.addEventListener('input', (e) => {
             const query = e.target.value.trim();
-            console.log('📝 Input event:', query);
+            console.log('Input event:', query);
             
             if (query.length >= this.options.minLength) {
                 this.scheduleSearch(query);
@@ -86,7 +83,7 @@ class PlacesAutocomplete {
     }
     
     scheduleSearch(query) {
-        console.log('⏰ Programmation recherche pour:', query);
+        console.log('Programmation recherche pour:', query);
         
         // Je nettoie le timeout précédent
         if (this.timeout) {
@@ -101,7 +98,7 @@ class PlacesAutocomplete {
     
     async searchPlaces(query) {
         try {
-            console.log('🔍 Recherche lancée:', query);
+            console.log('Recherche lancée:', query);
             
             // Je construis l'URL de recherche
             const params = new URLSearchParams({
@@ -111,10 +108,10 @@ class PlacesAutocomplete {
             });
             
             const url = `${this.options.apiUrl}?${params}`;
-            console.log('🌐 URL finale:', url);
+            console.log('URL finale:', url);
             
             const response = await fetch(url);
-            console.log('📡 Réponse HTTP status:', response.status);
+            console.log('Réponse HTTP status:', response.status);
             
             if (!response.ok) {
                 throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -122,17 +119,17 @@ class PlacesAutocomplete {
             
             const places = await response.json();
             
-            console.log('📍 Places trouvées:', places.length, places);
+            console.log('Places trouvées:', places.length, places);
             this.showSuggestions(places);
             
         } catch (error) {
-            console.error('❌ Erreur recherche places:', error);
+            console.error('Erreur recherche places:', error);
             this.showError('Erreur de connexion');
         }
     }
     
     showSuggestions(places) {
-        console.log('📋 Affichage suggestions:', places.length);
+        console.log('Affichage suggestions:', places.length);
         
         // Je vide la liste
         this.suggestionList.innerHTML = '';
@@ -150,11 +147,11 @@ class PlacesAutocomplete {
         this.suggestionList.style.display = 'block';
         this.isOpen = true;
         
-        console.log('✅ Suggestions affichées');
+        console.log('Suggestions affichées');
     }
     
     showError(message) {
-        this.suggestionList.innerHTML = `<div class="suggestion-item no-results">❌ ${message}</div>`;
+        this.suggestionList.innerHTML = `<div class="suggestion-item no-results">Erreur: ${message}</div>`;
         this.suggestionList.style.display = 'block';
         this.isOpen = true;
     }
@@ -189,7 +186,7 @@ class PlacesAutocomplete {
         
         // J'écoute les événements
         item.addEventListener('click', () => {
-            console.log('👆 Clic sur item:', place.name);
+            console.log('Clic sur item:', place.name);
             this.selectPlace(place);
         });
         
@@ -216,7 +213,7 @@ class PlacesAutocomplete {
         // Callback personnalisé
         this.options.onSelect(place, this.input);
         
-        console.log('✅ Lieu sélectionné:', place.name, '- GPS:', place.latitude, place.longitude);
+        console.log('Lieu sélectionné:', place.name, '- GPS:', place.latitude, place.longitude);
     }
     
     getTypeLabel(type) {
@@ -233,7 +230,7 @@ class PlacesAutocomplete {
     hideSuggestions() {
         this.suggestionList.style.display = 'none';
         this.isOpen = false;
-        console.log('🙈 Suggestions masquées');
+        console.log('Suggestions masquées');
     }
     
     highlightItem(item) {
@@ -300,4 +297,4 @@ style.textContent = `
 `;
 document.head.appendChild(style);
 
-console.log('🎯 PlacesAutocomplete class chargée avec debug !');
+console.log('PlacesAutocomplete class chargée avec debug !');

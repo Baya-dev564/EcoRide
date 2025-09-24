@@ -1,8 +1,8 @@
 <?php
 /**
- * Contrôleur des avis pour EcoRide - Système NoSQL MongoDB
- * TP Développement Web - Architecture MVC hybride MySQL + MongoDB
- * Je gère l'affichage et l'ajout d'avis stockés dans MongoDB via Docker
+ * AvisController - Contrôleur des avis pour EcoRide
+ * Système NoSQL MongoDB pour la gestion des avis utilisateurs
+ * Architecture MVC hybride MySQL + MongoDB
  */
 
 // J'inclus le modèle MongoDB pour les avis
@@ -15,7 +15,6 @@ class AvisController
     
     /**
      * Constructeur - J'initialise la connexion MongoDB
-     * Je crée une instance du modèle AvisMongo
      */
     public function __construct() 
     {
@@ -23,13 +22,8 @@ class AvisController
     }
     
     /**
-     * MÉTHODE CORRIGÉE : J'affiche la page principale des avis
-     * Route : GET /avis ou /mes-avis
-     * 
-     * CORRECTION MAJEURE :
-     * - Avant : Je récupérais les avis d'un trajet spécifique (incohérent)
-     * - Maintenant : Je récupère TOUS les avis validés par l'admin
-     * - Utilisation de la nouvelle méthode getTousLesAvisValidés()
+     * J'affiche la page principale des avis
+     * Je récupère tous les avis validés par l'administrateur
      */
     public function index() 
     {
@@ -38,7 +32,7 @@ class AvisController
         }
         
         try {
-            // ✅ CORRECTION : Je récupère TOUS les avis validés (plus de filtre par trajet)
+            // Je récupère tous les avis validés depuis MongoDB
             error_log("DEBUG AvisController: Récupération de tous les avis validés");
             $resultat = $this->avisMongo->getTousLesAvisValidés();
             
@@ -46,11 +40,10 @@ class AvisController
                 $avisArray = $resultat['avis'];
                 error_log("DEBUG AvisController: " . count($avisArray) . " avis récupérés avec succès");
                 
-                // CONVERSION : Je transforme les données MongoDB en objets Avis
-                // compatibles avec mes getters dans la vue HTML
+                // Je transforme les données MongoDB en objets Avis compatibles avec la vue
                 $avis = [];
                 foreach ($avisArray as $avisData) {
-                    // Je crée un objet Avis avec les données MongoDB
+                    // Je crée un objet avec les données MongoDB formatées
                     $avisFormatted = [
                         '_id' => $avisData['id'] ?? uniqid('avis_'),
                         'user_id' => $avisData['utilisateur_id'] ?? null,
@@ -70,7 +63,7 @@ class AvisController
                         'statut' => 'validé'
                     ];
                     
-                    // Je crée un objet Avis (la classe est incluse)
+                    // Je crée un objet Avis pour la vue
                     require_once '../app/Models/avis-mongo.php';
                     $avis[] = new Avis($avisFormatted);
                 }
@@ -79,7 +72,7 @@ class AvisController
                 
             } else {
                 error_log("DEBUG AvisController: Erreur récupération avis - " . ($resultat['error'] ?? 'Inconnue'));
-                $avis = []; // Je tableau vide si erreur MongoDB
+                $avis = []; // Je retourne un tableau vide si erreur MongoDB
             }
             
         } catch (Exception $e) {
@@ -87,7 +80,7 @@ class AvisController
             $avis = [];
         }
         
-        // Je variables pour la vue
+        // Je définis les variables pour la vue
         $pageTitle = "Avis des utilisateurs - EcoRide";
         
         // Je charge la vue avec les avis MongoDB
@@ -96,7 +89,6 @@ class AvisController
 
     /**
      * J'affiche le formulaire pour créer un nouvel avis
-     * Route : GET /donner-avis
      */
     public function create() 
     {
@@ -110,8 +102,8 @@ class AvisController
             exit;
         }
         
-        // AJOUTÉ : Je récupère l'ID du trajet depuis l'URL ou les paramètres
-        $trajet_id = $_GET['trajet_id'] ?? '1'; // Ou depuis tes paramètres de route
+        // Je récupère l'ID du trajet depuis l'URL ou les paramètres
+        $trajet_id = $_GET['trajet_id'] ?? '1';
         $conducteur_id = $_GET['conducteur_id'] ?? '1';
         
         $title = "Donner un avis | EcoRide";
@@ -122,8 +114,6 @@ class AvisController
     
     /**
      * J'affiche un avis spécifique par son ID MongoDB
-     * Route : GET /avis/123
-     * CORRECTION : J'utilise maintenant getAvisParId() du modèle MongoDB
      */
     public function show($id = null) 
     {
@@ -144,10 +134,10 @@ class AvisController
                 exit;
             }
             
-            // Je titre de la page
+            // Je définis le titre de la page
             $title = "Détail de l'avis | EcoRide";
             
-            // Je charge la vue détail d'un avis (avec $avis disponible)
+            // Je charge la vue détail d'un avis
             include '../app/Views/avis/show.php';
             
         } catch (Exception $e) {
@@ -160,8 +150,6 @@ class AvisController
     
     /**
      * API pour ajouter un nouvel avis dans MongoDB
-     * Route : POST /api/avis
-     * CORRECTION COMPLÈTE : Je supprime les warnings PHP + JSON propre
      */
     public function ajouterAvis() 
     {
@@ -187,11 +175,11 @@ class AvisController
         }
 
         try {
-            // CORRECTION : Je récupère le vrai pseudo depuis la session
+            // Je récupère le vrai pseudo depuis la session
             $donnees = [
                 'trajet_id' => $_POST['trajet_id'] ?? null,
                 'utilisateur_id' => $_SESSION['user_id'],
-                'nom_utilisateur' => $_SESSION['pseudo'] ?? $_SESSION['username'] ?? $_SESSION['nom'] ?? 'Utilisateur', // ← CORRECTION ICI
+                'nom_utilisateur' => $_SESSION['pseudo'] ?? $_SESSION['username'] ?? $_SESSION['nom'] ?? 'Utilisateur',
                 'note' => isset($_POST['note']) ? (int)$_POST['note'] : 5,
                 'commentaire' => $_POST['commentaire'] ?? ''
             ];
@@ -209,7 +197,7 @@ class AvisController
                 return;
             }
 
-            // J'appelle au modèle MongoDB pour sauvegarder
+            // J'appelle le modèle MongoDB pour sauvegarder
             $resultat = $this->avisMongo->ajouterAvis($donnees);
 
             echo json_encode($resultat);
@@ -225,12 +213,10 @@ class AvisController
 
     /**
      * API pour récupérer les avis d'un trajet spécifique
-     * Route : GET /api/avis/trajet/123
-     * Compatible avec la méthode getAvisParTrajet() du modèle MongoDB
      */
     public function getAvis($trajet_id) 
     {
-        // Je header JSON pour la réponse API
+        // Je définis le header JSON pour la réponse API
         header('Content-Type: application/json');
         
         // Je vérifie que l'ID du trajet est fourni
@@ -247,7 +233,7 @@ class AvisController
             echo json_encode($resultat);
             
         } catch (Exception $e) {
-            // Je gestion d'erreur MongoDB
+            // Je gère les erreurs MongoDB
             error_log("Erreur récupération avis MongoDB : " . $e->getMessage());
             echo json_encode([
                 'success' => false, 
@@ -258,8 +244,6 @@ class AvisController
     
     /**
      * API pour récupérer tous les avis d'un utilisateur
-     * Route : GET /api/avis/user/123
-     * CORRECTION : Compatible avec getAvisParUtilisateur() du modèle MongoDB
      */
     public function getAvisUtilisateur($utilisateur_id = null) 
     {
@@ -281,14 +265,14 @@ class AvisController
         }
         
         try {
-            // CORRECTION : J'utilise la méthode MongoDB ajoutée
+            // J'utilise la méthode MongoDB appropriée
             $resultat = $this->avisMongo->getAvisParUtilisateur($utilisateur_id);
             
             // Je retourne la réponse JSON
             echo json_encode($resultat);
             
         } catch (Exception $e) {
-            // Je gestion d'erreur MongoDB
+            // Je gère les erreurs MongoDB
             error_log("Erreur récupération avis utilisateur : " . $e->getMessage());
             echo json_encode([
                 'success' => false, 
@@ -298,9 +282,7 @@ class AvisController
     }
 
     /**
-     * BONUS : API pour calculer la note moyenne d'un trajet
-     * Route : GET /api/avis/moyenne/123
-     * J'utilise la méthode calculerNoteMoyenne() du modèle MongoDB
+     * API pour calculer la note moyenne d'un trajet
      */
     public function getMoyenneTrajet($trajet_id) 
     {
@@ -312,7 +294,7 @@ class AvisController
         }
         
         try {
-            // Je calcule la moyenne avec MongoDB (agrégation)
+            // Je calcule la moyenne avec MongoDB via agrégation
             $resultat = $this->avisMongo->calculerNoteMoyenne($trajet_id);
             
             echo json_encode($resultat);
@@ -332,8 +314,8 @@ class AvisController
     private function getNomUtilisateur($user_id) 
     {
         try {
-            // Je connexion à MySQL (adapte selon ta config)
-            $pdo = new PDO('mysql:host=localhost;dbname=ecoride', 'username', 'password');
+            // Je me connecte à MySQL
+            global $pdo;
             
             $stmt = $pdo->prepare("SELECT pseudo, nom, prenom FROM utilisateurs WHERE id = ?");
             $stmt->execute([$user_id]);

@@ -1,7 +1,7 @@
 <?php
 /**
  * Modèle User pour la gestion des utilisateurs EcoRide
- * Version nettoyée et corrigée avec les vrais noms de tables
+ * Version nettoyée et simplifiée - sans vérification email
  */
 
 class User
@@ -15,7 +15,7 @@ class User
     }
 
     /**
-     * Crée un nouveau compte utilisateur avec 20 crédits initiaux
+     * Je crée un nouveau compte utilisateur avec 20 crédits initiaux
      */
     public function creerCompte($data)
     {
@@ -37,7 +37,6 @@ class User
             
             $motDePasseHache = password_hash($data['mot_de_passe'], PASSWORD_DEFAULT);
             
-            // CORRIGÉ : utilisateurs (pas users)
             $sql = "INSERT INTO utilisateurs (
                         pseudo, email, mot_de_passe, credit, 
                         nom, prenom, telephone, adresse, ville, code_postal, 
@@ -62,7 +61,6 @@ class User
             if ($resultat) {
                 $userId = $this->pdo->lastInsertId();
                 
-                // CORRIGÉ : credits (pas transactions_credits)
                 $this->enregistrerTransactionCredit(
                     $userId, 
                     20, 
@@ -91,12 +89,11 @@ class User
     }
     
     /**
-     * Authentifie un utilisateur avec email et mot de passe
+     * J'authentifie un utilisateur avec email et mot de passe
      */
     public function authentifier($email, $motDePasse)
     {
         try {
-            // CORRIGÉ : utilisateurs (pas users)
             $sql = "SELECT id, pseudo, nom, prenom, email, mot_de_passe, credit,
                            telephone, adresse, ville, code_postal, permis_conduire,
                            bio, photo_profil, role, created_at, updated_at
@@ -129,12 +126,11 @@ class User
     }
     
     /**
-     * Récupère un utilisateur par son ID avec TOUS les champs
+     * Je récupère un utilisateur par son ID avec tous les champs
      */
     public function getUserById($userId)
     {
         try {
-            // CORRIGÉ : utilisateurs (pas users) + suppression last_login qui n'existe pas
             $sql = "SELECT id, pseudo, nom, prenom, email, credit, created_at,
                            telephone, adresse, ville, code_postal, permis_conduire, 
                            bio, photo_profil, role, updated_at
@@ -158,7 +154,7 @@ class User
     }
 
     /**
-     * Met à jour le profil utilisateur
+     * Je mets à jour le profil utilisateur
      */
     public function mettreAJourProfil($userId, $data)
     {
@@ -178,7 +174,6 @@ class User
                 ];
             }
             
-            // CORRIGÉ : utilisateurs (pas users)
             $sql = "UPDATE utilisateurs 
                     SET pseudo = ?, nom = ?, prenom = ?, email = ?, 
                         telephone = ?, adresse = ?, ville = ?, code_postal = ?, 
@@ -223,33 +218,27 @@ class User
     }
 
     /**
-     * Récupère les statistiques personnelles de l'utilisateur
-     * CORRIGÉ : avec les bons noms de tables
+     * Je récupère les statistiques personnelles de l'utilisateur
      */
     public function getStatistiquesUtilisateur($userId)
     {
         try {
-            // CORRIGÉ : trajets (pas trips)
             $sql = "SELECT COUNT(*) FROM trajets WHERE conducteur_id = ?";
             $stmt = $this->pdo->prepare($sql);
             $stmt->execute([$userId]);
             $trajetsProposés = $stmt->fetchColumn();
             
-            // CORRIGÉ : reservations avec user_id ou passager_id (à vérifier ta structure)
             $sql = "SELECT COUNT(*) FROM reservations WHERE passager_id = ? AND statut = 'confirmee'";
             $stmt = $this->pdo->prepare($sql);
             $stmt->execute([$userId]);
             $reservationsEffectuées = $stmt->fetchColumn();
             
-            // CORRIGÉ : credits (pas transactions_credits) - CETTE PARTIE DÉPEND DE TA STRUCTURE
-            // Si tu as une table credits séparée, sinon on peut utiliser les crédits actuels
             $sql = "SELECT credit FROM utilisateurs WHERE id = ?";
             $stmt = $this->pdo->prepare($sql);
             $stmt->execute([$userId]);
             $creditsActuels = $stmt->fetchColumn();
             
-            // Calcul CO2 économisé basé sur les trajets partagés
-            // CORRIGÉ : trajets et reservations avec bons noms
+            // Je calcule CO2 économisé basé sur les trajets partagés
             $sql = "SELECT COALESCE(SUM(t.distance_km * COALESCE(r.nb_places_total, 0)), 0) as km_partages
                     FROM trajets t
                     LEFT JOIN (
@@ -264,13 +253,13 @@ class User
             $stmt->execute([$userId]);
             $kmPartages = $stmt->fetchColumn();
             
-            // Estimation CO2 : 120g CO2/km par passager
+            // Je fais l'estimation CO2 : 120g CO2/km par passager
             $co2Economise = round($kmPartages * 0.12, 1);
             
             return [
                 'trajets_proposés' => $trajetsProposés,
                 'reservations_effectuées' => $reservationsEffectuées,
-                'credits_actuels' => $creditsActuels, // Modifié car plus de transactions
+                'credits_actuels' => $creditsActuels,
                 'co2_economise' => $co2Economise
             ];
             
@@ -374,8 +363,7 @@ public function verifierToken($token)
 
 
     /**
-     * Met à jour la dernière connexion de l'utilisateur
-     * CORRIGÉ : utilisateurs + updated_at (pas last_login qui n'existe pas)
+     * Je mets à jour la dernière connexion de l'utilisateur
      */
     private function mettreAJourDerniereConnexion($userId)
     {
@@ -388,7 +376,7 @@ public function verifierToken($token)
         }
     }
 
-    // ========== MÉTHODES PRIVÉES DE VALIDATION ==========
+    // Méthodes privées de validation
     
     private function validerDonneesInscription($data)
     {
@@ -445,7 +433,6 @@ public function verifierToken($token)
         $erreurs = [];
         
         try {
-            // CORRIGÉ : utilisateurs (pas users)
             $sql = "SELECT COUNT(*) FROM utilisateurs WHERE pseudo = ? AND id != ?";
             $stmt = $this->pdo->prepare($sql);
             $stmt->execute([$pseudo, $userId]);
@@ -470,7 +457,6 @@ public function verifierToken($token)
     
     private function emailExiste($email)
     {
-        // CORRIGÉ : utilisateurs (pas users)
         $sql = "SELECT COUNT(*) FROM utilisateurs WHERE email = ?";
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute([$email]);
@@ -479,7 +465,6 @@ public function verifierToken($token)
     
     private function pseudoExiste($pseudo)
     {
-        // CORRIGÉ : utilisateurs (pas users)
         $sql = "SELECT COUNT(*) FROM utilisateurs WHERE pseudo = ?";
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute([$pseudo]);
@@ -489,9 +474,6 @@ public function verifierToken($token)
     private function enregistrerTransactionCredit($userId, $montant, $type, $source, $description)
     {
         try {
-            // CORRIGÉ : credits (pas transactions_credits) - À ADAPTER SELON TA STRUCTURE
-            // Si tu as une table credits avec une structure différente, modifie ici
-            
             $sql = "INSERT INTO credits (
                         utilisateur_id, montant, type_transaction, source, description, created_at
                     ) VALUES (?, ?, ?, ?, ?, NOW())";

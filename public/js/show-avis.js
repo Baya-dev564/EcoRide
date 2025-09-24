@@ -1,13 +1,9 @@
 /**
  * Script JavaScript spécifique à la vue show.php - Profil conducteur EcoRide
- * Gère les statistiques, filtres et animations de la page de profil
+ * Je gère les statistiques, filtres et animations de la page de profil
  */
 
-// ===========================================
-// VARIABLES GLOBALES ET CONFIGURATION
-// ===========================================
-
-// Configuration de la vue show
+// Variables globales et configuration
 const SHOW_CONFIG = {
     animationDuration: 800,
     progressAnimationDelay: 200,
@@ -16,7 +12,7 @@ const SHOW_CONFIG = {
     tooltipDelay: 300
 };
 
-// État de la vue
+// J'initialise l'état de la vue
 let showState = {
     currentFilter: 'all',
     visibleAvis: [],
@@ -24,7 +20,7 @@ let showState = {
     animationsComplete: false
 };
 
-// Cache des éléments DOM
+// Je cache les éléments DOM
 let showElements = {
     avisContainer: null,
     filterDropdown: null,
@@ -33,10 +29,6 @@ let showElements = {
     statCards: null,
     avisItems: null
 };
-
-// ===========================================
-// CLASSE POUR LA GESTION DES STATISTIQUES
-// ===========================================
 
 /**
  * Classe pour gérer l'animation des statistiques
@@ -51,7 +43,7 @@ class StatisticsAnimator {
     }
     
     /**
-     * Initialise l'observateur d'intersection pour les animations
+     * J'initialise l'observateur d'intersection pour les animations
      */
     initObserver() {
         const observer = new IntersectionObserver((entries) => {
@@ -65,17 +57,17 @@ class StatisticsAnimator {
             threshold: 0.3
         });
         
-        // Observer les cartes de statistiques
+        // J'observe les cartes de statistiques
         this.statCards.forEach(card => {
             observer.observe(card);
         });
     }
     
     /**
-     * Anime les statistiques avec des effets séquentiels
+     * J'anime les statistiques avec des effets séquentiels
      */
     animateStatistics() {
-        // Animation des cartes de statistiques
+        // J'anime les cartes de statistiques
         this.statCards.forEach((card, index) => {
             setTimeout(() => {
                 card.style.opacity = '0';
@@ -89,7 +81,7 @@ class StatisticsAnimator {
             }, index * 150);
         });
         
-        // Animation des barres de progression
+        // J'anime les barres de progression
         setTimeout(() => {
             this.animateProgressBars();
         }, SHOW_CONFIG.progressAnimationDelay);
@@ -98,13 +90,13 @@ class StatisticsAnimator {
     }
     
     /**
-     * Anime les barres de progression
+     * J'anime les barres de progression
      */
     animateProgressBars() {
         this.progressBars.forEach((bar, index) => {
             const targetWidth = bar.style.width || bar.getAttribute('aria-valuenow') + '%';
             
-            // Reset de la barre
+            // Je remet la barre à zéro
             bar.style.width = '0%';
             
             setTimeout(() => {
@@ -115,7 +107,7 @@ class StatisticsAnimator {
     }
     
     /**
-     * Anime les valeurs numériques (compteur)
+     * J'anime les valeurs numériques (compteur)
      * @param {Element} element - Élément contenant la valeur
      * @param {number} targetValue - Valeur cible
      */
@@ -145,10 +137,6 @@ class StatisticsAnimator {
     }
 }
 
-// ===========================================
-// CLASSE POUR LA GESTION DES FILTRES
-// ===========================================
-
 /**
  * Classe pour gérer le filtrage des avis
  */
@@ -163,7 +151,7 @@ class AvisFilter {
     }
     
     /**
-     * Initialise les événements des filtres
+     * J'initialise les événements des filtres
      */
     initEvents() {
         this.filterItems.forEach(item => {
@@ -177,14 +165,14 @@ class AvisFilter {
     }
     
     /**
-     * Applique un filtre aux avis
+     * J'applique un filtre aux avis
      * @param {string} filterValue - Valeur du filtre
      */
     applyFilter(filterValue) {
         showState.currentFilter = filterValue;
         let visibleCount = 0;
         
-        // Affichage de l'animation de chargement
+        // J'affiche l'animation de chargement
         this.showFilterLoading();
         
         setTimeout(() => {
@@ -206,13 +194,13 @@ class AvisFilter {
                 }
             });
             
-            // Mise à jour du compteur
+            // Je mets à jour le compteur
             this.updateAvisCount(visibleCount);
             
-            // Masquage de l'animation de chargement
+            // Je masque l'animation de chargement
             this.hideFilterLoading();
             
-            // Affichage du message si aucun résultat
+            // J'affiche le message si aucun résultat
             if (visibleCount === 0) {
                 this.showNoResultsMessage(filterValue);
             } else {
@@ -222,7 +210,7 @@ class AvisFilter {
     }
     
     /**
-     * Affiche un avis avec animation
+     * J'affiche un avis avec animation
      * @param {Element} item - Élément avis à afficher
      * @param {number} index - Index pour l'animation séquentielle
      */
@@ -239,7 +227,7 @@ class AvisFilter {
     }
     
     /**
-     * Masque un avis avec animation
+     * Je masque un avis avec animation
      * @param {Element} item - Élément avis à masquer
      */
     hideAvisItem(item) {
@@ -253,7 +241,7 @@ class AvisFilter {
     }
     
     /**
-     * Met à jour le filtre actif visuellement
+     * Je mets à jour le filtre actif visuellement
      * @param {Element} activeItem - Élément de filtre actif
      */
     updateActiveFilter(activeItem) {
@@ -262,7 +250,7 @@ class AvisFilter {
         });
         activeItem.classList.add('active');
         
-        // Mise à jour du texte du bouton dropdown
+        // Je mets à jour le texte du bouton dropdown
         const filterText = activeItem.textContent;
         this.filterDropdown.innerHTML = `
             <i class="fas fa-filter me-1" aria-hidden="true"></i>
@@ -271,7 +259,7 @@ class AvisFilter {
     }
     
     /**
-     * Affiche l'animation de chargement du filtre
+     * J'affiche l'animation de chargement du filtre
      */
     showFilterLoading() {
         const loader = document.createElement('div');
@@ -288,7 +276,7 @@ class AvisFilter {
     }
     
     /**
-     * Masque l'animation de chargement du filtre
+     * Je masque l'animation de chargement du filtre
      */
     hideFilterLoading() {
         const loader = document.getElementById('filterLoader');
@@ -298,7 +286,7 @@ class AvisFilter {
     }
     
     /**
-     * Met à jour le compteur d'avis
+     * Je mets à jour le compteur d'avis
      * @param {number} count - Nombre d'avis visibles
      */
     updateAvisCount(count) {
@@ -312,7 +300,7 @@ class AvisFilter {
     }
     
     /**
-     * Affiche le message "Aucun résultat"
+     * J'affiche le message "Aucun résultat"
      * @param {string} filterValue - Valeur du filtre
      */
     showNoResultsMessage(filterValue) {
@@ -335,7 +323,7 @@ class AvisFilter {
     }
     
     /**
-     * Masque le message "Aucun résultat"
+     * Je masque le message "Aucun résultat"
      */
     hideNoResultsMessage() {
         const message = document.getElementById('noResultsMessage');
@@ -344,10 +332,6 @@ class AvisFilter {
         }
     }
 }
-
-// ===========================================
-// CLASSE POUR LA GESTION DES TOOLTIPS
-// ===========================================
 
 /**
  * Classe pour gérer les tooltips informatifs
@@ -359,7 +343,7 @@ class TooltipManager {
     }
     
     /**
-     * Initialise les tooltips
+     * J'initialise les tooltips
      */
     initTooltips() {
         // Tooltips pour les statistiques
@@ -376,7 +360,7 @@ class TooltipManager {
     }
     
     /**
-     * Ajoute un tooltip à un élément
+     * J'ajoute un tooltip à un élément
      * @param {Element} element - Élément cible
      * @param {string} text - Texte du tooltip
      */
@@ -408,7 +392,7 @@ class TooltipManager {
     }
     
     /**
-     * Crée un élément tooltip
+     * Je crée un élément tooltip
      * @param {string} text - Texte du tooltip
      * @returns {Element} Élément tooltip
      */
@@ -420,7 +404,7 @@ class TooltipManager {
     }
     
     /**
-     * Positionne le tooltip par rapport à l'élément cible
+     * Je positionne le tooltip par rapport à l'élément cible
      * @param {Element} tooltip - Élément tooltip
      * @param {Element} target - Élément cible
      */
@@ -435,7 +419,7 @@ class TooltipManager {
     }
     
     /**
-     * Génère le texte de tooltip pour une statistique
+     * Je génère le texte de tooltip pour une statistique
      * @param {Element} card - Carte de statistique
      * @returns {string} Texte du tooltip
      */
@@ -447,7 +431,7 @@ class TooltipManager {
     }
     
     /**
-     * Génère le texte de tooltip pour une barre de progression
+     * Je génère le texte de tooltip pour une barre de progression
      * @param {Element} bar - Barre de progression
      * @returns {string} Texte du tooltip
      */
@@ -458,10 +442,6 @@ class TooltipManager {
         return `${value}/${max}`;
     }
 }
-
-// ===========================================
-// CLASSE POUR LA GESTION DES ANIMATIONS
-// ===========================================
 
 /**
  * Classe pour gérer les animations avancées
@@ -474,7 +454,7 @@ class AdvancedAnimations {
     }
     
     /**
-     * Initialise les animations au scroll
+     * J'initialise les animations au scroll
      */
     initScrollAnimations() {
         const observer = new IntersectionObserver((entries) => {
@@ -489,14 +469,14 @@ class AdvancedAnimations {
             rootMargin: '0px 0px -50px 0px'
         });
         
-        // Observer les éléments à animer
+        // J'observe les éléments à animer
         document.querySelectorAll('.avis-item, .card, .stat-card').forEach(element => {
             observer.observe(element);
         });
     }
     
     /**
-     * Initialise les effets hover avancés
+     * J'initialise les effets hover avancés
      */
     initHoverEffects() {
         const cards = document.querySelectorAll('.card, .stat-card');
@@ -509,7 +489,7 @@ class AdvancedAnimations {
     }
     
     /**
-     * Initialise les effets parallax subtils
+     * J'initialise les effets parallax subtils
      */
     initParallaxEffects() {
         window.addEventListener('scroll', () => {
@@ -523,7 +503,7 @@ class AdvancedAnimations {
     }
     
     /**
-     * Anime un élément spécifique
+     * J'anime un élément spécifique
      * @param {Element} element - Élément à animer
      */
     animateElement(element) {
@@ -538,7 +518,7 @@ class AdvancedAnimations {
     }
     
     /**
-     * Crée un effet de ripple au clic
+     * Je crée un effet de ripple au clic
      * @param {Event} e - Événement de clic
      */
     createRippleEffect(e) {
@@ -571,10 +551,6 @@ class AdvancedAnimations {
     }
 }
 
-// ===========================================
-// CLASSE POUR LA GESTION DES PERFORMANCES
-// ===========================================
-
 /**
  * Classe pour optimiser les performances
  */
@@ -585,17 +561,17 @@ class PerformanceOptimizer {
     }
     
     /**
-     * Optimise les event listeners
+     * J'optimise les event listeners
      */
     optimizeEventListeners() {
-        // Debounce pour les événements de scroll
+        // Je crée un debounce pour les événements de scroll
         const throttledScroll = this.throttle(() => {
             this.handleScroll();
         }, 16); // 60 FPS
         
         window.addEventListener('scroll', throttledScroll, { passive: true });
         
-        // Optimisation des événements de resize
+        // J'optimise les événements de resize
         const throttledResize = this.throttle(() => {
             this.handleResize();
         }, 250);
@@ -604,7 +580,7 @@ class PerformanceOptimizer {
     }
     
     /**
-     * Throttle une fonction
+     * Je throttle une fonction
      * @param {Function} func - Fonction à throttler
      * @param {number} delay - Délai en millisecondes
      * @returns {Function} Fonction throttlée
@@ -630,23 +606,23 @@ class PerformanceOptimizer {
     }
     
     /**
-     * Gère les événements de scroll optimisés
+     * Je gère les événements de scroll optimisés
      */
     handleScroll() {
-        // Mise à jour des éléments visibles
+        // Je mets à jour les éléments visibles
         this.updateVisibleElements();
     }
     
     /**
-     * Gère les événements de resize optimisés
+     * Je gère les événements de resize optimisés
      */
     handleResize() {
-        // Recalcul des positions des tooltips
+        // Je recalcule les positions des tooltips
         this.recalculateTooltips();
     }
     
     /**
-     * Met à jour les éléments visibles
+     * Je mets à jour les éléments visibles
      */
     updateVisibleElements() {
         const viewportHeight = window.innerHeight;
@@ -664,7 +640,7 @@ class PerformanceOptimizer {
     }
     
     /**
-     * Optimise le rendu d'un élément
+     * J'optimise le rendu d'un élément
      * @param {Element} element - Élément à optimiser
      */
     optimizeElementRendering(element) {
@@ -677,47 +653,43 @@ class PerformanceOptimizer {
     }
     
     /**
-     * Recalcule les positions des tooltips
+     * Je recalcule les positions des tooltips
      */
     recalculateTooltips() {
         // Logique de recalcul des tooltips après resize
     }
 }
 
-// ===========================================
-// INITIALISATION DE LA VUE SHOW
-// ===========================================
-
 /**
  * Fonction d'initialisation de la vue show
  */
 function initShowAvis() {
-    // Vérification que le DOM est chargé
+    // Je vérifie que le DOM est chargé
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', initShowAvis);
         return;
     }
     
-    // Vérification que nous sommes sur la bonne page
+    // Je vérifie que nous sommes sur la bonne page
     if (!document.querySelector('.avis-item')) {
         return;
     }
     
-    // Initialisation des différents modules
+    // J'initialise les différents modules
     const statisticsAnimator = new StatisticsAnimator();
     const avisFilter = new AvisFilter();
     const tooltipManager = new TooltipManager();
     const advancedAnimations = new AdvancedAnimations();
     const performanceOptimizer = new PerformanceOptimizer();
     
-    // Exposition des instances pour le débogage
+    // J'expose les instances pour le débogage
     window.statisticsAnimator = statisticsAnimator;
     window.showAvisFilter = avisFilter;
     window.tooltipManager = tooltipManager;
     window.advancedAnimations = advancedAnimations;
     window.performanceOptimizer = performanceOptimizer;
     
-    // Ajout des styles CSS pour les animations
+    // J'ajoute les styles CSS pour les animations
     const style = document.createElement('style');
     style.textContent = `
         @keyframes ripple {
@@ -740,9 +712,5 @@ function initShowAvis() {
     showState.animationsComplete = true;
 }
 
-// ===========================================
-// LANCEMENT DE L'APPLICATION
-// ===========================================
-
-// Initialisation automatique
+// J'initialise automatiquement
 initShowAvis();

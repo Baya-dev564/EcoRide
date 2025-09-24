@@ -16,18 +16,18 @@ class NewConversationManager {
         const messageArea = document.getElementById('messageInitial');
         const startBtn = document.getElementById('startConversationBtn');
         
-        console.log('🔍 Éléments trouvés:', { input, motifSelect, messageArea, startBtn });
+        console.log('Éléments trouvés:', { input, motifSelect, messageArea, startBtn });
         
         if (input) {
             input.addEventListener('input', (e) => {
-                console.log('🔄 Saisie:', e.target.value);
+                console.log('Saisie:', e.target.value);
                 this.handleSearchInput(e.target.value.trim());
             });
         }
         
         if (startBtn) {
             startBtn.addEventListener('click', () => {
-                console.log('🚀 Clic démarrer conversation');
+                console.log('Clic démarrer conversation');
                 this.startConversation();
             });
         }
@@ -55,11 +55,11 @@ class NewConversationManager {
     
     async searchUsers(query) {
         try {
-            console.log('🌐 Recherche utilisateurs:', query);
+            console.log('Recherche utilisateurs:', query);
             const response = await fetch(`/api/users/search?q=${encodeURIComponent(query)}`);
             const data = await response.json();
             
-            console.log('👥 Utilisateurs trouvés:', data);
+            console.log('Utilisateurs trouvés:', data);
             
             if (data.users && data.users.length > 0) {
                 this.showSuggestions(data.users);
@@ -67,7 +67,7 @@ class NewConversationManager {
                 this.showNoResults();
             }
         } catch (error) {
-            console.error('❌ Erreur recherche:', error);
+            console.error('Erreur recherche:', error);
         }
     }
     
@@ -97,7 +97,7 @@ class NewConversationManager {
     showNoResults() {
         const container = document.getElementById('userSuggestions');
         if (container) {
-            container.innerHTML = '<div class="p-2 text-muted">❌ Aucun utilisateur trouvé</div>';
+            container.innerHTML = '<div class="p-2 text-muted">Aucun utilisateur trouvé</div>';
             container.style.display = 'block';
         }
     }
@@ -110,7 +110,7 @@ class NewConversationManager {
     }
     
     selectUser(user) {
-        console.log('👤 Utilisateur sélectionné:', user);
+        console.log('Utilisateur sélectionné:', user);
         this.selectedUser = user;
         document.getElementById('destinataireInput').value = user.pseudo;
         document.getElementById('destinataireId').value = user.id;
@@ -119,7 +119,7 @@ class NewConversationManager {
     
     async loadMotifs() {
         try {
-            console.log('📋 Chargement des motifs...');
+            console.log('Chargement des motifs...');
             const response = await fetch('/api/messages/motifs');
             const data = await response.json();
             
@@ -132,10 +132,10 @@ class NewConversationManager {
                     option.textContent = motif.libelle;
                     motifSelect.appendChild(option);
                 });
-                console.log('✅ Motifs chargés !');
+                console.log('Motifs chargés !');
             }
         } catch (error) {
-            console.error('❌ Erreur motifs:', error);
+            console.error('Erreur motifs:', error);
         }
     }
     
@@ -147,7 +147,7 @@ class NewConversationManager {
     }
     
     async startConversation() {
-        console.log('🚀 Démarrage conversation...');
+        console.log('Démarrage conversation...');
         
         if (!this.selectedUser) {
             alert('Veuillez sélectionner un destinataire');
@@ -175,7 +175,7 @@ class NewConversationManager {
             });
             
             const result = await response.json();
-            console.log('📤 Résultat:', result);
+            console.log('Résultat:', result);
             
             if (result.success) {
                 alert('Conversation créée !');
@@ -184,22 +184,19 @@ class NewConversationManager {
                 alert('Erreur : ' + result.error);
             }
         } catch (error) {
-            console.error('❌ Erreur:', error);
+            console.error('Erreur:', error);
             alert('Erreur : ' + error.message);
         }
     }
 }
 
-// Initialisation
+// J'initialise la messagerie
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('✅ Initialisation messagerie depuis fichier externe');
+    console.log('Initialisation messagerie depuis fichier externe');
     window.conversationManager = new NewConversationManager();
 });
 
-
-// =============================================================================
-// 💬 GESTION DES MESSAGES DANS UNE CONVERSATION EXISTANTE
-// =============================================================================
+// Gestion des messages dans une conversation existante
 
 class ConversationManager {
     constructor() {
@@ -212,7 +209,7 @@ class ConversationManager {
         const conversationIdInput = document.getElementById('conversationId');
         if (conversationIdInput) {
             this.conversationId = conversationIdInput.value;
-            console.log('💬 Conversation ID:', this.conversationId);
+            console.log('Conversation ID:', this.conversationId);
             this.initEventListeners();
         }
     }
@@ -229,7 +226,7 @@ class ConversationManager {
         }
         
         if (messageInput) {
-            // Compteur de caractères
+            // Je gère le compteur de caractères
             messageInput.addEventListener('input', (e) => {
                 const count = e.target.value.length;
                 const counter = document.getElementById('charCount');
@@ -243,7 +240,7 @@ class ConversationManager {
         const sendBtn = document.getElementById('sendBtn');
         
         if (!messageInput || !this.conversationId) {
-            console.error('❌ Éléments manquants');
+            console.error('Éléments manquants');
             return;
         }
         
@@ -258,7 +255,7 @@ class ConversationManager {
         sendBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Envoi...';
         
         try {
-            console.log('📤 Envoi message:', { conversationId: this.conversationId, contenu });
+            console.log('Envoi message:', { conversationId: this.conversationId, contenu });
             
             const response = await fetch('/api/messages/send', {
                 method: 'POST',
@@ -270,19 +267,19 @@ class ConversationManager {
             });
             
             const result = await response.json();
-            console.log('📨 Résultat envoi:', result);
+            console.log('Résultat envoi:', result);
             
             if (result.success) {
                 // Je vide le champ et recharge la page
                 messageInput.value = '';
                 document.getElementById('charCount').textContent = '0';
-                window.location.reload(); // Recharge pour voir le nouveau message
+                window.location.href = '/messages'
             } else {
                 alert('Erreur : ' + (result.error || 'Envoi échoué'));
             }
             
         } catch (error) {
-            console.error('❌ Erreur envoi:', error);
+            console.error('Erreur envoi:', error);
             alert('Erreur : ' + error.message);
         } finally {
             // Je réactive le bouton
@@ -295,7 +292,7 @@ class ConversationManager {
 // J'initialise le gestionnaire de conversation
 document.addEventListener('DOMContentLoaded', function() {
     if (document.getElementById('conversationId')) {
-        console.log('✅ Initialisation gestionnaire conversation');
+        console.log('Initialisation gestionnaire conversation');
         window.conversationManager = new ConversationManager();
     }
 });

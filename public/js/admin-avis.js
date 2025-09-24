@@ -11,7 +11,7 @@
 
 document.addEventListener('DOMContentLoaded', function() {
     // J'initialise la gestion des avis admin
-    console.log('🎯 Admin Avis JS - Initialisation');
+    console.log('Admin Avis JS - Initialisation');
     
     // Je récupère les éléments principaux
     const changeStatusButtons = document.querySelectorAll('.change-status-btn');
@@ -118,13 +118,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Je montre un message de succès
                 showNotification('Statut mis à jour avec succès !', 'success');
                 
-                console.log('✅ Statut avis mis à jour:', avisId, '→', newStatus);
+                console.log('Statut avis mis à jour:', avisId, '→', newStatus);
             } else {
                 throw new Error(data.message || 'Erreur lors de la modification du statut');
             }
         })
         .catch(error => {
-            console.error('❌ Erreur changement statut avis:', error);
+            console.error('Erreur changement statut avis:', error);
             showNotification('Erreur lors de la modification du statut: ' + error.message, 'error');
         })
         .finally(() => {
@@ -176,13 +176,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Je montre un message de succès
                 showNotification('Avis supprimé définitivement', 'success');
                 
-                console.log('✅ Avis supprimé:', avisId);
+                console.log('Avis supprimé:', avisId);
             } else {
                 throw new Error(data.message || 'Erreur lors de la suppression');
             }
         })
         .catch(error => {
-            console.error('❌ Erreur suppression avis:', error);
+            console.error('Erreur suppression avis:', error);
             
             // Je restaure l'état de la carte
             avisCard.style.opacity = '1';
@@ -210,16 +210,23 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Je mets à jour le contenu
             const statusIcons = {
-                'actif': '🟢',
-                'masque': '🟡', 
-                'signale': '🟠',
-                'supprime': '🔴'
+                'actif': 'check-circle',
+                'masque': 'eye-slash',
+                'signale': 'exclamation-triangle',
+                'supprime': 'times-circle'
             };
             
-            const icon = statusIcons[newStatus] || '🟢';
-            const text = newStatus.charAt(0).toUpperCase() + newStatus.slice(1);
+            const statusLabels = {
+                'actif': 'Actif',
+                'masque': 'Masqué',
+                'signale': 'Signalé', 
+                'supprime': 'Supprimé'
+            };
             
-            statusBadge.innerHTML = `${icon} ${text}`;
+            const icon = statusIcons[newStatus] || 'check-circle';
+            const text = statusLabels[newStatus] || 'Actif';
+            
+            statusBadge.innerHTML = `<i class="fas fa-${icon}"></i> ${text}`;
             
             // J'anime le changement
             statusBadge.style.transform = 'scale(1.1)';
@@ -327,7 +334,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     
-    console.log('✅ Admin Avis JS - Initialisé avec succès');
+    console.log('Admin Avis JS - Initialisé avec succès');
 });
 
 /**

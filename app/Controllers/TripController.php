@@ -1,17 +1,15 @@
 <?php
 /**
- * Contrôleur pour la gestion des trajets de covoiturage EcoRide avec géolocalisation + SYSTÈME DE NOTATION
- * Je gère tous les trajets avec coordonnées GPS et calcul automatique des distances
- * ✅ NOUVEAU : Workflow complet de notation post-trajet intégré
+ * TripController - Contrôleur pour la gestion des trajets de covoiturage EcoRide
+ * Je gère tous les trajets avec géolocalisation, système de notation et workflow complet
  */
-
 
 class TripController
 {
     private $tripModel;
     
     /**
-     * Constructeur avec injection de dépendance
+     * Je constructeur avec injection de dépendance
      * J'initialise le service de géolocalisation et la connexion base de données
      */
     public function __construct()
@@ -28,19 +26,18 @@ class TripController
     }
     
     /**
-     * Page de recherche avec tous les filtres fonctionnels
-     * J'affiche la page de recherche des trajets avec résultats filtrés,
-     * tri dynamique et pagination complète
+     * J'affiche la page de recherche avec tous les filtres fonctionnels
+     * Page de recherche des trajets avec résultats filtrés, tri dynamique et pagination
      */
     public function index()
     {
-        // Je récupère complètement tous les critères de recherche
+        // Je récupère tous les critères de recherche
         $criteres = [
             'lieu_depart' => $this->validerLieu($_GET['lieu_depart'] ?? ''),
             'lieu_arrivee' => $this->validerLieu($_GET['lieu_arrivee'] ?? ''),
             'date_depart' => $this->validerDate($_GET['date_depart'] ?? ''),
             'vehicule_electrique' => isset($_GET['vehicule_electrique']) ? true : false,
-            // Je gère les filtres avancés fonctionnels
+            // Je gère les filtres avancés
             'prix_min' => !empty($_GET['prix_min']) ? (int)$_GET['prix_min'] : '',
             'prix_max' => !empty($_GET['prix_max']) ? (int)$_GET['prix_max'] : '',
             'note_min' => !empty($_GET['note_min']) ? (float)$_GET['note_min'] : '',
@@ -64,7 +61,7 @@ class TripController
             $trajets = $resultats['trajets'];
             $pagination = $resultats['pagination'];
             
-            // Je calcule complètement la pagination
+            // Je calcule la pagination
             if ($pagination) {
                 $pagination['total_pages'] = ceil($pagination['total_trajets'] / $limit);
                 $pagination['page_actuelle'] = $page;
@@ -87,8 +84,7 @@ class TripController
     }
     
     /**
-     * Méthode dédiée pour afficher la vue index
-     * Je centralise la préparation des variables pour la vue
+     * Je centralise la préparation des variables pour la vue index
      */
     private function afficherVueIndex($criteres, $trajets, $pagination, $stats)
     {
@@ -108,10 +104,6 @@ class TripController
     
     /**
      * Je calcule les statistiques d'affichage
-     * 
-     * @param array $trajets Liste des trajets trouvés
-     * @param int $totalTrajets Nombre total de trajets
-     * @return array Statistiques formatées
      */
     private function calculerStatistiques($trajets, $totalTrajets)
     {
@@ -136,8 +128,7 @@ class TripController
     }
     
     /**
-     * J'affiche les détails complets d'un trajet
-     * ✅ AMÉLIORÉ : Avec bouton "Noter ce trajet" si trajet terminé
+     * J'affiche les détails complets d'un trajet avec bouton "Noter ce trajet" si terminé
      */
     public function details($trajetId = null)
     {
@@ -169,7 +160,7 @@ class TripController
         $userConnecte = $_SESSION['user'] ?? null;
         $peutReserver = false;
         
-        // ✅ NOUVEAU : Je vérifie si l'utilisateur peut noter ce trajet
+        // Je vérifie si l'utilisateur peut noter ce trajet
         $peutNoter = false;
         $dejaNote = false;
         
@@ -179,7 +170,7 @@ class TripController
                          && ($userConnecte['credit'] >= $trajet['prix'])
                          && !$this->aDejaReserve($trajetId, $userConnecte['id']);
             
-            // ✅ NOUVEAU : Je vérifie les conditions pour noter
+            // Je vérifie les conditions pour noter
             if ($trajet['statut'] === 'termine') {
                 // Je peux noter si : passager de ce trajet OU conducteur peut noter les passagers
                 $peutNoter = $this->aParticiipeAuTrajet($trajetId, $userConnecte['id']);
@@ -197,9 +188,7 @@ class TripController
     }
 
     /**
-     * ✅ NOUVEAU : J'affiche les trajets que l'utilisateur peut noter
-     * Route : GET /mes-trajets-a-noter
-     * Je montre tous les trajets terminés où l'utilisateur était passager/conducteur et n'a pas encore noté
+     * J'affiche les trajets que l'utilisateur peut noter
      */
     public function trajetsANoter()
     {
@@ -233,9 +222,7 @@ class TripController
     }
 
     /**
-     * ✅ NOUVEAU : Je marque un trajet comme terminé (pour le conducteur)
-     * Route : POST /trajet/{id}/terminer
-     * Le conducteur peut marquer son trajet comme terminé pour déclencher les notifications
+     * Je marque un trajet comme terminé (pour le conducteur)
      */
     public function terminerTrajet($trajetId = null)
     {
@@ -295,9 +282,7 @@ class TripController
     }
 
     /**
-     * ✅ NOUVEAU : Je redirige vers le formulaire de notation avec les bonnes données
-     * Route : GET /noter-trajet/{id}
-     * Je pré-remplis le formulaire d'avis avec les infos du trajet
+     * Je redirige vers le formulaire de notation avec les bonnes données
      */
     public function noterTrajet($trajetId = null)
     {
@@ -349,7 +334,7 @@ class TripController
                 exit;
             }
             
-            // Je détermine qui il doit noter (conducteur ou passager)
+            // Je détermine qui il doit noter
             $conducteur_id = ($userId == $trajet['conducteur_id']) ? null : $trajet['conducteur_id'];
             
             // Je redirige vers le formulaire d'avis avec les paramètres
@@ -373,12 +358,7 @@ class TripController
     }
 
     /**
-     * ✅ NOUVEAU : Je vérifie si un utilisateur a participé à un trajet
-     * (Soit conducteur, soit passager avec réservation confirmée)
-     * 
-     * @param int $trajetId ID du trajet
-     * @param int $userId ID de l'utilisateur
-     * @return bool True si il a participé
+     * Je vérifie si un utilisateur a participé à un trajet
      */
     private function aParticiipeAuTrajet($trajetId, $userId)
     {
@@ -410,70 +390,63 @@ class TripController
         }
     }
 
-/**
- * ✅ SOLUTION SIMPLE : Je vérifie si un utilisateur a déjà noté un trajet
- * Version simplifiée qui utilise les méthodes existantes d'AvisMongo
- * 
- * @param int $trajetId ID du trajet
- * @param int $userId ID de l'utilisateur
- * @return bool True s'il a déjà noté
- */
-private function aDejaNote($trajetId, $userId)
-{
-    try {
-        // J'inclus le modèle MongoDB pour les avis
-        require_once __DIR__ . '/../Models/avis-mongo.php';
-        
-        $avisMongo = new AvisMongo();
-        
-        // ✅ J'utilise getAvisParTrajet pour voir s'il y a des avis
-        $resultats = $avisMongo->getAvisParTrajet($trajetId);
-        
-        if ($resultats['success']) {
-            // Je cherche si cet utilisateur a déjà noté ce trajet
-            foreach ($resultats['avis'] as $avis) {
-                if (isset($avis['utilisateur_id']) && $avis['utilisateur_id'] == $userId) {
-                    return true; // Il a déjà noté ce trajet
+    /**
+     * Je vérifie si un utilisateur a déjà noté un trajet
+     */
+    private function aDejaNote($trajetId, $userId)
+    {
+        try {
+            // J'inclus le modèle MongoDB pour les avis
+            require_once __DIR__ . '/../Models/avis-mongo.php';
+            
+            $avisMongo = new AvisMongo();
+            
+            // J'utilise getAvisParTrajet pour voir s'il y a des avis
+            $resultats = $avisMongo->getAvisParTrajet($trajetId);
+            
+            if ($resultats['success']) {
+                // Je cherche si cet utilisateur a déjà noté ce trajet
+                foreach ($resultats['avis'] as $avis) {
+                    if (isset($avis['utilisateur_id']) && $avis['utilisateur_id'] == $userId) {
+                        return true; // Il a déjà noté ce trajet
+                    }
                 }
             }
+            
+            return false; // Pas d'avis trouvé de cet utilisateur pour ce trajet
+            
+        } catch (Exception $e) {
+            error_log("Erreur aDejaNote : " . $e->getMessage());
+            return false; // En cas d'erreur, je permets la notation
+        }
+    }
+
+    /**
+     * J'affiche les trajets avec les statuts des réservations
+     */
+    public function mesTrajets()
+    {
+        // Je vérifie l'authentification
+        if (!isset($_SESSION['user'])) {
+            $_SESSION['message'] = 'Vous devez être connecté pour voir vos trajets.';
+            header('Location: /EcoRide/public/connexion');
+            exit;
         }
         
-        return false; // Pas d'avis trouvé de cet utilisateur pour ce trajet
+        // J'appelle la méthode du modèle Trip.php
+        $trajets = $this->tripModel->getTrajetsUtilisateurAvecStatuts($_SESSION['user']['id']);
         
-    } catch (Exception $e) {
-        error_log("Erreur aDejaNote : " . $e->getMessage());
-        return false; // En cas d'erreur, je permets la notation
+        // Je prépare les variables pour la vue
+        $title = "Mes trajets | EcoRide - Gestion de vos trajets proposés";
+        $user = $_SESSION['user'];
+        $message = $_SESSION['message'] ?? '';
+        unset($_SESSION['message']);
+        
+        require __DIR__ . '/../Views/trips/mes-trajets.php';
     }
-}
-
-   /**
- * ✅ MÉTHODE PROPRE : J'affiche les trajets avec les statuts des réservations
- */
-public function mesTrajets()
-{
-    // Je vérifie l'authentification
-    if (!isset($_SESSION['user'])) {
-        $_SESSION['message'] = 'Vous devez être connecté pour voir vos trajets.';
-        header('Location: /EcoRide/public/connexion');
-        exit;
-    }
-    
-    // ✅ J'appelle la NOUVELLE méthode du model Trip.php
-    $trajets = $this->tripModel->getTrajetsUtilisateurAvecStatuts($_SESSION['user']['id']);
-    
-    // Je prépare les variables pour la vue
-    $title = "Mes trajets | EcoRide - Gestion de vos trajets proposés";
-    $user = $_SESSION['user'];
-    $message = $_SESSION['message'] ?? '';
-    unset($_SESSION['message']);
-    
-    require __DIR__ . '/../Views/trips/mes-trajets.php';
-}
 
     /**
      * J'affiche le formulaire de création avec gestion des véhicules
-     * Je montre le formulaire de création d'un nouveau trajet
-     * avec récupération des véhicules de l'utilisateur
      */
     public function nouveauTrajet()
     {
@@ -508,7 +481,6 @@ public function mesTrajets()
 
     /**
      * API : Je recherche des lieux pour l'autocomplete
-     * Endpoint : /api/places/search
      */
     public function apiSearchPlaces(): void
     {
@@ -535,7 +507,6 @@ public function mesTrajets()
 
     /**
      * API : Je récupère les détails d'un lieu spécifique
-     * Endpoint : /api/places/details
      */
     public function apiPlaceDetails()
     {
@@ -551,7 +522,6 @@ public function mesTrajets()
             }
             
             // Pour les lieux API, je retourne les infos de base
-            // (Dans un vrai projet, on pourrait faire un appel détaillé)
             if (strpos($placeId, 'api_') === 0) {
                 echo json_encode([
                     'id' => $placeId,
@@ -572,9 +542,6 @@ public function mesTrajets()
     
     /**
      * Je récupère les véhicules d'un utilisateur
-     * 
-     * @param int $userId ID de l'utilisateur
-     * @return array Liste des véhicules
      */
     private function recupererVehiculesUtilisateur($userId)
     {
@@ -599,7 +566,6 @@ public function mesTrajets()
     
     /**
      * Je traite la création avec validation centralisée et géolocalisation
-     * Je traite la soumission du formulaire de création de trajet avec coordonnées GPS
      */
     public function creerTrajet()
     {
@@ -621,7 +587,7 @@ public function mesTrajets()
             exit;
         }
         
-        // Je valide centralement les données
+        // Je valide les données
         $data = $this->extraireDonneesTrajet($_POST);
         $erreurs = $this->validerDonneesControleur($data);
         
@@ -632,7 +598,7 @@ public function mesTrajets()
             exit;
         }
         
-        // ✅ JE GÉOCODE LES ADRESSES POUR OBTENIR LES COORDONNÉES GPS
+        // Je géocode les adresses pour obtenir les coordonnées GPS
         $geoService = new GeolocationService();
         $departCoords = $geoService->geocodeAddress($data['lieu_depart'], $data['code_postal_depart']);
         $arriveeCoords = $geoService->geocodeAddress($data['lieu_arrivee'], $data['code_postal_arrivee']);
@@ -673,12 +639,6 @@ public function mesTrajets()
     
     /**
      * Je calcule la distance entre deux coordonnées GPS avec la formule de Haversine
-     * 
-     * @param float $lat1 Latitude départ
-     * @param float $lon1 Longitude départ
-     * @param float $lat2 Latitude arrivée
-     * @param float $lon2 Longitude arrivée
-     * @return float Distance en kilomètres
      */
     private function calculerDistance($lat1, $lon1, $lat2, $lon2)
     {
@@ -702,9 +662,6 @@ public function mesTrajets()
     
     /**
      * J'extrais et nettoie les données du formulaire
-     * 
-     * @param array $post Données POST
-     * @return array Données nettoyées
      */
     private function extraireDonneesTrajet($post)
     {
@@ -725,9 +682,6 @@ public function mesTrajets()
     
     /**
      * Je valide côté contrôleur (validation rapide)
-     * 
-     * @param array $data Données à valider
-     * @return array Erreurs trouvées
      */
     private function validerDonneesControleur($data)
     {
@@ -754,8 +708,7 @@ public function mesTrajets()
     }
     
     /**
-     * J'API pour la recherche AJAX avec gestion complète
-     * J'endpoint pour les recherches en temps réel depuis JavaScript
+     * API pour la recherche AJAX avec gestion complète
      */
     public function apiRecherche()
     {
@@ -763,7 +716,7 @@ public function mesTrajets()
         header('Content-Type: application/json');
         header('Cache-Control: no-cache, must-revalidate');
         
-        // Je récupère complètement les critères
+        // Je récupère tous les critères
         $criteres = [
             'lieu_depart' => $this->validerLieu($_GET['lieu_depart'] ?? ''),
             'lieu_arrivee' => $this->validerLieu($_GET['lieu_arrivee'] ?? ''),
@@ -803,14 +756,7 @@ public function mesTrajets()
     }
     
     /**
-     * MÉTHODES UTILITAIRES PRIVÉES
-     */
-    
-    /**
      * J'extrais l'ID depuis l'URL pour le routing
-     * 
-     * @param string $route Nom de la route
-     * @return int|null ID extrait ou null
      */
     private function extraireIdDepuisUrl($route)
     {
@@ -828,10 +774,6 @@ public function mesTrajets()
     
     /**
      * Je vérifie si un utilisateur a déjà réservé un trajet
-     * 
-     * @param int $trajetId ID du trajet
-     * @param int $userId ID de l'utilisateur
-     * @return bool True si déjà réservé
      */
     private function aDejaReserve($trajetId, $userId)
     {
@@ -854,10 +796,6 @@ public function mesTrajets()
     
     /**
      * Je vérifie si l'utilisateur peut réserver un trajet
-     * 
-     * @param array $trajet Données du trajet
-     * @param array|null $user Utilisateur connecté
-     * @return bool True si la réservation est possible
      */
     private function peutReserverTrajet($trajet, $user)
     {
@@ -882,9 +820,6 @@ public function mesTrajets()
     
     /**
      * Je valide et nettoie un lieu de recherche
-     * 
-     * @param string $lieu Lieu à valider
-     * @return string Lieu validé ou chaîne vide
      */
     private function validerLieu($lieu)
     {
@@ -894,9 +829,6 @@ public function mesTrajets()
     
     /**
      * Je valide une date de recherche
-     * 
-     * @param string $date Date à valider
-     * @return string Date validée ou chaîne vide
      */
     private function validerDate($date)
     {
