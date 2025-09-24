@@ -1,5 +1,11 @@
 FROM php:8.1-apache
 
+# Installation des dépendances PostgreSQL
+RUN apt-get update && apt-get install -y \
+    libpq-dev \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
 # Extensions PHP pour PostgreSQL
 RUN docker-php-ext-install pdo pdo_pgsql
 RUN pecl install mongodb && docker-php-ext-enable mongodb
