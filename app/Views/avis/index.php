@@ -193,8 +193,9 @@ $avis = $avis ?? [];
                                                 <div>
                                                   <h3 class="h6 mb-1">
                                                    <i class="fas fa-user me-1 text-secondary"></i>
-                                                     <?= htmlspecialchars($avis_item->getPseudo() ?? ('#' . $avis_item->getUserId())) ?>
-                                                   </h3>
+                                                   <?= htmlspecialchars($avis_item->getPseudo() ?: 'Utilisateur anonyme') ?>
+                                                  </h3>
+
 
                                                     <small class="text-muted">
                                                         <i class="fas fa-calendar me-1" aria-hidden="true"></i>

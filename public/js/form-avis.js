@@ -1,9 +1,7 @@
-// ============================
-// JS formulaire avis EcoRide )
-// ============================
+// JS formulaire avis EcoRide
 
 document.addEventListener('DOMContentLoaded', function() {
-    // ---  GESTION DES ÉTOILES (Note globale) ---
+    // Je gère les étoiles (Note globale)
     const starContainer = document.querySelector('.star-rating');
     if (starContainer) {
         const stars = starContainer.querySelectorAll('.star');
@@ -12,7 +10,7 @@ document.addEventListener('DOMContentLoaded', function() {
             star.addEventListener('click', function() {
                 let note = idx + 1;
                 hiddenInput.value = note;
-                // Mise à jour visuelle active/inactive
+                // Je mets à jour l'affichage visuel active/inactive
                 stars.forEach((s, i) => {
                     s.classList.toggle('active', i < note);
                     s.classList.toggle('inactive', i >= note);
@@ -21,7 +19,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // ---  GESTION DES ÉTOILES (CRITÈRES) ---
+    // Je gère les étoiles (Critères)
     document.querySelectorAll('.star-rating-critere').forEach(container => {
         const stars = container.querySelectorAll('.star-small');
         const hiddenInput = container.querySelector('input[type="hidden"]');
@@ -37,7 +35,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // ---  GESTION DES TAGS SUGGÉRÉS CLIQUABLES ---
+    // Je gère les tags suggérés cliquables
     const tagsInput = document.getElementById('tags');
     const suggestedTags = document.querySelectorAll('.suggested-tag');
     
@@ -47,24 +45,24 @@ document.addEventListener('DOMContentLoaded', function() {
                 const tagValue = this.dataset.tag;
                 const currentTags = tagsInput.value;
                 
-                // Vérifier si le tag n'est pas déjà présent
+                // Je vérifie si le tag n'est pas déjà présent
                 if (!currentTags.includes(tagValue)) {
-                    // Ajouter le tag
+                    // J'ajoute le tag
                     if (currentTags.trim() === '') {
                         tagsInput.value = tagValue;
                     } else {
                         tagsInput.value = currentTags + ', ' + tagValue;
                     }
                     
-                    // Effet visuel : tag sélectionné
+                    // J'applique l'effet visuel : tag sélectionné
                     this.classList.remove('bg-light', 'text-dark');
                     this.classList.add('bg-success', 'text-white');
                 } else {
-                    // Retirer le tag s'il est déjà présent
+                    // Je retire le tag s'il est déjà présent
                     const tagsArray = currentTags.split(',').map(t => t.trim()).filter(t => t !== tagValue);
                     tagsInput.value = tagsArray.join(', ');
                     
-                    // Effet visuel : tag désélectionné
+                    // J'applique l'effet visuel : tag désélectionné
                     this.classList.remove('bg-success', 'text-white');
                     this.classList.add('bg-light', 'text-dark');
                 }
@@ -72,7 +70,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // --- VALIDATION TEMPS RÉEL DU COMMENTAIRE ---
+    // Je valide en temps réel le commentaire
     const commentaireField = document.getElementById('commentaire');
     const charCountElement = document.getElementById('charCount');
     
@@ -82,13 +80,13 @@ document.addEventListener('DOMContentLoaded', function() {
             const length = commentaireField.value.length;
             charCountElement.textContent = length;
             
-            // Mise à jour du compteur de caractères
+            // Je mets à jour le compteur de caractères
             if (length < 10) {
                 charCountElement.style.color = '#dc3545'; // Rouge
                 commentaireField.classList.add('is-invalid');
                 commentaireField.classList.remove('is-valid');
                 
-                // Afficher le message d'erreur
+                // J'affiche le message d'erreur
                 let feedback = commentaireField.parentNode.querySelector('.invalid-feedback');
                 if (feedback) {
                     feedback.style.display = 'block';
@@ -109,7 +107,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 commentaireField.classList.remove('is-invalid');
                 commentaireField.classList.add('is-valid');
                 
-                // Masquer le message d'erreur
+                // Je masque le message d'erreur
                 let feedback = commentaireField.parentNode.querySelector('.invalid-feedback');
                 if (feedback) {
                     feedback.style.display = 'none';
@@ -117,21 +115,21 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
         
-        // Validation en temps réel sur chaque saisie
+        // Je valide en temps réel sur chaque saisie
         commentaireField.addEventListener('input', validateCommentaire);
         
-        // Validation initiale au chargement de la page
+        // Je fais la validation initiale au chargement de la page
         validateCommentaire();
     }
 
-    // ---  VALIDATION ET ENVOI AJAX  ---
+    // Je valide et envoie en AJAX
     const form = document.getElementById('avisForm');
     if (!form) return; // Sécurité
 
     form.addEventListener('submit', function(e) {
         e.preventDefault();
 
-        // Validation finale avant envoi
+        // Je fais la validation finale avant envoi
         const commentaire = commentaireField.value;
         if (commentaire.length < 10) {
             alert('Le commentaire doit contenir au moins 10 caractères !');
@@ -139,7 +137,7 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
-        // Récupération des données du formulaire
+        // Je récupère les données du formulaire
         const formData = new FormData(form);
         const avisData = {
             trajet_id: formData.get('trajet_id'),
@@ -157,7 +155,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 : []
         };
 
-        // Validation rapide (personnalise selon besoins)
+        // Je fais une validation rapide (personnalise selon besoins)
         if (
             !avisData.note_globale || 
             Object.values(avisData.criteres).some(val => !val) ||
@@ -168,43 +166,44 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
-        // Désactiver le bouton pendant l'envoi
+        // Je désactive le bouton pendant l'envoi
         const submitBtn = document.getElementById('submitBtn');
         const originalText = submitBtn.innerHTML;
         submitBtn.disabled = true;
         submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Envoi en cours...';
 
-        // --- ENVOI AJAX  : vérifie que le serveur répond bien en JSON ---
+       // Je fais l'envoi AJAX corrigé
         fetch('/api/avis', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(avisData)
+            headers: { 
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: new URLSearchParams({
+                trajet_id: avisData.trajet_id,
+                conducteur_id: avisData.conducteur_id,
+                note: avisData.note_globale,
+                commentaire: avisData.commentaire,
+                nom_utilisateur: 'Utilisateur' // Ou récupère depuis une variable
+            })
         })
-        .then(async response => {
-            const contentType = response.headers.get("content-type");
-            if (!contentType || !contentType.includes("application/json")) {
-                // Le serveur a répondu du HTML / erreur PHP : on affiche le contenu
-                const text = await response.text();
-                throw new Error("Erreur inattendue du serveur :\n" + text.substring(0, 250));
-            }
-            // réponse en JSON
-            return response.json();
-        })
+        .then(response => response.json())
         .then(data => {
-            if (data.succes) {
+            if (data.success) {
                 alert('Avis publié avec succès !');
                 window.location.href = '/avis';
             } else {
-                alert('Erreur : ' + data.message);
+                alert('Erreur : ' + (data.error || data.message));
             }
         })
         .catch(error => {
-            alert("Erreur lors de l'envoi de l'avis ou réponse inattendue du serveur !\n" + error.message);
+            console.error('Erreur:', error);
+            alert("Erreur lors de l'envoi de l'avis !");
         })
         .finally(() => {
-            // Restaurer le bouton
+            // Je restaure le bouton
             submitBtn.disabled = false;
             submitBtn.innerHTML = originalText;
         });
-    });
+    })
 });

@@ -2,13 +2,13 @@
 // JavaScript pour la réservation de trajets 
 
 document.addEventListener('DOMContentLoaded', function() {
-    // Initialisation du formulaire de réservation
+    // J'initialise le formulaire de réservation
     initFormReservation();
     initRecapitulatif();
 });
 
 /**
- * Initialise le formulaire de réservation
+ * J'initialise le formulaire de réservation
  */
 function initFormReservation() {
     const formReservation = document.getElementById('formReservation');
@@ -17,7 +17,7 @@ function initFormReservation() {
         formReservation.addEventListener('submit', function(e) {
             e.preventDefault();
             
-            // Validation côté client
+            // Je valide côté client
             if (validateReservationForm()) {
                 confirmerReservation();
             }
@@ -26,7 +26,7 @@ function initFormReservation() {
 }
 
 /**
- * Initialise le récapitulatif dynamique
+ * J'initialise le récapitulatif dynamique
  */
 function initRecapitulatif() {
     const nbPlacesSelect = document.getElementById('nb_places');
@@ -36,13 +36,13 @@ function initRecapitulatif() {
             mettreAJourRecapitulatif();
         });
         
-        // Mise à jour initiale
+        // Je fais la mise à jour initiale
         mettreAJourRecapitulatif();
     }
 }
 
 /**
- * Met à jour le récapitulatif des coûts
+ * Je mets à jour le récapitulatif des coûts
  */
 function mettreAJourRecapitulatif() {
     const nbPlacesSelect = document.getElementById('nb_places');
@@ -55,11 +55,11 @@ function mettreAJourRecapitulatif() {
     const creditsUtilisateur = parseInt(document.getElementById('creditsUtilisateur').value);
     const total = nbPlaces * prixParPlace;
     
-    // Mise à jour de l'affichage
+    // Je mets à jour l'affichage
     recapPlaces.textContent = nbPlaces;
     recapTotal.textContent = total + ' crédits';
     
-    // Vérification des crédits
+    // Je vérifie les crédits
     if (total > creditsUtilisateur) {
         alertCredits.className = 'alert alert-danger';
         alertCredits.innerHTML = '<i class="fas fa-exclamation-triangle me-2"></i>Vous n\'avez pas assez de crédits pour cette réservation !';
@@ -70,7 +70,7 @@ function mettreAJourRecapitulatif() {
 }
 
 /**
- * Valide le formulaire de réservation
+ * Je valide le formulaire de réservation
  */
 function validateReservationForm() {
     const nbPlaces = parseInt(document.getElementById('nb_places').value);
@@ -79,18 +79,18 @@ function validateReservationForm() {
     const conditions = document.getElementById('conditions').checked;
     const total = nbPlaces * prixParPlace;
     
-    // Réinitialiser les erreurs
+    // Je réinitialise les erreurs
     clearFormErrors();
     
     let hasErrors = false;
     
-    // Vérification des crédits
+    // Je vérifie les crédits
     if (total > creditsUtilisateur) {
         showGeneralError('Vous n\'avez pas assez de crédits pour cette réservation.');
         hasErrors = true;
     }
     
-    // Vérification des conditions
+    // Je vérifie les conditions
     if (!conditions) {
         showFieldError('conditions', 'Vous devez accepter les conditions de réservation.');
         hasErrors = true;
@@ -100,27 +100,27 @@ function validateReservationForm() {
 }
 
 /**
- * Confirme et traite la réservation
+ * Je confirme et traite la réservation
  */
 function confirmerReservation() {
     const nbPlaces = parseInt(document.getElementById('nb_places').value);
     const prixParPlace = parseInt(document.getElementById('prixParPlace').value);
     const total = nbPlaces * prixParPlace;
     
-    // Demande de confirmation
+    // Je demande une confirmation
     if (!confirm(`Confirmer la réservation de ${nbPlaces} place${nbPlaces > 1 ? 's' : ''} pour ${total} crédits ?`)) {
         return;
     }
     
-    // Afficher le loader
+    // J'affiche le loader
     const submitBtn = document.querySelector('#formReservation button[type="submit"]');
     showLoader(submitBtn, 'Réservation en cours...');
     
-    // Préparer les données
+    // Je prépare les données
     const formData = new FormData(document.getElementById('formReservation'));
     formData.append('credits_utilises', total);
     
-    // Envoi AJAX
+    // J'envoie en AJAX
     fetch('/EcoRide/public/api/reserver', {
         method: 'POST',
         body: formData,
@@ -134,7 +134,7 @@ function confirmerReservation() {
             // Succès
             showSuccessMessage(data.message);
             
-            // Redirection après 2 secondes
+            // Je redirige après 2 secondes
             setTimeout(() => {
                 window.location.href = '/EcoRide/public/mes-reservations';
             }, 2000);
@@ -147,7 +147,7 @@ function confirmerReservation() {
         showGeneralError('Une erreur technique est survenue. Veuillez réessayer.');
     })
     .finally(() => {
-        // Restaurer le bouton
+        // Je restaure le bouton
         hideLoader(submitBtn, '<i class="fas fa-check me-2"></i>Confirmer la réservation');
     });
 }
@@ -160,7 +160,7 @@ function showFieldError(fieldId, message) {
     if (field) {
         field.classList.add('is-invalid');
         
-        // Créer ou mettre à jour le message d'erreur
+        // Je crée ou mets à jour le message d'erreur
         let feedback = field.parentNode.querySelector('.invalid-feedback');
         if (!feedback) {
             feedback = document.createElement('div');
@@ -173,17 +173,17 @@ function showFieldError(fieldId, message) {
 }
 
 function clearFormErrors() {
-    // Supprimer toutes les classes d'erreur
+    // Je supprime toutes les classes d'erreur
     document.querySelectorAll('.is-invalid').forEach(field => {
         field.classList.remove('is-invalid');
     });
     
-    // Masquer tous les messages d'erreur
+    // Je masque tous les messages d'erreur
     document.querySelectorAll('.invalid-feedback').forEach(feedback => {
         feedback.style.display = 'none';
     });
     
-    // Supprimer les messages d'erreur généraux
+    // Je supprime les messages d'erreur généraux
     const existingAlerts = document.querySelectorAll('.alert-danger');
     existingAlerts.forEach(alert => alert.remove());
 }
@@ -191,38 +191,38 @@ function clearFormErrors() {
 function showGeneralError(message) {
     const cardBody = document.querySelector('#formReservation').parentNode;
     
-    // Supprimer les anciennes alertes d'erreur
+    // Je supprime les anciennes alertes d'erreur
     const existingAlerts = cardBody.querySelectorAll('.alert-danger');
     existingAlerts.forEach(alert => alert.remove());
     
-    // Créer l'alerte d'erreur
+    // Je crée l'alerte d'erreur
     const alertDiv = document.createElement('div');
     alertDiv.className = 'alert alert-danger';
     alertDiv.innerHTML = `<i class="fas fa-exclamation-triangle me-2"></i>${message}`;
     
-    // Insérer l'alerte avant le formulaire
+    // J'insère l'alerte avant le formulaire
     cardBody.insertBefore(alertDiv, cardBody.firstChild);
     
-    // Faire défiler vers l'alerte
+    // Je fais défiler vers l'alerte
     alertDiv.scrollIntoView({ behavior: 'smooth' });
 }
 
 function showSuccessMessage(message) {
     const cardBody = document.querySelector('#formReservation').parentNode;
     
-    // Supprimer les anciennes alertes
+    // Je supprime les anciennes alertes
     const existingAlerts = cardBody.querySelectorAll('.alert');
     existingAlerts.forEach(alert => alert.remove());
     
-    // Créer l'alerte de succès
+    // Je crée l'alerte de succès
     const alertDiv = document.createElement('div');
     alertDiv.className = 'alert alert-success';
     alertDiv.innerHTML = `<i class="fas fa-check-circle me-2"></i>${message}`;
     
-    // Insérer l'alerte avant le formulaire
+    // J'insère l'alerte avant le formulaire
     cardBody.insertBefore(alertDiv, cardBody.firstChild);
     
-    // Faire défiler vers l'alerte
+    // Je fais défiler vers l'alerte
     alertDiv.scrollIntoView({ behavior: 'smooth' });
 }
 

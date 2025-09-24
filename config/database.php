@@ -1,21 +1,27 @@
 <?php
-// Connexion à la base de données EcoRide
-$host = 'localhost';
-$db   = 'EcoRide';
-$user = 'root';
-$pass = ''; // Mets ton mot de passe si tu en as un
-$charset = 'utf8mb4';
-
-$dsn = "mysql:host=$host;dbname=$db;charset=$charset";
-$options = [
-    PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
-    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-    PDO::ATTR_EMULATE_PREPARES   => false,
-];
-
-try {
-    $pdo = new PDO($dsn, $user, $pass, $options);
-    // echo "Connexion réussie !";
-} catch (\PDOException $e) {
-    throw new \PDOException($e->getMessage(), (int)$e->getCode());
+class DatabaseConfig 
+{
+    private $host = 'mysql';           // Nom du service Docker
+    private $username = 'ecoride';     // MYSQL_USER de ton docker-compose.yml
+    private $password = 'ecoridepass'; // MYSQL_PASSWORD de ton docker-compose.yml  
+    private $database = 'EcoRide';     // MYSQL_DATABASE
+    
+    public function getConnection() 
+    {
+        try {
+            $pdo = new PDO(
+                "mysql:host={$this->host};dbname={$this->database};charset=utf8",
+                $this->username,
+                $this->password,
+                [
+                    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
+                ]
+            );
+            return $pdo;
+        } catch (PDOException $e) {
+            die("Erreur de connexion : " . $e->getMessage());
+        }
+    }
 }
+?>

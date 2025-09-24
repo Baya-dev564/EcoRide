@@ -1,83 +1,81 @@
 <?php
 /**
- * Contrôleur d'authentification 
+ * AuthController - Contrôleur d'authentification pour EcoRide
+ * Gère l'inscription, la connexion et la déconnexion des utilisateurs
  */
 
 class AuthController
 {
     /**
-     * Affiche le formulaire d'inscription
-     * Route : GET /inscription
+     * J'affiche le formulaire d'inscription
      */
     public function inscription()
     {
-        // Démarrer la session de manière sécurisée
+        // Je démarre la session de façon sécurisée
         if (session_status() === PHP_SESSION_NONE) {
             session_start();
         }
         
-        // Vérification si l'utilisateur est déjà connecté
+        // Je vérifie si l'utilisateur est déjà connecté
         if (isset($_SESSION['user'])) {
             $_SESSION['message'] = 'Vous êtes déjà connecté à EcoRide !';
-            header('Location: /EcoRide/public/');
+            header('Location: /');
             exit;
         }
         
-        // Récupération des messages de session
+        // Je récupère les messages de session pour affichage
         $message = $_SESSION['message'] ?? '';
-        unset($_SESSION['message']);
+        unset($_SESSION['message']); // Je nettoie le message après récupération
         
-        // Données pour la vue
+        // Je définis le titre de la page pour le SEO
         $title = "Inscription | EcoRide - Rejoignez la communauté écologique";
         
-        // Affichage du formulaire d'inscription
+        // Je charge la vue d'inscription
         require __DIR__ . '/../Views/auth/inscription.php';
     }
     
     /**
-     * Affiche le formulaire de connexion
-     * Route : GET /connexion
+     * J'affiche le formulaire de connexion
      */
     public function connexion()
     {
-        // Démarrer la session de manière sécurisée
+        // Je démarre la session de façon sécurisée
         if (session_status() === PHP_SESSION_NONE) {
             session_start();
         }
         
-        // Vérification si l'utilisateur est déjà connecté
+        // Je vérifie si l'utilisateur est déjà connecté
         if (isset($_SESSION['user'])) {
             $_SESSION['message'] = 'Vous êtes déjà connecté à EcoRide !';
-            header('Location: /EcoRide/public/');
+            header('Location: /');
             exit;
         }
         
-        // Récupération des messages de session
+        // Je récupère les messages de session
         $message = $_SESSION['message'] ?? '';
         unset($_SESSION['message']);
         
-        // Données pour la vue
+        // Je définis le titre de la page pour le SEO
         $title = "Connexion | EcoRide - Accédez à votre compte";
         
-        // Affichage du formulaire de connexion
+        // Je charge la vue de connexion
         require __DIR__ . '/../Views/auth/connexion.php';
     }
     
     /**
-     * Déconnecte l'utilisateur et détruit la session
-     * Route : GET /deconnexion
+     * Je déconnecte l'utilisateur et détruis sa session
      */
     public function deconnexion()
     {
-        // Démarrer la session si pas déjà fait
+        // Je démarre la session si ce n'est pas déjà fait
         if (session_status() === PHP_SESSION_NONE) {
             session_start();
         }
         
-        // Détruire toutes les données de session
+        // Je vide complètement le tableau de session
         $_SESSION = [];
         
-        // Détruire la session côté client (cookie)
+        // Je supprime le cookie de session côté client
         if (ini_get("session.use_cookies")) {
             $params = session_get_cookie_params();
             setcookie(session_name(), '', time() - 42000,
@@ -86,42 +84,39 @@ class AuthController
             );
         }
         
-        // Détruire la session côté serveur
+        // Je détruis la session côté serveur
         session_destroy();
         
-        // Redémarrer une nouvelle session pour le message
+        // Je redémarre une nouvelle session pour le message de déconnexion
         session_start();
         $_SESSION['message'] = 'Vous avez été déconnecté avec succès. À bientôt sur EcoRide !';
         
-        // Redirection vers l'accueil
-        header('Location: /EcoRide/public/');
+        // Je redirige vers la page d'accueil
+        header('Location: /');
         exit;
     }
     
-    // ========== API AJAX POUR L'AUTHENTIFICATION ==========
-    
     /**
-     * API d'inscription pour les requêtes AJAX
-     * Route : POST /api/inscription
+     * API d'inscription - Je traite les données du formulaire via AJAX
      */
     public function apiInscription()
     {
-        //  Démarrer la session de manière sécurisée
+        // Je démarre la session de façon sécurisée
         if (session_status() === PHP_SESSION_NONE) {
             session_start();
         }
         
-        //  Header JSON pour toutes les réponses API
+        // Je définis le header JSON pour toutes les réponses API
         header('Content-Type: application/json');
         
-        // Vérifier que c'est bien une requête AJAX
+        // Je vérifie que c'est bien une requête AJAX pour la sécurité
         if (!isset($_SERVER['HTTP_X_REQUESTED_WITH']) || $_SERVER['HTTP_X_REQUESTED_WITH'] !== 'XMLHttpRequest') {
             http_response_code(400);
             echo json_encode(['succes' => false, 'erreur' => 'Requête invalide - AJAX requis']);
             return;
         }
         
-        // R2écupération des données du formulaire AJAX
+        // Je récupère et nettoie les données du formulaire
         $data = [
             'pseudo' => trim($_POST['pseudo'] ?? ''),
             'email' => trim($_POST['email'] ?? ''),
@@ -134,30 +129,33 @@ class AuthController
             'code_postal' => trim($_POST['code_postal'] ?? ''),
             'adresse' => trim($_POST['adresse'] ?? ''),
             'bio' => trim($_POST['bio'] ?? ''),
-            'permis_conduire' => isset($_POST['permis_conduire']),
+            'permis_conduire' => isset($_POST['permis_conduire']), // Checkbox true/false
             'consentement_rgpd' => isset($_POST['consentement_rgpd'])
         ];
         
-        // Inclusion des fichiers nécessaires
+        // Je me connecte à la base de données MySQL
         require_once __DIR__ . '/../../config/database.php';
-        require_once __DIR__ . '/../Models/User.php';
+        $db = new DatabaseConfig();
+        $pdo = $db->getConnection();
         
-        // Récupération de la connexion PDO
-        global $pdo;
+        // Je charge le modèle User et lui passe la connexion PDO
+        require_once __DIR__ . '/../Models/User.php';
         $userModel = new User($pdo);
         
-        // Traitement via le modèle User
+        // Je traite l'inscription via le modèle
         $resultat = $userModel->creerCompte($data);
         
-        // Retour de la réponse en JSON
+        // Je retourne la réponse en JSON selon le résultat
         if ($resultat['succes']) {
+            // Inscription réussie - je redirige vers la connexion
             echo json_encode([
                 'succes' => true,
                 'message' => $resultat['message'],
-                'redirect' => '/EcoRide/public/connexion',
+                'redirect' => '/connexion',
                 'user_id' => $resultat['user_id'] ?? null
             ]);
         } else {
+            // Erreurs de validation - je les affiche à l'utilisateur
             echo json_encode([
                 'succes' => false,
                 'erreurs' => $resultat['erreurs']
@@ -166,30 +164,30 @@ class AuthController
     }
     
     /**
-     * API de connexion pour les requêtes AJAX
-     * + Ajout des variables de session pour le système d'avis
+     * API de connexion - J'authentifie l'utilisateur via AJAX
      */
     public function apiConnexion()
-    /**  Démarrer la session AVANT tout traitement*/
-        {if (session_status() === PHP_SESSION_NONE) {
+    {
+        // Je démarre la session AVANT tout traitement
+        if (session_status() === PHP_SESSION_NONE) {
             session_start();
         }
         
-        //  Header JSON pour toutes les réponses API
+        // Je définis le header JSON pour toutes les réponses API
         header('Content-Type: application/json');
         
-        // Vérifier que c'est bien une requête AJAX
+        // Je vérifie la sécurité AJAX
         if (!isset($_SERVER['HTTP_X_REQUESTED_WITH']) || $_SERVER['HTTP_X_REQUESTED_WITH'] !== 'XMLHttpRequest') {
             http_response_code(400);
             echo json_encode(['succes' => false, 'erreur' => 'Requête invalide - AJAX requis']);
             return;
         }
         
-        // Récupération des données du formulaire
+        // Je récupère les identifiants de connexion
         $email = trim($_POST['email'] ?? '');
         $motDePasse = $_POST['mot_de_passe'] ?? '';
         
-        // Validation basique côté serveur
+        // Je valide les données côté serveur
         if (empty($email) || empty($motDePasse)) {
             echo json_encode([
                 'succes' => false, 
@@ -198,29 +196,29 @@ class AuthController
             return;
         }
         
-        // Inclusion des fichiers nécessaires
+        // Je me connecte à la base de données MySQL
         require_once __DIR__ . '/../../config/database.php';
-        require_once __DIR__ . '/../Models/User.php';
+        $db = new DatabaseConfig();
+        $pdo = $db->getConnection();
         
-        // Récupération de la connexion PDO
-        global $pdo;
+        // Je charge le modèle User avec la connexion PDO
+        require_once __DIR__ . '/../Models/User.php';
         $userModel = new User($pdo);
         
-        // Tentative d'authentification
+        // Je tente l'authentification
         $resultat = $userModel->authentifier($email, $motDePasse);
         
         if ($resultat['succes']) {
-            // Création complète de la session utilisateur
-            // Nécessaire pour le système d'avis NoSQL qui utilise user_id et pseudo
-            $_SESSION['user'] = $resultat['user'];
-            $_SESSION['user_id'] = $resultat['user']['id'];        // Pour les avis (clé étrangère)
-            $_SESSION['pseudo'] = $resultat['user']['pseudo'];     // Pour l'affichage dans les avis
+            // Connexion réussie - je crée la session utilisateur complète
+            $_SESSION['user'] = $resultat['user']; // Toutes les données utilisateur
+            $_SESSION['user_id'] = $resultat['user']['id']; // ID pour l'application
+            $_SESSION['pseudo'] = $resultat['user']['pseudo']; // Pseudo pour affichage
             
-            // Réponse JSON de succès
+            // Je retourne une réponse JSON de succès avec données utilisateur
             echo json_encode([
                 'succes' => true,
                 'message' => $resultat['message'],
-                'redirect' => '/EcoRide/public/',
+                'redirect' => '/',
                 'user' => [
                     'id' => $resultat['user']['id'],
                     'pseudo' => $resultat['user']['pseudo'],
@@ -229,7 +227,7 @@ class AuthController
                 ]
             ]);
         } else {
-            // Erreur de connexion
+            // Erreur de connexion - identifiants incorrects
             echo json_encode([
                 'succes' => false,
                 'erreur' => $resultat['erreur']

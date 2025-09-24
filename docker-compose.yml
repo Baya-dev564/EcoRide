@@ -1,0 +1,65 @@
+
+services:
+  php:
+    build: .
+    container_name: ecoride-php
+    volumes:
+      - ./app:/var/www/app
+      - ./public:/var/www/public
+      - ./config:/var/www/config
+      - ./sessions:/tmp/sessions
+      - ./config/php.ini:/usr/local/etc/php/conf.d/custom.ini
+    networks:
+      - ecoride-network
+
+  nginx:
+    image: nginx:latest
+    container_name: ecoride-nginx
+    ports:
+      - "8080:80"
+    volumes:
+      - ./public:/var/www/public
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - php
+    networks:
+      - ecoride-network
+
+  mysql:
+    image: mysql:8.0
+    container_name: ecoride-mysql
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_DATABASE: Ecoride
+      MYSQL_USER: ecoride
+      MYSQL_PASSWORD: ecoridepass
+    volumes:
+      - mysql-data:/var/lib/mysql
+    networks:
+      - ecoride-network
+
+  mongo:
+    image: mongo:4.4
+    container_name: ecoride-mongo
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ecoride
+      MONGO_INITDB_ROOT_PASSWORD: ecoride123
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    networks:
+      - ecoride-network
+
+volumes:
+  mysql-data:
+    driver: local
+  mongo-data:
+    driver: local
+
+networks:
+  ecoride-network:
+    driver: bridge

@@ -1,6 +1,7 @@
 <?php
 /**
- * Vue détail d'un trajet EcoRide
+ * Vue détail d'un trajet EcoRide avec système de notation
+ * ✅ NOUVEAU : Bouton "Noter ce trajet" pour trajets terminés
  */
 
 ob_start();
@@ -59,6 +60,52 @@ ob_start();
         </ol>
     </nav>
 
+    <!-- ✅ NOUVEAU : Section notation pour trajets terminés -->
+    <?php if ($trajet['statut'] === 'termine' && isset($peutNoter) && $peutNoter && isset($dejaNote) && !$dejaNote): ?>
+        <div class="alert alert-success border-0 shadow-sm mb-4" role="region" aria-labelledby="notation-titre">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h2 class="alert-heading mb-2 h5" id="notation-titre">
+                        <i class="fas fa-star text-warning me-2" aria-hidden="true"></i>
+                        Trajet terminé - Donnez votre avis !
+                    </h2>
+                    <p class="mb-0">
+                        Aidez la communauté EcoRide en partageant votre expérience de ce trajet.
+                    </p>
+                </div>
+                <div class="col-md-4 text-end">
+                    <a href="/EcoRide/public/noter-trajet/<?= $trajet['id'] ?>" 
+                       class="btn btn-warning btn-lg"
+                       aria-describedby="notation-aide">
+                        <i class="fas fa-star me-1" aria-hidden="true"></i>
+                        Noter ce trajet
+                    </a>
+                    <div id="notation-aide" class="form-text mt-1">
+                        <small class="text-muted">Votre avis est anonyme et confidentiel</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    <?php elseif ($trajet['statut'] === 'termine' && isset($dejaNote) && $dejaNote): ?>
+        <div class="alert alert-info border-0 shadow-sm mb-4" role="status">
+            <div class="text-center">
+                <i class="fas fa-check-circle text-success me-2" aria-hidden="true"></i>
+                <strong>Merci !</strong> Vous avez déjà donné votre avis sur ce trajet.
+                <a href="/EcoRide/public/mes-avis" class="btn btn-sm btn-outline-info ms-3">
+                    <i class="fas fa-eye me-1" aria-hidden="true"></i>
+                    Voir mes avis
+                </a>
+            </div>
+        </div>
+    <?php elseif ($trajet['statut'] === 'termine'): ?>
+        <div class="alert alert-secondary border-0 shadow-sm mb-4" role="status">
+            <div class="text-center">
+                <i class="fas fa-flag-checkered text-secondary me-2" aria-hidden="true"></i>
+                <strong>Trajet terminé</strong> - Les évaluations sont réservées aux participants
+            </div>
+        </div>
+    <?php endif; ?>
+
     <!-- Contenu principal structuré sémantiquement -->
     <div class="row">
         <!-- Section principale - Détails du trajet -->
@@ -72,6 +119,14 @@ ob_start();
                         <span aria-hidden="true"> → </span>
                         <span class="visually-hidden">vers</span>
                         <span itemprop="arrivalLocation"><?= htmlspecialchars($trajet['lieu_arrivee']) ?></span>
+                        
+                        <!-- Badge statut du trajet -->
+                        <span class="badge bg-<?= 
+                            $trajet['statut'] === 'ouvert' ? 'success' : 
+                            ($trajet['statut'] === 'termine' ? 'secondary' : 'warning') 
+                        ?> ms-2">
+                            <?= ucfirst($trajet['statut']) ?>
+                        </span>
                         
                         <?php if ($trajet['vehicule_electrique']): ?>
                             <span class="badge bg-light text-success ms-2" 
@@ -127,7 +182,7 @@ ob_start();
                                         <span class="ms-1">Places disponibles</span>
                                     </h3>
                                     <p class="mb-0">
-                                        <span class="badge bg-primary fs-6" 
+                                        <span class="badge bg-<?= $trajet['places_disponibles'] > 0 ? 'primary' : 'secondary' ?> fs-6" 
                                               role="status" 
                                               aria-label="<?= $trajet['places_disponibles'] ?> places disponibles sur ce trajet">
                                             <?= $trajet['places_disponibles'] ?> place<?= $trajet['places_disponibles'] > 1 ? 's' : '' ?>
@@ -209,23 +264,23 @@ ob_start();
                         <div class="row" role="list" aria-label="Liste des préférences">
                             <div class="col-md-4" role="listitem">
                                 <div class="d-flex align-items-center mb-2">
-                                    <i class="fas fa-smoking <?= $trajet['fumeur_accepte'] ? 'text-success' : 'text-danger' ?> me-2" 
+                                    <i class="fas fa-smoking <?= isset($trajet['fumeur_accepte']) && $trajet['fumeur_accepte'] ? 'text-success' : 'text-danger' ?> me-2" 
                                        aria-hidden="true"></i>
-                                    <span><?= $trajet['fumeur_accepte'] ? 'Fumeur accepté' : 'Véhicule non-fumeur' ?></span>
+                                    <span><?= isset($trajet['fumeur_accepte']) && $trajet['fumeur_accepte'] ? 'Fumeur accepté' : 'Véhicule non-fumeur' ?></span>
                                 </div>
                             </div>
                             <div class="col-md-4" role="listitem">
                                 <div class="d-flex align-items-center mb-2">
-                                    <i class="fas fa-paw <?= $trajet['animaux_acceptes'] ? 'text-success' : 'text-danger' ?> me-2" 
+                                    <i class="fas fa-paw <?= isset($trajet['animaux_acceptes']) && $trajet['animaux_acceptes'] ? 'text-success' : 'text-danger' ?> me-2" 
                                        aria-hidden="true"></i>
-                                    <span><?= $trajet['animaux_acceptes'] ? 'Animaux acceptés' : 'Animaux non acceptés' ?></span>
+                                    <span><?= isset($trajet['animaux_acceptes']) && $trajet['animaux_acceptes'] ? 'Animaux acceptés' : 'Animaux non acceptés' ?></span>
                                 </div>
                             </div>
                             <div class="col-md-4" role="listitem">
                                 <div class="d-flex align-items-center mb-2">
-                                    <i class="fas fa-suitcase <?= $trajet['bagages_acceptes'] ? 'text-success' : 'text-danger' ?> me-2" 
+                                    <i class="fas fa-suitcase <?= isset($trajet['bagages_acceptes']) && $trajet['bagages_acceptes'] ? 'text-success' : 'text-danger' ?> me-2" 
                                        aria-hidden="true"></i>
-                                    <span><?= $trajet['bagages_acceptes'] ? 'Bagages acceptés' : 'Bagages limités' ?></span>
+                                    <span><?= isset($trajet['bagages_acceptes']) && $trajet['bagages_acceptes'] ? 'Bagages acceptés' : 'Bagages limités' ?></span>
                                 </div>
                             </div>
                         </div>
@@ -314,6 +369,7 @@ ob_start();
             </section>
 
             <!-- Informations du véhicule -->
+            <?php if (!empty($trajet['vehicule_marque'])): ?>
             <section class="card shadow-sm mb-4" 
                      aria-labelledby="vehicule-titre" 
                      itemscope 
@@ -336,37 +392,70 @@ ob_start();
                             <?= htmlspecialchars($trajet['vehicule_modele']) ?>
                         </dd>
                         
+                        <?php if (!empty($trajet['vehicule_couleur'])): ?>
                         <dt class="col-sm-4">Couleur :</dt>
                         <dd class="col-sm-8" itemprop="color">
                             <?= htmlspecialchars($trajet['vehicule_couleur']) ?>
                         </dd>
+                        <?php endif; ?>
                         
                         <dt class="col-sm-4">Énergie :</dt>
                         <dd class="col-sm-8">
                             <span class="badge bg-<?= $trajet['vehicule_electrique_detail'] ? 'success' : 'secondary' ?>"
                                   itemprop="fuelType">
-                                <?= $trajet['energie_vehicule'] ?>
+                                <?= $trajet['energie_vehicule'] ?? ($trajet['vehicule_electrique_detail'] ? 'Électrique' : 'Thermique') ?>
                             </span>
                         </dd>
                         
+                        <?php if (!empty($trajet['vehicule_nb_places'])): ?>
                         <dt class="col-sm-4">Capacité :</dt>
                         <dd class="col-sm-8" itemprop="seatingCapacity">
                             <?= $trajet['vehicule_nb_places'] ?> places
                         </dd>
+                        <?php endif; ?>
                     </dl>
                 </div>
             </section>
+            <?php endif; ?>
 
             <!-- Section de réservation -->
             <section class="card shadow-sm" aria-labelledby="reservation-titre">
                 <header class="card-header">
                     <h2 class="h5 mb-0" id="reservation-titre">
                         <i class="fas fa-ticket-alt me-2" aria-hidden="true"></i>
-                        Réservation
+                        <?= $trajet['statut'] === 'termine' ? 'Trajet terminé' : 'Réservation' ?>
                     </h2>
                 </header>
                 <div class="card-body">
-                    <?php if (!$userConnecte): ?>
+                    <?php if ($trajet['statut'] === 'termine'): ?>
+                        <!-- Trajet terminé -->
+                        <div class="text-center">
+                            <div class="alert alert-secondary" role="status">
+                                <i class="fas fa-flag-checkered me-2" aria-hidden="true"></i>
+                                Ce trajet est terminé
+                            </div>
+                            
+                            <?php if (isset($peutNoter) && $peutNoter && isset($dejaNote) && !$dejaNote): ?>
+                                <a href="/EcoRide/public/noter-trajet/<?= $trajet['id'] ?>" 
+                                   class="btn btn-warning btn-lg w-100 mb-2">
+                                    <i class="fas fa-star me-2" aria-hidden="true"></i>
+                                    Noter ce trajet
+                                </a>
+                            <?php elseif (isset($dejaNote) && $dejaNote): ?>
+                                <div class="text-success mb-2">
+                                    <i class="fas fa-check-circle me-1" aria-hidden="true"></i>
+                                    Trajet déjà noté
+                                </div>
+                            <?php endif; ?>
+                            
+                            <a href="/EcoRide/public/trajets" 
+                               class="btn btn-outline-success">
+                                <i class="fas fa-search me-2" aria-hidden="true"></i>
+                                Chercher d'autres trajets
+                            </a>
+                        </div>
+                        
+                    <?php elseif (!$userConnecte): ?>
                         <!-- Utilisateur non connecté -->
                         <div class="text-center">
                             <p class="text-muted mb-3">
@@ -436,8 +525,8 @@ ob_start();
                             </button>
                         </div>
                         
-                    <?php elseif ($this->aDejaReserve($trajet['id'], $userConnecte['id'])): ?>
-                        <!-- Déjà réservé -->
+                    <?php elseif (isset($peutReserver) && !$peutReserver): ?>
+                        <!-- Déjà réservé ou autre empêchement -->
                         <div class="text-center">
                             <div class="alert alert-success" role="status">
                                 <i class="fas fa-check-circle me-2" aria-hidden="true"></i>
@@ -589,40 +678,6 @@ ob_start();
 
 <?php
 $content = ob_get_clean();
-
-// Métadonnées pour le SEO et les réseaux sociaux
-$metaDescription = "Détails du trajet de covoiturage de " . htmlspecialchars($trajet['lieu_depart']) . " à " . htmlspecialchars($trajet['lieu_arrivee']) . " le " . $trajet['date_depart_formatee'] . " - " . $trajet['prix'] . " crédits";
-$metaKeywords = "covoiturage, " . htmlspecialchars($trajet['lieu_depart']) . ", " . htmlspecialchars($trajet['lieu_arrivee']) . ", transport écologique, EcoRide";
-
-// Données structurées JSON-LD pour le SEO
-$jsonLd = [
-    "@context" => "https://schema.org",
-    "@type" => "Trip",
-    "name" => htmlspecialchars($trajet['lieu_depart']) . " → " . htmlspecialchars($trajet['lieu_arrivee']),
-    "description" => $trajet['commentaire'] ? htmlspecialchars($trajet['commentaire']) : "Trajet de covoiturage EcoRide",
-    "departureLocation" => [
-        "@type" => "Place",
-        "name" => htmlspecialchars($trajet['lieu_depart']),
-        "address" => htmlspecialchars($trajet['code_postal_depart'])
-    ],
-    "arrivalLocation" => [
-        "@type" => "Place", 
-        "name" => htmlspecialchars($trajet['lieu_arrivee']),
-        "address" => htmlspecialchars($trajet['code_postal_arrivee'])
-    ],
-    "departureTime" => date('c', strtotime($trajet['date_depart'])),
-    "provider" => [
-        "@type" => "Organization",
-        "name" => "EcoRide",
-        "url" => "https://ecoride.fr"
-    ],
-    "offers" => [
-        "@type" => "Offer",
-        "price" => $trajet['prix'],
-        "priceCurrency" => "CREDITS",
-        "availability" => $trajet['places_disponibles'] > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock"
-    ]
-];
 
 // Fichiers CSS et JS spécifiques
 $cssFiles = ['css/trips.css', 'css/trip-details.css'];

@@ -1,10 +1,12 @@
 <?php
 /**
- * Modèle User pour la gestion complète des utilisateurs EcoRide+admin
+ * Modèle User pour la gestion des utilisateurs EcoRide
+ * Version nettoyée et simplifiée - sans vérification email
  */
 
 class User
 {
+    protected $connection = 'mysql';
     private $pdo;
     
     public function __construct($pdo)
@@ -13,7 +15,7 @@ class User
     }
 
     /**
-     * Crée un nouveau compte utilisateur avec 20 crédits initiaux
+     * Je crée un nouveau compte utilisateur avec 20 crédits initiaux
      */
     public function creerCompte($data)
     {
@@ -87,7 +89,7 @@ class User
     }
     
     /**
-     * Authentifie un utilisateur avec email et mot de passe
+     * J'authentifie un utilisateur avec email et mot de passe
      */
     public function authentifier($email, $motDePasse)
     {
@@ -105,6 +107,9 @@ class User
                 return ['succes' => false, 'erreur' => 'Email ou mot de passe incorrect.'];
             }
             
+            // Je mets à jour la dernière connexion
+            $this->mettreAJourDerniereConnexion($user['id']);
+            
             unset($user['mot_de_passe']);
             $user['permis_conduire'] = (bool)$user['permis_conduire'];
             
@@ -121,7 +126,7 @@ class User
     }
     
     /**
-     * Récupère un utilisateur par son ID avec TOUS les champs
+     * Je récupère un utilisateur par son ID avec tous les champs
      */
     public function getUserById($userId)
     {
@@ -149,7 +154,7 @@ class User
     }
 
     /**
-     * Met à jour le profil utilisateur
+     * Je mets à jour le profil utilisateur
      */
     public function mettreAJourProfil($userId, $data)
     {
@@ -213,37 +218,33 @@ class User
     }
 
     /**
-     * Récupère les statistiques de l'utilisateur
+     * Je récupère les statistiques personnelles de l'utilisateur
      */
     public function getStatistiquesUtilisateur($userId)
     {
         try {
-            // Trajets proposés
             $sql = "SELECT COUNT(*) FROM trajets WHERE conducteur_id = ?";
             $stmt = $this->pdo->prepare($sql);
             $stmt->execute([$userId]);
             $trajetsProposés = $stmt->fetchColumn();
             
-            // Réservations effectuées
-            $sql = "SELECT COUNT(*) FROM reservations WHERE passager_id = ? AND statut = 'confirme'";
+            $sql = "SELECT COUNT(*) FROM reservations WHERE passager_id = ? AND statut = 'confirmee'";
             $stmt = $this->pdo->prepare($sql);
             $stmt->execute([$userId]);
             $reservationsEffectuées = $stmt->fetchColumn();
             
-            // Crédits gagnés
-            $sql = "SELECT COALESCE(SUM(montant), 0) FROM transactions_credits 
-                    WHERE utilisateur_id = ? AND type_transaction = 'credit' AND source != 'inscription'";
+            $sql = "SELECT credit FROM utilisateurs WHERE id = ?";
             $stmt = $this->pdo->prepare($sql);
             $stmt->execute([$userId]);
-            $creditsGagnés = $stmt->fetchColumn();
+            $creditsActuels = $stmt->fetchColumn();
             
-            // Calcul CO2 économisé
+            // Je calcule CO2 économisé basé sur les trajets partagés
             $sql = "SELECT COALESCE(SUM(t.distance_km * COALESCE(r.nb_places_total, 0)), 0) as km_partages
                     FROM trajets t
                     LEFT JOIN (
                         SELECT trajet_id, SUM(nb_places) as nb_places_total
                         FROM reservations 
-                        WHERE statut = 'confirme'
+                        WHERE statut = 'confirmee'
                         GROUP BY trajet_id
                     ) r ON t.id = r.trajet_id
                     WHERE t.conducteur_id = ?";
@@ -252,12 +253,13 @@ class User
             $stmt->execute([$userId]);
             $kmPartages = $stmt->fetchColumn();
             
+            // Je fais l'estimation CO2 : 120g CO2/km par passager
             $co2Economise = round($kmPartages * 0.12, 1);
             
             return [
                 'trajets_proposés' => $trajetsProposés,
                 'reservations_effectuées' => $reservationsEffectuées,
-                'credits_gagnés' => $creditsGagnés,
+                'credits_actuels' => $creditsActuels,
                 'co2_economise' => $co2Economise
             ];
             
@@ -267,267 +269,114 @@ class User
             return [
                 'trajets_proposés' => 0,
                 'reservations_effectuées' => 0,
-                'credits_gagnés' => 0,
+                'credits_actuels' => 0,
                 'co2_economise' => 0
             ];
         }
     }
 
-    // ========== NOUVELLES MÉTHODES POUR L'ADMINISTRATION ==========
+/**
+ * ✅ NOUVEAU : J'envoie un email de vérification avec template séparé
+ * 
+ * @param string $email Email de l'utilisateur
+ * @param string $pseudo Pseudo de l'utilisateur  
+ * @param string $token Token de vérification
+ * @return bool Succès de l'envoi
+ */
+public function envoyerEmailVerification($email, $pseudo, $token)
+{
+    // Je crée le lien de vérification
+    $lienVerification = "http://localhost/verifier-email/$token";
+    
+    // Je charge le template HTML proprement séparé
+    ob_start();
+    include __DIR__ . '/../Views/auth/emailverification.php';
+    $contenuHtml = ob_get_clean();
+    
+    // Je configure l'email
+    $sujet = 'EcoRide - Vérifiez votre adresse email';
+    $headers = [
+        'MIME-Version: 1.0',
+        'Content-Type: text/html; charset=UTF-8',
+        'From: EcoRide <noreply@ecoride.local>',
+        'Reply-To: noreply@ecoride.local'
+    ];
+    
+    // J'envoie l'email
+    return mail($email, $sujet, $contenuHtml, implode("\r\n", $headers));
+}
 
-    /**
-     * ADMIN : Récupérer tous les utilisateurs pour l'administration
-     * Utilisé par l'AdminController pour afficher la liste des utilisateurs
-     * @return array Tableau des utilisateurs avec leurs informations
-     */
-    public function getAllUsers()
-    {
-        try {
-            $sql = "SELECT id, pseudo, nom, prenom, email, credit, permis_conduire, 
-                           telephone, ville, code_postal, role, created_at, updated_at, note
-                    FROM utilisateurs 
-                    ORDER BY created_at DESC";
-            
-            $stmt = $this->pdo->prepare($sql);
-            $stmt->execute();
-            
-            $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
-            
-            // Convertir permis_conduire en booléen pour chaque utilisateur
-            foreach ($users as &$user) {
-                $user['permis_conduire'] = (bool)$user['permis_conduire'];
-            }
-            
-            return $users;
-            
-        } catch (PDOException $e) {
-            error_log("Erreur getAllUsers : " . $e->getMessage());
-            return [];
+/**
+ * ✅ NOUVEAU : Je génère un token de vérification unique
+ * 
+ * @return string Token aléatoire sécurisé
+ */
+public function genererTokenVerification()
+{
+    return bin2hex(random_bytes(32)); // Token de 64 caractères
+}
+
+/**
+ * ✅ NOUVEAU : Je vérifie un token de vérification
+ * 
+ * @param string $token Token à vérifier
+ * @return array Résultat de la vérification
+ */
+public function verifierToken($token)
+{
+    try {
+        // Je cherche l'utilisateur avec ce token valide
+        $sql = "SELECT id, email, pseudo FROM utilisateurs 
+                WHERE token_verification = ? 
+                AND token_expire_at > NOW() 
+                AND email_verifie = 0";
+        
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute([$token]);
+        $user = $stmt->fetch();
+        
+        if (!$user) {
+            return ['succes' => false, 'erreur' => 'Token invalide ou expiré.'];
         }
+        
+        // Je marque l'email comme vérifié
+        $sqlUpdate = "UPDATE utilisateurs 
+                      SET email_verifie = 1, 
+                          token_verification = NULL, 
+                          token_expire_at = NULL 
+                      WHERE id = ?";
+        
+        $stmtUpdate = $this->pdo->prepare($sqlUpdate);
+        $stmtUpdate->execute([$user['id']]);
+        
+        return [
+            'succes' => true, 
+            'message' => 'Email vérifié avec succès !',
+            'user' => $user
+        ];
+        
+    } catch (Exception $e) {
+        error_log("Erreur vérification token : " . $e->getMessage());
+        return ['succes' => false, 'erreur' => 'Erreur technique.'];
     }
+}
+
 
     /**
-     * ADMIN : Récupérer les utilisateurs actifs (connectés récemment)
-     * Utilisé pour les statistiques d'administration
-     * @param int $jours Nombre de jours pour considérer un utilisateur comme actif
-     * @return array Tableau des utilisateurs actifs
+     * Je mets à jour la dernière connexion de l'utilisateur
      */
-    public function getActiveUsers($jours = 30)
+    private function mettreAJourDerniereConnexion($userId)
     {
         try {
-            $sql = "SELECT id, pseudo, nom, prenom, email, updated_at 
-                    FROM utilisateurs 
-                    WHERE role != 'admin' 
-                    AND updated_at > DATE_SUB(NOW(), INTERVAL ? DAY)
-                    ORDER BY updated_at DESC";
-            
-            $stmt = $this->pdo->prepare($sql);
-            $stmt->execute([$jours]);
-            
-            return $stmt->fetchAll(PDO::FETCH_ASSOC);
-            
-        } catch (PDOException $e) {
-            error_log("Erreur getActiveUsers : " . $e->getMessage());
-            return [];
-        }
-    }
-
-    /**
-     * ADMIN : Mettre à jour les crédits d'un utilisateur
-     * Utilisé par l'admin pour ajuster les crédits des utilisateurs
-     * @param int $userId ID de l'utilisateur
-     * @param int $nouveauCredit Nouveau montant de crédits
-     * @return bool True si mise à jour réussie
-     */
-    public function updateCredits($userId, $nouveauCredit)
-    {
-        try {
-            // Récupérer l'ancien montant pour historique
-            $sql = "SELECT credit FROM utilisateurs WHERE id = ? AND role != 'admin'";
-            $stmt = $this->pdo->prepare($sql);
-            $stmt->execute([$userId]);
-            $ancienCredit = $stmt->fetchColumn();
-            
-            if ($ancienCredit === false) {
-                return false; // Utilisateur non trouvé ou admin
-            }
-            
-            // Mettre à jour les crédits
-            $sql = "UPDATE utilisateurs 
-                    SET credit = ?, updated_at = NOW() 
-                    WHERE id = ? AND role != 'admin'";
-            
-            $stmt = $this->pdo->prepare($sql);
-            $result = $stmt->execute([$nouveauCredit, $userId]);
-            
-            if ($result && $stmt->rowCount() > 0) {
-                // Enregistrer la transaction pour historique
-                $difference = $nouveauCredit - $ancienCredit;
-                $type = $difference > 0 ? 'credit' : 'debit';
-                $this->enregistrerTransactionCredit(
-                    $userId,
-                    abs($difference),
-                    $type,
-                    'admin',
-                    'Ajustement administrateur'
-                );
-                
-                return true;
-            }
-            
-            return false;
-            
-        } catch (PDOException $e) {
-            error_log("Erreur updateCredits : " . $e->getMessage());
-            return false;
-        }
-    }
-
-    /**
-     * ADMIN : Obtenir les statistiques des utilisateurs
-     * Méthode utile pour l'AdminController
-     * @return array Statistiques générales des utilisateurs
-     */
-    public function getStatistiquesUsers()
-    {
-        try {
-            $stats = [];
-            
-            // Nombre total d'utilisateurs (sans admin)
-            $stmt = $this->pdo->query("SELECT COUNT(*) FROM utilisateurs WHERE role != 'admin'");
-            $stats['total_users'] = $stmt->fetchColumn();
-            
-            // Nombre d'utilisateurs avec permis
-            $stmt = $this->pdo->query("SELECT COUNT(*) FROM utilisateurs WHERE permis_conduire = 1 AND role != 'admin'");
-            $stats['users_avec_permis'] = $stmt->fetchColumn();
-            
-            // Crédits totaux en circulation
-            $stmt = $this->pdo->query("SELECT SUM(credit) FROM utilisateurs WHERE role != 'admin'");
-            $stats['credits_total'] = $stmt->fetchColumn() ?: 0;
-            
-            // Moyenne des crédits par utilisateur
-            if ($stats['total_users'] > 0) {
-                $stats['credits_moyenne'] = round($stats['credits_total'] / $stats['total_users'], 2);
-            } else {
-                $stats['credits_moyenne'] = 0;
-            }
-            
-            // Utilisateurs inscrits ce mois-ci
-            $stmt = $this->pdo->query("SELECT COUNT(*) FROM utilisateurs 
-                                      WHERE role != 'admin' 
-                                      AND created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)");
-            $stats['nouveaux_users_mois'] = $stmt->fetchColumn();
-            
-            return $stats;
-            
-        } catch (PDOException $e) {
-            error_log("Erreur getStatistiquesUsers : " . $e->getMessage());
-            return [
-                'total_users' => 0,
-                'users_avec_permis' => 0,
-                'credits_total' => 0,
-                'credits_moyenne' => 0,
-                'nouveaux_users_mois' => 0
-            ];
-        }
-    }
-
-    /**
-     * ADMIN : Rechercher des utilisateurs
-     * Permet à l'admin de rechercher par pseudo, nom, email
-     * @param string $recherche Terme de recherche
-     * @return array Utilisateurs correspondant à la recherche
-     */
-    public function rechercherUsers($recherche)
-    {
-        try {
-            $sql = "SELECT id, pseudo, nom, prenom, email, credit, created_at, role 
-                    FROM utilisateurs 
-                    WHERE role != 'admin' 
-                    AND (pseudo LIKE ? OR nom LIKE ? OR prenom LIKE ? OR email LIKE ?)
-                    ORDER BY created_at DESC";
-            
-            $terme = '%' . $recherche . '%';
-            $stmt = $this->pdo->prepare($sql);
-            $stmt->execute([$terme, $terme, $terme, $terme]);
-            
-            return $stmt->fetchAll(PDO::FETCH_ASSOC);
-            
-        } catch (PDOException $e) {
-            error_log("Erreur rechercherUsers : " . $e->getMessage());
-            return [];
-        }
-    }
-
-    /**
-     * ADMIN : Compter les trajets d'un utilisateur
-     * Utile pour les statistiques par utilisateur
-     * @param int $userId ID de l'utilisateur
-     * @return int Nombre de trajets créés
-     */
-    public function compterTrajetsUser($userId)
-    {
-        try {
-            $sql = "SELECT COUNT(*) FROM trajets WHERE conducteur_id = ?";
+            $sql = "UPDATE utilisateurs SET updated_at = NOW() WHERE id = ?";
             $stmt = $this->pdo->prepare($sql);
             $stmt->execute([$userId]);
-            
-            return $stmt->fetchColumn();
-            
         } catch (PDOException $e) {
-            error_log("Erreur compterTrajetsUser : " . $e->getMessage());
-            return 0;
+            error_log("Erreur mise à jour dernière connexion : " . $e->getMessage());
         }
     }
 
-    /**
-     * ADMIN : Compter les réservations d'un utilisateur
-     * Utile pour les statistiques par utilisateur
-     * @param int $userId ID de l'utilisateur
-     * @return int Nombre de réservations effectuées
-     */
-    public function compterReservationsUser($userId)
-    {
-        try {
-            $sql = "SELECT COUNT(*) FROM reservations WHERE passager_id = ?";
-            $stmt = $this->pdo->prepare($sql);
-            $stmt->execute([$userId]);
-            
-            return $stmt->fetchColumn();
-            
-        } catch (PDOException $e) {
-            error_log("Erreur compterReservationsUser : " . $e->getMessage());
-            return 0;
-        }
-    }
-
-    /**
-     * ADMIN : Désactiver temporairement un utilisateur
-     * Permet de bloquer un utilisateur sans le supprimer
-     * @param int $userId ID de l'utilisateur
-     * @return bool True si succès
-     */
-    public function desactiverUtilisateur($userId)
-    {
-        try {
-            // Pour l'instant, on met à jour updated_at pour marquer l'action
-            // Tu peux ajouter un champ "statut" à la table utilisateurs si nécessaire
-            $sql = "UPDATE utilisateurs 
-                    SET updated_at = NOW() 
-                    WHERE id = ? AND role != 'admin'";
-            
-            $stmt = $this->pdo->prepare($sql);
-            $result = $stmt->execute([$userId]);
-            
-            return $result && $stmt->rowCount() > 0;
-            
-        } catch (PDOException $e) {
-            error_log("Erreur desactiverUtilisateur : " . $e->getMessage());
-            return false;
-        }
-    }
-
-    // ========== MÉTHODES PRIVÉES (inchangées) ==========
+    // Méthodes privées de validation
     
     private function validerDonneesInscription($data)
     {
@@ -553,12 +402,12 @@ class User
             $erreurs[] = 'Le mot de passe doit contenir au moins 6 caractères.';
         }
         
-        if (!empty($data['nom']) && strlen($data['nom']) > 100) {
-            $erreurs[] = 'Le nom ne peut pas dépasser 100 caractères.';
+        if (!empty($data['nom']) && strlen($data['nom']) > 50) {
+            $erreurs[] = 'Le nom ne peut pas dépasser 50 caractères.';
         }
         
-        if (!empty($data['prenom']) && strlen($data['prenom']) > 100) {
-            $erreurs[] = 'Le prénom ne peut pas dépasser 100 caractères.';
+        if (!empty($data['prenom']) && strlen($data['prenom']) > 50) {
+            $erreurs[] = 'Le prénom ne peut pas dépasser 50 caractères.';
         }
         
         if (!empty($data['telephone']) && !preg_match('/^[0-9+\-\s\.]{10,15}$/', $data['telephone'])) {
@@ -625,8 +474,8 @@ class User
     private function enregistrerTransactionCredit($userId, $montant, $type, $source, $description)
     {
         try {
-            $sql = "INSERT INTO transactions_credits (
-                        utilisateur_id, montant, type_transaction, source, description, date_transaction
+            $sql = "INSERT INTO credits (
+                        utilisateur_id, montant, type_transaction, source, description, created_at
                     ) VALUES (?, ?, ?, ?, ?, NOW())";
             
             $stmt = $this->pdo->prepare($sql);
@@ -634,7 +483,10 @@ class User
             
         } catch (PDOException $e) {
             error_log("Erreur transaction crédit : " . $e->getMessage());
+            // Je ne fais pas échouer l'inscription si les transactions ne marchent pas
         }
     }
+
+    
 }
 ?>

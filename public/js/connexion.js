@@ -2,29 +2,29 @@
 // Validation côté client pour le formulaire de connexion EcoRide avec AJAX
 
 document.addEventListener('DOMContentLoaded', function() {
-    // Récupération des éléments du formulaire
+    // Je récupère les éléments du formulaire
     const form = document.getElementById('formConnexion');
     const email = document.getElementById('email');
     const motDePasse = document.getElementById('mot_de_passe');
     const togglePassword = document.getElementById('togglePassword');
     
-    // Vérification que tous les éléments existent
+    // Je vérifie que tous les éléments existent
     if (!form || !email || !motDePasse) {
         return;
     }
     
-    // IMPORTANT : Désactiver la validation HTML5 native
+    // Je désactive la validation HTML5 native
     form.setAttribute('novalidate', 'true');
     
     /**
-     * Gestion de l'affichage/masquage du mot de passe avec animation
+     * Je gère l'affichage/masquage du mot de passe avec animation
      */
     if (togglePassword) {
         togglePassword.addEventListener('click', function() {
             const type = motDePasse.getAttribute('type') === 'password' ? 'text' : 'password';
             motDePasse.setAttribute('type', type);
             
-            // Animation de l'icône
+            // J'anime l'icône
             const icon = this.querySelector('i');
             icon.classList.add('animate-pulse');
             
@@ -38,13 +38,13 @@ document.addEventListener('DOMContentLoaded', function() {
             
             setTimeout(() => icon.classList.remove('animate-pulse'), 300);
             
-            // Maintient le focus sur le champ mot de passe
+            // Je maintiens le focus sur le champ mot de passe
             motDePasse.focus();
         });
     }
     
     /**
-     * Validation en temps réel de l'email avec animations
+     * Je valide en temps réel l'email avec animations
      */
     email.addEventListener('input', function() {
         clearFieldError('email');
@@ -64,7 +64,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     /**
-     * Validation en temps réel du mot de passe avec animations
+     * Je valide en temps réel le mot de passe avec animations
      */
     motDePasse.addEventListener('input', function() {
         clearFieldError('mot_de_passe');
@@ -79,7 +79,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     /**
-     * Gestion de la touche Entrée pour soumission rapide
+     * Je gère la touche Entrée pour soumission rapide
      */
     [email, motDePasse].forEach(input => {
         input.addEventListener('keypress', function(event) {
@@ -91,26 +91,26 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     /**
-     * CRUCIAL : Intercepter la soumission du formulaire pour AJAX
+     * J'intercepte la soumission du formulaire pour AJAX
      */
     form.addEventListener('submit', function(event) {
-        // EMPÊCHER la soumission normale (rechargement de page)
+        // J'empêche la soumission normale (rechargement de page)
         event.preventDefault();
         event.stopPropagation();
         
-        // Validation complète du formulaire
+        // Je valide complètement le formulaire
         const isValid = validateForm();
         
         if (isValid) {
-            // Animation de succès
+            // J'anime le succès
             animateFormSuccess();
-            // Soumission AJAX
+            // Je soumets en AJAX
             submitLoginForm();
         } else {
-            // Animation d'erreur
+            // J'anime l'erreur
             animateFormError();
             
-            // Focus sur le premier champ en erreur
+            // Je focus sur le premier champ en erreur
             const firstError = this.querySelector('.is-invalid');
             if (firstError) {
                 firstError.focus();
@@ -120,25 +120,25 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     /**
-     * Soumission AJAX du formulaire de connexion EcoRide
-     * CORRECTION : Headers AJAX appropriés pour éviter l'erreur "Requête invalide"
+     * Je soumets le formulaire de connexion EcoRide en AJAX
+     * Headers AJAX appropriés pour éviter l'erreur "Requête invalide"
      */
     function submitLoginForm() {
-        // Affichage du loader pendant la connexion
+        // J'affiche le loader pendant la connexion
         showLoader();
         
-        // Récupération des données du formulaire
+        // Je récupère les données du formulaire
         const formData = new FormData();
         formData.append('email', email.value.trim());
         formData.append('mot_de_passe', motDePasse.value);
         
-        // Requête AJAX vers l'API de connexion EcoRide avec headers corrigés
+        // Je fais la requête AJAX vers l'API de connexion EcoRide avec headers corrigés
         fetch('/api/connexion', {
             method: 'POST',
             body: formData,
             headers: {
                 'X-Requested-With': 'XMLHttpRequest',  // Header AJAX requis par le serveur
-                'Accept': 'application/json'           // Accepter les réponses JSON
+                'Accept': 'application/json'           // J'accepte les réponses JSON
             }
         })
         .then(response => {
@@ -151,17 +151,17 @@ document.addEventListener('DOMContentLoaded', function() {
             hideLoader();
             
             if (data.succes) {
-                // Connexion réussie - Animation de succès
+                // Connexion réussie - j'anime le succès
                 showSuccessMessage(data.message);
                 animateFormSuccess();
                 
-                // Redirection vers l'accueil après 1.5 secondes
+                // Je redirige vers l'accueil après 1.5 secondes
                 setTimeout(() => {
                     window.location.href = data.redirect || '/';
                 }, 1500);
                 
             } else {
-                // Erreur de connexion - Affichage du message d'erreur
+                // Erreur de connexion - j'affiche le message d'erreur
                 showErrorMessage(data.erreur);
                 animateFormError();
             }
@@ -174,12 +174,12 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     /**
-     * Validation en temps réel de tous les champs requis
+     * Je valide en temps réel tous les champs requis
      */
     const requiredInputs = form.querySelectorAll('input[required]');
     requiredInputs.forEach(input => {
         input.addEventListener('input', function() {
-            // Animation lors de la saisie
+            // J'anime lors de la saisie
             this.classList.add('animate-pulse-success');
             setTimeout(() => this.classList.remove('animate-pulse-success'), 300);
             
@@ -272,11 +272,11 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     function showSuccessMessage(message) {
-        // Supprimer les anciens messages
+        // Je supprime les anciens messages
         const existingAlerts = document.querySelectorAll('.alert');
         existingAlerts.forEach(alert => alert.remove());
         
-        // Créer et afficher un message de succès
+        // Je crée et affiche un message de succès
         const alertDiv = document.createElement('div');
         alertDiv.className = 'alert alert-success border-0 shadow-sm animate-slideDown';
         alertDiv.innerHTML = `
@@ -286,19 +286,19 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
         `;
         
-        // Insérer le message en haut du formulaire
+        // J'insère le message en haut du formulaire
         form.parentNode.insertBefore(alertDiv, form);
         
-        // Faire défiler vers le message
+        // Je fais défiler vers le message
         alertDiv.scrollIntoView({ behavior: 'smooth' });
     }
     
     function showErrorMessage(message) {
-        // Supprimer les anciens messages
+        // Je supprime les anciens messages
         const existingAlerts = document.querySelectorAll('.alert');
         existingAlerts.forEach(alert => alert.remove());
         
-        // Créer et afficher un message d'erreur
+        // Je crée et affiche un message d'erreur
         const alertDiv = document.createElement('div');
         alertDiv.className = 'alert alert-danger border-0 shadow-sm animate-slideDown';
         alertDiv.innerHTML = `
@@ -308,27 +308,27 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
         `;
         
-        // Insérer le message en haut du formulaire
+        // J'insère le message en haut du formulaire
         form.parentNode.insertBefore(alertDiv, form);
         
-        // Faire défiler vers le message
+        // Je fais défiler vers le message
         alertDiv.scrollIntoView({ behavior: 'smooth' });
     }
     
     /**
-     * Met à jour l'affichage de validation d'un champ avec animations
+     * Je mets à jour l'affichage de validation d'un champ avec animations
      */
     function showFieldError(fieldId, message) {
         const field = document.getElementById(fieldId);
         if (field) {
-            // Animation de secousse
+            // J'anime la secousse
             field.classList.add('animate-shake');
             setTimeout(() => field.classList.remove('animate-shake'), 600);
             
             field.classList.remove('is-valid');
             field.classList.add('is-invalid');
             
-            // Créer ou mettre à jour le message d'erreur
+            // Je crée ou mets à jour le message d'erreur
             let feedback = field.parentNode.querySelector('.invalid-feedback');
             if (!feedback) {
                 feedback = document.createElement('div');
@@ -344,14 +344,14 @@ document.addEventListener('DOMContentLoaded', function() {
     function showFieldSuccess(fieldId) {
         const field = document.getElementById(fieldId);
         if (field) {
-            // Animation de succès
+            // J'anime le succès
             field.classList.add('animate-pulse-success');
             setTimeout(() => field.classList.remove('animate-pulse-success'), 600);
             
             field.classList.remove('is-invalid');
             field.classList.add('is-valid');
             
-            // Masquer le message d'erreur
+            // Je masque le message d'erreur
             const feedback = field.parentNode.querySelector('.invalid-feedback');
             if (feedback) {
                 feedback.style.display = 'none';

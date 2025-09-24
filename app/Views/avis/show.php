@@ -357,7 +357,7 @@ $conducteur_id = $conducteur_id ?? '';
                                                             <div>
                                                                 <h4 class="h6 mb-1">
                                                                  <i class="fas fa-user text-secondary me-1" aria-hidden="true"></i>
-                                                                  <?= htmlspecialchars($avis_item->pseudo ?? ('#' . $avis_item->user_id)) ?>
+                                                                <?= htmlspecialchars($avis_item->getPseudo() ?? ('#' . $avis_item->getUserId())) ?>
                                                                 </h4>
 
                                                                 <small class="text-muted">
@@ -365,6 +365,7 @@ $conducteur_id = $conducteur_id ?? '';
                                                                     Trajet #<?= $avis_item->getTrajetId() ?>
                                                                 </small>
                                                             </div>
+                                                            
                                                             
                                                             <!-- Statut -->
                                                             <span class="badge bg-<?= $avis_item->getStatut() === 'validé' ? 'success' : 'warning' ?>">
