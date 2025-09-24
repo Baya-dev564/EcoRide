@@ -275,6 +275,93 @@ class User
         }
     }
 
+/**
+ * ✅ NOUVEAU : J'envoie un email de vérification avec template séparé
+ * 
+ * @param string $email Email de l'utilisateur
+ * @param string $pseudo Pseudo de l'utilisateur  
+ * @param string $token Token de vérification
+ * @return bool Succès de l'envoi
+ */
+public function envoyerEmailVerification($email, $pseudo, $token)
+{
+    // Je crée le lien de vérification
+    $lienVerification = "http://localhost/verifier-email/$token";
+    
+    // Je charge le template HTML proprement séparé
+    ob_start();
+    include __DIR__ . '/../Views/auth/emailverification.php';
+    $contenuHtml = ob_get_clean();
+    
+    // Je configure l'email
+    $sujet = 'EcoRide - Vérifiez votre adresse email';
+    $headers = [
+        'MIME-Version: 1.0',
+        'Content-Type: text/html; charset=UTF-8',
+        'From: EcoRide <noreply@ecoride.local>',
+        'Reply-To: noreply@ecoride.local'
+    ];
+    
+    // J'envoie l'email
+    return mail($email, $sujet, $contenuHtml, implode("\r\n", $headers));
+}
+
+/**
+ * ✅ NOUVEAU : Je génère un token de vérification unique
+ * 
+ * @return string Token aléatoire sécurisé
+ */
+public function genererTokenVerification()
+{
+    return bin2hex(random_bytes(32)); // Token de 64 caractères
+}
+
+/**
+ * ✅ NOUVEAU : Je vérifie un token de vérification
+ * 
+ * @param string $token Token à vérifier
+ * @return array Résultat de la vérification
+ */
+public function verifierToken($token)
+{
+    try {
+        // Je cherche l'utilisateur avec ce token valide
+        $sql = "SELECT id, email, pseudo FROM utilisateurs 
+                WHERE token_verification = ? 
+                AND token_expire_at > NOW() 
+                AND email_verifie = 0";
+        
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute([$token]);
+        $user = $stmt->fetch();
+        
+        if (!$user) {
+            return ['succes' => false, 'erreur' => 'Token invalide ou expiré.'];
+        }
+        
+        // Je marque l'email comme vérifié
+        $sqlUpdate = "UPDATE utilisateurs 
+                      SET email_verifie = 1, 
+                          token_verification = NULL, 
+                          token_expire_at = NULL 
+                      WHERE id = ?";
+        
+        $stmtUpdate = $this->pdo->prepare($sqlUpdate);
+        $stmtUpdate->execute([$user['id']]);
+        
+        return [
+            'succes' => true, 
+            'message' => 'Email vérifié avec succès !',
+            'user' => $user
+        ];
+        
+    } catch (Exception $e) {
+        error_log("Erreur vérification token : " . $e->getMessage());
+        return ['succes' => false, 'erreur' => 'Erreur technique.'];
+    }
+}
+
+
     /**
      * Je mets à jour la dernière connexion de l'utilisateur
      */
@@ -399,5 +486,7 @@ class User
             // Je ne fais pas échouer l'inscription si les transactions ne marchent pas
         }
     }
+
+    
 }
 ?>
