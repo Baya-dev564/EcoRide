@@ -1,6 +1,7 @@
 <?php
 /**
- * Modèle MessagerieMongoDB pour EcoRide - 100% NoSQL comme les avis
+ * Modèle MessagerieMongoDB pour EcoRide - Système NoSQL complet
+ * Gestion de la messagerie avec MongoDB pour EcoRide
  */
 
 class MessagerieMongoDB 
@@ -11,17 +12,17 @@ class MessagerieMongoDB
     private $collection_messages = 'messages';
 
     /**
-     * ✅ Constructeur SIMPLE - SEULEMENT MONGODB
+     * Je constructeur - J'établis la connexion MongoDB simple
      */
     public function __construct() 
     {
         try {
-            // ✅ CONNEXION MONGODB DRIVER MANAGER (COMME TES AVIS)
+            // Je connecte MongoDB avec les mêmes paramètres que les avis
             $this->manager = new MongoDB\Driver\Manager(
                 "mongodb://ecoride:ecoride123@mongo:27017/EcoRide?authSource=admin"
             );
             
-            // ✅ DÉFINIR LA BASE ET LES COLLECTIONS
+            // Je définis la base et les collections
             $this->database = 'EcoRide';
             $this->collection_conversations = 'conversations';
             $this->collection_messages = 'messages';
@@ -35,7 +36,7 @@ class MessagerieMongoDB
     }
 
     /**
-     * ✅ Je crée une nouvelle conversation - 100% NoSQL
+     * Je crée une nouvelle conversation 100% NoSQL
      * Je stocke directement les pseudos dans MongoDB (pas de jointure MySQL)
      */
     public function creerConversation($user1Id, $user2Id, $pseudo1, $pseudo2, $trajetId = null)
@@ -76,12 +77,12 @@ class MessagerieMongoDB
     }
     
     /**
-     * ✅ J'envoie un message - 100% NoSQL
+     * J'envoie un message 100% NoSQL
      */
     public function envoyerMessage($conversationId, $expediteurId, $expediteurPseudo, $contenu) 
     {  
         try {
-            // ✅ Créer le message
+            // Je crée le message
             $message = [
                 'conversation_id' => $conversationId,
                 'expediteur' => [
@@ -93,7 +94,7 @@ class MessagerieMongoDB
                 'lu_par' => [(int)$expediteurId]
             ];
             
-            // ✅ UTILISE MANAGER + BULKWRITE (COMME DANS creerConversation)
+            // J'utilise Manager + BulkWrite comme dans creerConversation
             $bulk = new MongoDB\Driver\BulkWrite;
             $bulk->insert($message);
             
@@ -103,7 +104,7 @@ class MessagerieMongoDB
                 throw new Exception("Erreur lors de l'insertion du message");
             }
             
-            // ✅ Mettre à jour la conversation (AUSSI AVEC MANAGER)
+            // Je mets à jour la conversation avec Manager aussi
             $bulkUpdate = new MongoDB\Driver\BulkWrite;
             $bulkUpdate->update(
                 ['_id' => new MongoDB\BSON\ObjectId($conversationId)],
@@ -121,19 +122,19 @@ class MessagerieMongoDB
     }
     
     /**
-     * ✅ Je récupère toutes les conversations d'un utilisateur
+     * Je récupère toutes les conversations d'un utilisateur
      */
     public function getConversationsUtilisateur($userId)
     {
         try {
             error_log("DEBUG getConversationsUtilisateur - userId: $userId");
             
-            // ✅ AJOUTE LE CAST EN INTEGER ICI !
+            // Je caste en integer ici
             $userIdInt = (int)$userId;
             error_log("DEBUG getConversationsUtilisateur - userId casted: $userIdInt");
             
             $filter = [
-                'participants.user_id' => $userIdInt  // ← INTEGER au lieu de string !
+                'participants.user_id' => $userIdInt  // Integer au lieu de string
             ];
             
             $options = ['sort' => ['derniere_activite' => -1]];
@@ -157,7 +158,7 @@ class MessagerieMongoDB
     }
 
     /**
-     * ✅ Je récupère tous les messages d'une conversation
+     * Je récupère tous les messages d'une conversation
      */
     public function getMessages($conversationId)
     {
@@ -182,7 +183,7 @@ class MessagerieMongoDB
     }
 
     /**
-     * ✅ NOUVEAU : Je récupère une conversation spécifique
+     * Je récupère une conversation spécifique
      */
     public function getConversation($conversationId)
     {
@@ -193,7 +194,7 @@ class MessagerieMongoDB
             $cursor = $this->manager->executeQuery($this->database . '.' . $this->collection_conversations, $query);
             
             foreach ($cursor as $conversation) {
-                return $conversation; // Retourne le premier (et seul) résultat
+                return $conversation; // Je retourne le premier (et seul) résultat
             }
             
             return null;
@@ -205,7 +206,7 @@ class MessagerieMongoDB
     }
 
     /**
-     * ✅ NOUVEAU : Je marque les messages comme lus pour un utilisateur
+     * Je marque les messages comme lus pour un utilisateur
      */
     public function marquerMessagesCommuLus($conversationId, $userId)
     {
@@ -232,7 +233,7 @@ class MessagerieMongoDB
     }
 
     /**
-     * ✅ NOUVEAU : J'incrémente le compteur de messages non lus
+     * J'incrémente le compteur de messages non lus
      */
     public function incrementerMessagesNonLus($conversationId, $userId)
     {

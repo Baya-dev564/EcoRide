@@ -1,39 +1,37 @@
 <?php
 /**
- * Contrôleur pour la page d'accueil EcoRide
+ * HomeController - Contrôleur pour la page d'accueil EcoRide
  */
 
 class HomeController
 {
     /**
-     * Affiche la page d'accueil EcoRide
+     * J'affiche la page d'accueil EcoRide
      * 
      * Cette méthode gère l'affichage de la page d'accueil avec :
      * - Présentation des avantages du covoiturage écologique
      * - Statistiques de la plateforme EcoRide
      * - Interface adaptée selon l'état de connexion
      * - Liens vers les fonctionnalités principales
-     * 
-     * Route : GET /
      */
     public function index()
     {
-        // Vérification de l'utilisateur connecté
+        // Je vérifie l'utilisateur connecté pour adapter l'affichage
         // Si connecté : affichage personnalisé avec crédits et actions rapides
         // Si non connecté : affichage général avec incitation à l'inscription
         $user = $_SESSION['user'] ?? null;
         
-        // Récupération et nettoyage des messages de session
-        // Messages de confirmation (ex: après connexion, déconnexion, etc.)
+        // Je récupère et nettoie les messages de session
+        // Messages de confirmation après connexion, déconnexion, etc.
         $message = $_SESSION['message'] ?? '';
-        unset($_SESSION['message']); // Nettoyage après affichage
+        unset($_SESSION['message']); // Je nettoie après affichage
         
-        // Données pour la vue Bootstrap
+        // Je définis les données pour la vue Bootstrap
         $title = "Accueil | EcoRide - Covoiturage Écologique";
         
-        // Statistiques de la plateforme EcoRide pour la page d'accueil
+        // Je prépare les statistiques de la plateforme EcoRide pour la page d'accueil
         // Dans un vrai projet, ces données viendraient de la base de données
-        // Ici,  j'utilise des données statiques 
+        // Ici, j'utilise des données statiques représentatives
         $stats = [
             'trajets_total' => 1250,           // Nombre total de trajets proposés
             'co2_economise' => '2.5T',         // CO₂ économisé grâce au covoiturage
@@ -41,8 +39,8 @@ class HomeController
             'vehicules_electriques' => 45      // Pourcentage de véhicules électriques
         ];
         
-        // Appel de la vue d'accueil avec Bootstrap 5
-        // La vue adaptera l'affichage selon l'état de connexion ($user)
+        // J'appelle la vue d'accueil avec Bootstrap 5
+        // La vue adaptera l'affichage selon l'état de connexion
         require __DIR__ . '/../Views/home/index.php';
     }
 }

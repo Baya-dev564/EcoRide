@@ -68,7 +68,7 @@ class PlacesService
                 'address' => $address['road'] ?? '',
                 'city' => $address['city'] ?? $address['town'] ?? $address['village'] ?? '',
                 'postal_code' => $address['postcode'] ?? '',
-                'icon' => '📍'
+                'icon' => 'location-dot'
             ];
         }
 

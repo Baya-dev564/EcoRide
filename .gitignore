@@ -1,0 +1,68 @@
+# =================================
+# GITIGNORE ECORIDE - VERSION PRODUCTION
+# =================================
+
+# ===== FICHIERS DEBUG & TEST =====
+debug-*.php
+test-*.php
+index2.php
+*-debug.php
+*-test.php
+temp*.php
+
+# ===== SESSIONS & CACHE =====
+sessions/sess_*
+sessions/*.tmp
+cache/
+tmp/
+*.cache
+
+# ===== LOGS & ERREURS =====
+*.log
+logs/
+error.log
+access.log
+
+# ===== FICHIERS TEMPORAIRES =====
+*.tmp
+*.bak
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# ===== CONFIG SENSIBLE =====
+.env
+.env.local
+.env.production
+config/secret.php
+config/database_prod.php
+
+# ===== VENDOR & DEPENDENCIES =====
+vendor/
+node_modules/
+composer.lock
+
+# ===== UPLOADS & MEDIA =====
+uploads/*.jpg
+uploads/*.png
+uploads/*.gif
+uploads/temp/
+!uploads/.gitkeep
+
+# ===== DOCKER & DÉVELOPPEMENT =====
+.vscode/
+.idea/
+*.sublime-*
+docker-compose.override.yml
+
+# ===== FICHIERS SYSTÈME =====
+php.ini
+.htaccess.bak
+*.orig
+
+# ===== SAUVEGARDES BASE DE DONNÉES =====
+*.sql
+*.dump
+backup/

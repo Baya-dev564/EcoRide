@@ -1,9 +1,8 @@
 <?php
 /**
- * Modèle Trip avec système de modération admin + WORKFLOW DE NOTATION
+ * Modèle Trip avec système de modération admin + workflow de notation
  * Les trajets créés sont en attente de validation + Gestion des statuts pour notation
- * ✅ NOUVEAU : Méthodes pour le workflow de notation post-trajet
- * ✅ CORRIGÉ : Bug d'affichage de l'heure (date+heure combinées correctement)
+ * Méthodes pour le workflow de notation post-trajet et correction du bug d'affichage de l'heure
  */
 
 class Trip
@@ -16,17 +15,17 @@ class Trip
     }
     
     /**
-     * Crée un nouveau trajet EN ATTENTE de modération admin
+     * Je crée un nouveau trajet en attente de modération admin
      */
     public function creerTrajet($data)
     {
-        // Validation des données avant insertion
+        // Je valide les données avant insertion
         $validation = $this->validerDonneesTrajet($data);
         if (!$validation['valide']) {
             return ['succes' => false, 'erreurs' => $validation['erreurs']];
         }
         
-        // Vérification des prérequis utilisateur
+        // Je vérifie les prérequis utilisateur
         if (!$this->utilisateurAPermis($data['conducteur_id'])) {
             return ['succes' => false, 'erreurs' => ['Vous devez avoir le permis de conduire pour proposer un trajet.']];
         }
@@ -34,11 +33,11 @@ class Trip
         try {
             $this->pdo->beginTransaction();
             
-            // ✅ JE UTILISE LA DISTANCE CALCULÉE PAR LE CONTROLLER OU JE LA CALCULE
+            // J'utilise la distance calculée par le contrôleur ou je la calcule
             $distance = $data['distance_km'] ?? $this->calculerDistanceEstimative($data['lieu_depart'], $data['lieu_arrivee']);
             $prixCalcule = $this->calculerPrix($distance, $data['vehicule_electrique'] ?? false);
             
-            // ✅ REQUÊTE SQL AVEC LES NOUVELLES COLONNES GPS + STATUT POUR NOTATION
+            // Je requête SQL avec les nouvelles colonnes GPS + statut pour notation
             $sql = "INSERT INTO trajets (
                         conducteur_id, vehicule_id, lieu_depart, code_postal_depart, 
                         lieu_arrivee, code_postal_arrivee, date_depart, heure_depart,
@@ -63,7 +62,7 @@ class Trip
                 $data['vehicule_electrique'] ? 1 : 0,
                 $distance,
                 $data['commentaire'] ?? null,
-                // ✅ NOUVELLES COLONNES GPS
+                // Nouvelles colonnes GPS
                 $data['depart_latitude'] ?? null,
                 $data['depart_longitude'] ?? null,
                 $data['arrivee_latitude'] ?? null,
@@ -73,7 +72,7 @@ class Trip
             if ($resultat) {
                 $trajetId = $this->pdo->lastInsertId();
                 
-                // ✅ J'ajoute le statut_moderation APRÈS avec UPDATE
+                // J'ajoute le statut_moderation après avec UPDATE
                 try {
                     $sqlUpdate = "UPDATE trajets SET statut_moderation = 'en_attente' WHERE id = ?";
                     $stmtUpdate = $this->pdo->prepare($sqlUpdate);
@@ -105,11 +104,8 @@ class Trip
     }
 
     /**
-     * ✅ NOUVEAU : Je marque un trajet comme terminé
+     * Je marque un trajet comme terminé
      * Permet au conducteur de déclencher le workflow de notation
-     * 
-     * @param int $trajetId ID du trajet
-     * @return array Résultat de l'opération
      */
     public function marquerCommeTermine($trajetId)
     {
@@ -150,11 +146,8 @@ class Trip
     }
 
     /**
-     * ✅ NOUVEAU : Je récupère les trajets qu'un utilisateur peut noter
+     * Je récupère les trajets qu'un utilisateur peut noter
      * Trajets terminés où l'utilisateur était conducteur ou passager et n'a pas encore noté
-     * 
-     * @param int $userId ID de l'utilisateur
-     * @return array Liste des trajets à noter
      */
     public function getTrajetsANoter($userId)
     {
@@ -187,7 +180,7 @@ class Trip
             
             // J'enrichis les données pour chaque trajet
             foreach ($trajets as &$trajet) {
-                // ✅ CORRECTION BUG HEURE : Je combine date + heure correctement
+                // Correction bug heure : je combine date + heure correctement
                 $trajet = $this->enrichirDonneesTrajet($trajet);
                 $trajet['peut_noter'] = true;
                 
@@ -212,11 +205,8 @@ class Trip
     }
 
     /**
-     * ✅ NOUVEAU : Je compte le nombre de passagers d'un trajet
+     * Je compte le nombre de passagers d'un trajet
      * Utile pour savoir combien d'avis le conducteur doit donner
-     * 
-     * @param int $trajetId ID du trajet
-     * @return int Nombre de passagers
      */
     private function getNombrePassagers($trajetId)
     {
@@ -236,11 +226,8 @@ class Trip
     }
 
     /**
-     * ✅ NOUVEAU : Je récupère les trajets terminés récemment (pour notifications)
+     * Je récupère les trajets terminés récemment (pour notifications)
      * Utile pour envoyer des rappels de notation
-     * 
-     * @param int $jours Nombre de jours depuis la fin du trajet (défaut: 7)
-     * @return array Liste des trajets terminés récemment
      */
     public function getTrajetsTerminesRecents($jours = 7)
     {
@@ -270,12 +257,8 @@ class Trip
     }
 
     /**
-     * ✅ NOUVEAU : Je vérifie si un trajet peut être noté par un utilisateur
+     * Je vérifie si un trajet peut être noté par un utilisateur
      * Vérifie que le trajet est terminé et que l'utilisateur y a participé
-     * 
-     * @param int $trajetId ID du trajet
-     * @param int $userId ID de l'utilisateur
-     * @return array Informations sur la possibilité de noter
      */
     public function peutNoterTrajet($trajetId, $userId)
     {
@@ -322,12 +305,12 @@ class Trip
     }
     
     /**
-     * Recherche SEULEMENT les trajets validés par l'admin
+     * Je recherche seulement les trajets validés par l'admin
      */
     public function rechercherTrajets($criteres = [], $page = 1, $limit = 10)
     {
         try {
-            // ✅ MODIFICATION : Ne montre que les trajets validés
+            // Modification : ne montre que les trajets validés
             $sql = "SELECT t.*, 
                            u.pseudo as conducteur_pseudo, 
                            u.nom as conducteur_nom,
@@ -349,7 +332,7 @@ class Trip
             
             $params = [];
             
-            // Je garde tous tes filtres existants
+            // Je garde tous les filtres existants
             if (!empty($criteres['lieu_depart'])) {
                 $sql .= " AND (t.lieu_depart LIKE ? OR t.code_postal_depart LIKE ?)";
                 $params[] = '%' . $criteres['lieu_depart'] . '%';
@@ -371,7 +354,7 @@ class Trip
                 $sql .= " AND t.vehicule_electrique = 1";
             }
             
-            // Je garde ta pagination
+            // Je garde la pagination
             $offset = ($page - 1) * $limit;
             $sql .= " ORDER BY t.date_depart ASC LIMIT $limit OFFSET $offset";
             
@@ -379,7 +362,7 @@ class Trip
             $stmt->execute($params);
             $trajets = $stmt->fetchAll(PDO::FETCH_ASSOC);
             
-            // ✅ CORRECTION BUG HEURE : J'utilise enrichirDonneesTrajet
+            // Correction bug heure : j'utilise enrichirDonneesTrajet
             foreach ($trajets as &$trajet) {
                 $trajet = $this->enrichirDonneesTrajet($trajet);
             }
@@ -400,13 +383,13 @@ class Trip
     }
     
     /**
-     * Récupère TOUS les trajets de l'utilisateur avec statut de modération
-     * ✅ AMÉLIORÉ : Avec information sur possibilité de terminer/noter
+     * Je récupère tous les trajets de l'utilisateur avec statut de modération
+     * Amélioration : avec information sur possibilité de terminer/noter
      */
     public function getTrajetsUtilisateur($userId)
     {
         try {
-            // ✅ MODIFICATION : J'ajoute le statut de modération + infos notation
+            // Modification : j'ajoute le statut de modération + infos notation
             $sql = "SELECT t.*, 
                            COUNT(r.id) as nb_reservations,
                            SUM(r.nb_places) as places_reservees,
@@ -434,7 +417,7 @@ class Trip
             $stmt->execute([$userId]);
             $trajets = $stmt->fetchAll(PDO::FETCH_ASSOC);
             
-            // ✅ CORRECTION BUG HEURE : J'enrichis chaque trajet
+            // Correction bug heure : j'enrichis chaque trajet
             foreach ($trajets as &$trajet) {
                 $trajet = $this->enrichirDonneesTrajet($trajet);
             }
@@ -448,12 +431,12 @@ class Trip
     }
 
     /**
-     * ✅ NOUVELLE MÉTHODE : Pour l'admin - Récupère tous les trajets en attente
+     * Pour l'admin - je récupère tous les trajets en attente
      */
     public function getTrajetsEnAttente()
     {
         try {
-            // ✅ BACK TO BASIC - SANS JOINTURE pour éviter les erreurs
+            // Back to basic - sans jointure pour éviter les erreurs
             $sql = "SELECT * FROM trajets 
                     WHERE statut_moderation = 'en_attente' 
                     ORDER BY created_at ASC";
@@ -462,10 +445,10 @@ class Trip
             $stmt->execute();
             $trajets = $stmt->fetchAll(PDO::FETCH_ASSOC);
             
-            // ✅ On ajoute les infos conducteur APRÈS si on trouve des trajets
+            // J'ajoute les infos conducteur après si je trouve des trajets
             if (!empty($trajets)) {
                 foreach ($trajets as &$trajet) {
-                    // Récupération simple du conducteur
+                    // Je récupère simplement le conducteur
                     $sqlUser = "SELECT pseudo, email, nom, prenom FROM utilisateurs WHERE id = ?";
                     $stmtUser = $this->pdo->prepare($sqlUser);
                     $stmtUser->execute([$trajet['conducteur_id']]);
@@ -478,7 +461,7 @@ class Trip
                         $trajet['conducteur_prenom'] = $conducteur['prenom'];
                     }
                     
-                    // ✅ CORRECTION BUG HEURE ICI AUSSI
+                    // Correction bug heure ici aussi
                     $trajet = $this->enrichirDonneesTrajet($trajet);
                 }
             }
@@ -492,7 +475,7 @@ class Trip
     }
 
     /**
-     * ✅ NOUVELLE MÉTHODE : Pour l'admin - Modère un trajet (valide ou refuse)
+     * Pour l'admin - je modère un trajet (valide ou refuse)
      */
     public function modererTrajet($trajetId, $decision, $motif = null)
     {
@@ -521,7 +504,7 @@ class Trip
     }
 
     /**
-     * ✅ NOUVELLE MÉTHODE : Statistiques de modération pour l'admin
+     * Je fournis les statistiques de modération pour l'admin
      */
     public function getStatsModeration()
     {
@@ -546,19 +529,19 @@ class Trip
     }
 
     /**
-     * ✅ NOUVELLE MÉTHODE : Pour l'admin - Récupère TOUS les trajets (pas seulement en attente)
+     * Pour l'admin - je récupère tous les trajets (pas seulement en attente)
      */
     public function getTousLesTrajets()
     {
         try {
-            // ✅ SANS JOINTURE
+            // Sans jointure
             $sql = "SELECT * FROM trajets ORDER BY created_at DESC";
             
             $stmt = $this->pdo->prepare($sql);
             $stmt->execute();
             $trajets = $stmt->fetchAll(PDO::FETCH_ASSOC);
             
-            // ✅ Ajout des infos conducteur
+            // J'ajoute les infos conducteur
             foreach ($trajets as &$trajet) {
                 $sqlUser = "SELECT pseudo, email, nom, prenom FROM utilisateurs WHERE id = ?";
                 $stmtUser = $this->pdo->prepare($sqlUser);
@@ -572,7 +555,7 @@ class Trip
                     $trajet['conducteur_prenom'] = $conducteur['prenom'];
                 }
                 
-                // Texte lisible du statut
+                // Je texte lisible du statut
                 $trajet['statut_moderation_texte'] = match($trajet['statut_moderation'] ?? '') {
                     'en_attente' => 'En attente',
                     'valide' => 'Validé',
@@ -580,7 +563,7 @@ class Trip
                     default => 'Non défini'
                 };
                 
-                // ✅ CORRECTION BUG HEURE ICI AUSSI
+                // Correction bug heure ici aussi
                 $trajet = $this->enrichirDonneesTrajet($trajet);
             }
             
@@ -592,7 +575,7 @@ class Trip
         }
     }
     
-    // ✅ MODIFICATION du compteur pour ne compter que les trajets validés
+    // Modification du compteur pour ne compter que les trajets validés
     private function compterTrajets($criteres)
     {
         try {
@@ -603,7 +586,7 @@ class Trip
             
             $params = [];
             
-            // Je garde tous tes filtres
+            // Je garde tous les filtres
             if (!empty($criteres['lieu_depart'])) {
                 $sql .= " AND (t.lieu_depart LIKE ? OR t.code_postal_depart LIKE ?)";
                 $params[] = '%' . $criteres['lieu_depart'] . '%';
@@ -636,7 +619,7 @@ class Trip
         }
     }
 
-    // Je garde TOUTES tes méthodes existantes inchangées
+    // Je garde toutes les méthodes existantes inchangées
     private function construireClauseTri($criteres)
     {
         $tri = $criteres['tri'] ?? 'date_depart';
@@ -665,11 +648,11 @@ class Trip
     }
     
     /**
-     * ✅ CORRIGÉ : Méthode qui enrichit les données ET corrige le bug d'heure
+     * Je méthode qui enrichit les données et corrige le bug d'heure
      */
     private function enrichirDonneesTrajet($trajet)
     {
-        // ✅ CORRECTION BUG HEURE : Je combine date + heure correctement
+        // Correction bug heure : je combine date + heure correctement
         if (!empty($trajet['heure_depart'])) {
             // J'extrais juste la date (sans l'heure 00:00:00)
             $dateSeule = date('Y-m-d', strtotime($trajet['date_depart']));
@@ -696,7 +679,7 @@ class Trip
     }
     
     /**
-     * ✅ CORRIGÉ : getTrajetDetails avec correction du bug d'heure
+     * Je getTrajetDetails avec correction du bug d'heure
      */
     public function getTrajetDetails($trajetId)
     {
@@ -725,7 +708,7 @@ class Trip
             $trajet = $stmt->fetch(PDO::FETCH_ASSOC);
             
             if ($trajet) {
-                // ✅ CORRECTION ICI AUSSI : J'utilise enrichirDonneesTrajet
+                // Correction ici aussi : j'utilise enrichirDonneesTrajet
                 $trajet = $this->enrichirDonneesTrajet($trajet);
                 
                 $trajet['duree_estimee'] = ($trajet['duree_estimee'] ? $trajet['duree_estimee'] . ' min' : 'N/A');
@@ -878,54 +861,50 @@ class Trip
     }
 
     /**
- * ✅ NOUVELLE MÉTHODE : Je récupère les trajets avec les statuts des réservations
- * Cela permet d'afficher les bons boutons selon l'état du workflow
- * 
- * @param int $userId ID de l'utilisateur
- * @return array Liste des trajets avec statuts des réservations
- */
-public function getTrajetsUtilisateurAvecStatuts($userId)
-{
-    try {
-        $sql = "SELECT t.*, 
-                       v.marque as vehicule_marque, 
-                       v.modele as vehicule_modele,
-                       -- Je compte les réservations par statut avec les nouvelles colonnes
-                       SUM(CASE WHEN r.statut = 'confirme' AND r.date_debut_trajet IS NULL THEN 1 ELSE 0 END) as nb_reservations_confirmees,
-                       SUM(CASE WHEN r.statut = 'confirme' AND r.date_debut_trajet IS NOT NULL AND r.date_fin_trajet IS NULL THEN 1 ELSE 0 END) as nb_reservations_en_cours,
-                       SUM(CASE WHEN r.statut = 'termine' THEN 1 ELSE 0 END) as nb_reservations_terminees,
-                       COUNT(r.id) as nb_reservations,
-                       SUM(CASE WHEN r.statut = 'confirme' OR r.statut = 'termine' THEN 1 ELSE 0 END) as places_reservees
-                FROM trajets t 
-                LEFT JOIN vehicules v ON t.vehicule_id = v.id
-                LEFT JOIN reservations r ON t.id = r.trajet_id AND r.statut IN ('confirme', 'termine')
-                WHERE t.conducteur_id = ? 
-                GROUP BY t.id, t.lieu_depart, t.lieu_arrivee, t.date_depart, t.heure_depart, 
-                         t.places, t.prix, t.vehicule_electrique, t.commentaire, t.statut, 
-                         t.created_at, v.marque, v.modele
-                ORDER BY t.date_depart DESC";
-        
-        $stmt = $this->pdo->prepare($sql);
-        $stmt->execute([$userId]);
-        
-        $trajets = $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
-        
-        // Je m'assure que les compteurs sont des entiers
-        foreach ($trajets as &$trajet) {
-            $trajet['nb_reservations_confirmees'] = (int)($trajet['nb_reservations_confirmees'] ?? 0);
-            $trajet['nb_reservations_en_cours'] = (int)($trajet['nb_reservations_en_cours'] ?? 0);
-            $trajet['nb_reservations_terminees'] = (int)($trajet['nb_reservations_terminees'] ?? 0);
-            $trajet['nb_reservations'] = (int)($trajet['nb_reservations'] ?? 0);
-            $trajet['places_reservees'] = (int)($trajet['places_reservees'] ?? 0);
+     * Je récupère les trajets avec les statuts des réservations
+     * Cela permet d'afficher les bons boutons selon l'état du workflow
+     */
+    public function getTrajetsUtilisateurAvecStatuts($userId)
+    {
+        try {
+            $sql = "SELECT t.*, 
+                           v.marque as vehicule_marque, 
+                           v.modele as vehicule_modele,
+                           -- Je compte les réservations par statut avec les nouvelles colonnes
+                           SUM(CASE WHEN r.statut = 'confirme' AND r.date_debut_trajet IS NULL THEN 1 ELSE 0 END) as nb_reservations_confirmees,
+                           SUM(CASE WHEN r.statut = 'confirme' AND r.date_debut_trajet IS NOT NULL AND r.date_fin_trajet IS NULL THEN 1 ELSE 0 END) as nb_reservations_en_cours,
+                           SUM(CASE WHEN r.statut = 'termine' THEN 1 ELSE 0 END) as nb_reservations_terminees,
+                           COUNT(r.id) as nb_reservations,
+                           SUM(CASE WHEN r.statut = 'confirme' OR r.statut = 'termine' THEN 1 ELSE 0 END) as places_reservees
+                    FROM trajets t 
+                    LEFT JOIN vehicules v ON t.vehicule_id = v.id
+                    LEFT JOIN reservations r ON t.id = r.trajet_id AND r.statut IN ('confirme', 'termine')
+                    WHERE t.conducteur_id = ? 
+                    GROUP BY t.id, t.lieu_depart, t.lieu_arrivee, t.date_depart, t.heure_depart, 
+                             t.places, t.prix, t.vehicule_electrique, t.commentaire, t.statut, 
+                             t.created_at, v.marque, v.modele
+                    ORDER BY t.date_depart DESC";
+            
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->execute([$userId]);
+            
+            $trajets = $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+            
+            // Je m'assure que les compteurs sont des entiers
+            foreach ($trajets as &$trajet) {
+                $trajet['nb_reservations_confirmees'] = (int)($trajet['nb_reservations_confirmees'] ?? 0);
+                $trajet['nb_reservations_en_cours'] = (int)($trajet['nb_reservations_en_cours'] ?? 0);
+                $trajet['nb_reservations_terminees'] = (int)($trajet['nb_reservations_terminees'] ?? 0);
+                $trajet['nb_reservations'] = (int)($trajet['nb_reservations'] ?? 0);
+                $trajet['places_reservees'] = (int)($trajet['places_reservees'] ?? 0);
+            }
+            
+            return $trajets;
+            
+        } catch (Exception $e) {
+            error_log("Erreur getTrajetsUtilisateurAvecStatuts : " . $e->getMessage());
+            return [];
         }
-        
-        return $trajets;
-        
-    } catch (Exception $e) {
-        error_log("Erreur getTrajetsUtilisateurAvecStatuts : " . $e->getMessage());
-        return [];
     }
-}
-
 }
 ?>

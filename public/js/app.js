@@ -1,9 +1,9 @@
 // public/js/app.js
 // JavaScript global EcoRide 
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('🌱 EcoRide JavaScript chargé');
+    console.log('EcoRide JavaScript chargé');
     
-    // Auto-fermeture des alertes après 5 secondes
+    // J'auto-ferme les alertes après 5 secondes
     const alerts = document.querySelectorAll('.alert-dismissible');
     alerts.forEach(function(alert) {
         setTimeout(function() {

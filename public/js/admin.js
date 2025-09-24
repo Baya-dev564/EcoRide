@@ -62,7 +62,7 @@
     };
 
     /* ========================================
-       2. NOUVEAU : DÉTECTION DE PAGE ET ÉTAT
+       2. DÉTECTION DE PAGE ET ÉTAT
     ======================================== */
 
     // État global de l'application admin
@@ -73,7 +73,7 @@
     };
 
     /**
-     * Détecte la page admin actuelle pour initialiser les bonnes fonctionnalités
+     * Je détecte la page admin actuelle pour initialiser les bonnes fonctionnalités
      */
     function detectCurrentPage() {
         const url = window.location.pathname;
@@ -97,11 +97,11 @@
     }
 
     /* ========================================
-       3. UTILITAIRES CHART.JS (TES FONCTIONS EXISTANTES)
+       3. UTILITAIRES CHART.JS
     ======================================== */
 
     /**
-     * Crée un dégradé linéaire pour Chart.js
+     * Je crée un dégradé linéaire pour Chart.js
      */
     function createGradient(ctx, colors, height = 300) {
         const gradient = ctx.createLinearGradient(0, 0, 0, height);
@@ -111,7 +111,7 @@
     }
 
     /**
-     * Crée un dégradé radial pour les graphiques en camembert
+     * Je crée un dégradé radial pour les graphiques en camembert
      */
     function createRadialGradient(ctx, colors) {
         const gradient = ctx.createRadialGradient(0, 0, 0, 0, 0, 150);
@@ -122,7 +122,7 @@
     }
 
     /**
-     * Formate les nombres pour l'affichage dans les tooltips
+     * Je formate les nombres pour l'affichage dans les tooltips
      */
     function formatNumber(value, type = 'number') {
         switch (type) {
@@ -141,7 +141,7 @@
     }
 
     /**
-     * Récupère les données des graphiques depuis le HTML
+     * Je récupère les données des graphiques depuis le HTML
      */
     function getChartData() {
         try {
@@ -177,11 +177,11 @@
     }
 
     /* ========================================
-       4. TES GRAPHIQUES EXISTANTS (DASHBOARD)
+       4. GRAPHIQUES DASHBOARD
     ======================================== */
 
     /**
-     * Initialise le graphique d'évolution des inscriptions (ligne)
+     * J'initialise le graphique d'évolution des inscriptions (ligne)
      */
     function initInscriptionsChart(data) {
         const ctx = document.getElementById('inscriptionsChart');
@@ -192,7 +192,7 @@
 
         const canvasCtx = ctx.getContext('2d');
         
-        // Création des dégradés
+        // Je crée les dégradés
         const primaryGradient = createGradient(canvasCtx, ADMIN_GRADIENTS.primary, 350);
         const successGradient = createGradient(canvasCtx, ADMIN_GRADIENTS.success, 350);
         
@@ -287,14 +287,14 @@
 
         try {
             adminApp.charts.inscriptions = new Chart(canvasCtx, config);
-            console.log('✅ Graphique inscriptions initialisé');
+            console.log('Graphique inscriptions initialisé');
         } catch (error) {
-            console.error('❌ Erreur lors de l\'initialisation du graphique inscriptions:', error);
+            console.error('Erreur lors de l\'initialisation du graphique inscriptions:', error);
         }
     }
 
     /**
-     * Initialise le graphique des types de véhicules (camembert)
+     * J'initialise le graphique des types de véhicules (camembert)
      */
     function initVehiculesChart(data) {
         const ctx = document.getElementById('vehiculesChart');
@@ -346,14 +346,14 @@
 
         try {
             adminApp.charts.vehicules = new Chart(canvasCtx, config);
-            console.log('✅ Graphique véhicules initialisé');
+            console.log('Graphique véhicules initialisé');
         } catch (error) {
-            console.error('❌ Erreur lors de l\'initialisation du graphique véhicules:', error);
+            console.error('Erreur lors de l\'initialisation du graphique véhicules:', error);
         }
     }
 
     /**
-     * Initialise le graphique d'activité mensuelle (barres)
+     * J'initialise le graphique d'activité mensuelle (barres)
      */
     function initActiviteChart(data) {
         const ctx = document.getElementById('activiteChart');
@@ -445,14 +445,14 @@
 
         try {
             adminApp.charts.activite = new Chart(canvasCtx, config);
-            console.log('✅ Graphique activité initialisé');
+            console.log('Graphique activité initialisé');
         } catch (error) {
-            console.error('❌ Erreur lors de l\'initialisation du graphique activité:', error);
+            console.error('Erreur lors de l\'initialisation du graphique activité:', error);
         }
     }
 
     /**
-     * Initialise le graphique de distribution des crédits (aires)
+     * J'initialise le graphique de distribution des crédits (aires)
      */
     function initCreditsChart(data) {
         const ctx = document.getElementById('creditsChart');
@@ -532,18 +532,18 @@
 
         try {
             adminApp.charts.credits = new Chart(canvasCtx, config);
-            console.log('✅ Graphique crédits initialisé');
+            console.log('Graphique crédits initialisé');
         } catch (error) {
-            console.error('❌ Erreur lors de l\'initialisation du graphique crédits:', error);
+            console.error('Erreur lors de l\'initialisation du graphique crédits:', error);
         }
     }
 
     /* ========================================
-       5. TES CONTRÔLES EXISTANTS
+       5. CONTRÔLES DES GRAPHIQUES
     ======================================== */
 
     /**
-     * Initialise les contrôles des graphiques (boutons de période, etc.)
+     * J'initialise les contrôles des graphiques (boutons de période, etc.)
      */
     function initChartControls() {
         const periodButtons = document.querySelectorAll('[data-chart-period]');
@@ -566,7 +566,7 @@
     }
 
     /**
-     * Met à jour le graphique des inscriptions selon la période sélectionnée
+     * Je mets à jour le graphique des inscriptions selon la période sélectionnée
      */
     function updateInscriptionsChartPeriod(period) {
         if (!adminApp.charts.inscriptions) return;
@@ -600,15 +600,15 @@
         adminApp.charts.inscriptions.data.datasets[1].data = newData.objectif;
         adminApp.charts.inscriptions.update('active');
 
-        console.log(`📊 Graphique inscriptions mis à jour pour ${period} mois`);
+        console.log(`Graphique inscriptions mis à jour pour ${period} mois`);
     }
 
     /* ========================================
-       6. TES ANIMATIONS EXISTANTES
+       6. ANIMATIONS
     ======================================== */
 
     /**
-     * Anime les compteurs numériques des cartes métriques
+     * J'anime les compteurs numériques des cartes métriques
      */
     function animateCounters() {
         const counters = document.querySelectorAll('[data-counter]');
@@ -633,7 +633,7 @@
     }
 
     /**
-     * Anime les barres de progression
+     * J'anime les barres de progression
      */
     function animateProgressBars() {
         const progressBars = document.querySelectorAll('.progress-fill');
@@ -655,14 +655,14 @@
     }
 
     /* ========================================
-       7. NOUVEAU : FONCTIONNALITÉS UTILISATEURS
+       7. FONCTIONNALITÉS UTILISATEURS
     ======================================== */
 
     /**
-     * Initialise la page utilisateurs (recherche, filtres, actions)
+     * J'initialise la page utilisateurs (recherche, filtres, actions)
      */
     function initUtilisateurs() {
-        console.log('👥 Initialisation Utilisateurs');
+        console.log('Initialisation Utilisateurs');
         
         initUserSearch();
         initUserFilters();
@@ -671,7 +671,7 @@
     }
 
     /**
-     * Initialise la recherche d'utilisateurs en temps réel
+     * J'initialise la recherche d'utilisateurs en temps réel
      */
     function initUserSearch() {
         const searchInput = document.getElementById('searchUsers');
@@ -690,7 +690,7 @@
     }
 
     /**
-     * Initialise les filtres d'utilisateurs
+     * J'initialise les filtres d'utilisateurs
      */
     function initUserFilters() {
         const roleFilter = document.getElementById('filterRole');
@@ -703,7 +703,7 @@
     }
 
     /**
-     * Filtre les utilisateurs par recherche textuelle
+     * Je filtre les utilisateurs par recherche textuelle
      */
     function filterUsers(query) {
         const rows = document.querySelectorAll('#usersTable tbody tr');
@@ -727,7 +727,7 @@
     }
 
     /**
-     * Filtre les utilisateurs par rôle
+     * Je filtre les utilisateurs par rôle
      */
     function filterUsersByRole(role) {
         const rows = document.querySelectorAll('#usersTable tbody tr');
@@ -745,7 +745,7 @@
     }
 
     /**
-     * Met à jour le compteur d'utilisateurs affichés
+     * Je mets à jour le compteur d'utilisateurs affichés
      */
     function updateUserCount(count) {
         const badge = document.querySelector('.stat-badge-primary');
@@ -755,7 +755,7 @@
     }
 
     /**
-     * Initialise les actions sur les utilisateurs
+     * J'initialise les actions sur les utilisateurs
      */
     function initUserActions() {
         document.addEventListener('click', function(e) {
@@ -768,14 +768,14 @@
     }
 
     /**
-     * Redirige vers les statistiques d'un utilisateur
+     * Je redirige vers les statistiques d'un utilisateur
      */
     function viewUserStats(userId) {
         window.location.href = `/admin/user-stats/${userId}`;
     }
 
     /**
-     * Initialise le modal de modification des crédits
+     * J'initialise le modal de modification des crédits
      */
     function initEditCreditsModal() {
         const modal = document.getElementById('editCreditsModal');
@@ -807,7 +807,7 @@
     }
 
     /**
-     * Sauvegarde les modifications de crédits via AJAX
+     * Je sauvegarde les modifications de crédits via AJAX
      */
     function saveUserCredits() {
         const userId = document.getElementById('editUserId').value;
@@ -862,7 +862,7 @@
     }
 
     /**
-     * Met à jour l'affichage des crédits dans le tableau
+     * Je mets à jour l'affichage des crédits dans le tableau
      */
     function updateUserCreditsInTable(userId, newCredits) {
         const row = document.querySelector(`[data-user-id="${userId}"]`);
@@ -876,19 +876,19 @@
     }
 
     /* ========================================
-       8. NOUVEAU : STATISTIQUES UTILISATEUR
+       8. STATISTIQUES UTILISATEUR
     ======================================== */
 
     /**
-     * Initialise la page des statistiques utilisateur
+     * J'initialise la page des statistiques utilisateur
      */
     function initUtilisateursStats() {
-        console.log('📈 Initialisation Statistiques Utilisateur');
+        console.log('Initialisation Statistiques Utilisateur');
         loadUserStatsChart();
     }
 
     /**
-     * Charge le graphique d'évolution des statistiques utilisateur
+     * Je charge le graphique d'évolution des statistiques utilisateur
      */
     function loadUserStatsChart() {
         const chartScript = document.getElementById('chart-data');
@@ -908,7 +908,7 @@
     }
 
     /**
-     * Crée le graphique d'évolution utilisateur avec Chart.js
+     * Je crée le graphique d'évolution utilisateur avec Chart.js
      */
     function createEvolutionChart(canvas, evolutionData) {
         const moisNoms = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 
@@ -986,19 +986,19 @@
     }
 
     /* ========================================
-       9. NOUVEAU : MODIFICATION UTILISATEUR
+       9. MODIFICATION UTILISATEUR
     ======================================== */
 
     /**
-     * Initialise la page de modification utilisateur
+     * J'initialise la page de modification utilisateur
      */
     function initUtilisateursEdit() {
-        console.log('✏️ Initialisation Modification Utilisateur');
+        console.log('Initialisation Modification Utilisateur');
         initUserEditValidation();
     }
 
     /**
-     * Initialise la validation du formulaire de modification
+     * J'initialise la validation du formulaire de modification
      */
     function initUserEditValidation() {
         const form = document.getElementById('editUserForm');
@@ -1024,7 +1024,7 @@
     }
 
     /**
-     * Valide un champ spécifique
+     * Je valide un champ spécifique
      */
     function validateField(field) {
         const fieldName = field.name;
@@ -1081,14 +1081,14 @@
     }
 
     /**
-     * Supprime les erreurs d'un champ
+     * Je supprime les erreurs d'un champ
      */
     function clearFieldError(field) {
         field.classList.remove('is-invalid', 'is-valid');
     }
 
     /**
-     * Valide l'ensemble du formulaire
+     * Je valide l'ensemble du formulaire
      */
     function validateForm(form) {
         const inputs = form.querySelectorAll('input[required], textarea[required], select[required]');
@@ -1104,7 +1104,7 @@
     }
 
     /**
-     * Soumet le formulaire de modification
+     * Je soumets le formulaire de modification
      */
     function submitUserForm(form) {
         const submitBtn = form.querySelector('button[type="submit"]');
@@ -1117,11 +1117,11 @@
     }
 
     /* ========================================
-       10. NOUVEAU : UTILITAIRES GÉNÉRAUX
+       10. UTILITAIRES GÉNÉRAUX
     ======================================== */
 
     /**
-     * Affiche une alerte Bootstrap dynamique
+     * J'affiche une alerte Bootstrap dynamique
      */
     function showAlert(message, type = 'info') {
         const alertContainer = document.querySelector('.container') || document.body;
@@ -1145,7 +1145,7 @@
     }
 
     /**
-     * Retourne l'icône appropriée pour le type d'alerte
+     * Je retourne l'icône appropriée pour le type d'alerte
      */
     function getAlertIcon(type) {
         switch(type) {
@@ -1162,7 +1162,7 @@
     ======================================== */
 
     /**
-     * Gère le redimensionnement responsive des graphiques
+     * Je gère le redimensionnement responsive des graphiques
      */
     function handleResize() {
         Object.values(adminApp.charts).forEach(chart => {
@@ -1180,13 +1180,13 @@
      * Fonction principale d'initialisation selon la page
      */
     function initializeAdmin() {
-        console.log('🚀 Initialisation Admin EcoRide - Version fusionnée');
+        console.log('Initialisation Admin EcoRide - Version fusionnée');
         
-        // Détection de la page actuelle
+        // Je détecte la page actuelle
         adminApp.currentPage = detectCurrentPage();
-        console.log('📍 Page détectée:', adminApp.currentPage);
+        console.log('Page détectée:', adminApp.currentPage);
         
-        // Initialisation selon la page
+        // J'initialise selon la page
         switch(adminApp.currentPage) {
             case 'dashboard':
                 initializeDashboard();
@@ -1201,26 +1201,26 @@
                 initUtilisateursEdit();
                 break;
             default:
-                console.log('🔧 Page générique - fonctionnalités de base uniquement');
+                console.log('Page générique - fonctionnalités de base uniquement');
         }
         
-        // Initialisation des composants communs
+        // J'initialise les composants communs
         initCommonComponents();
     }
 
     /**
-     * Initialise le dashboard avec tes graphiques existants
+     * J'initialise le dashboard avec les graphiques existants
      */
     function initializeDashboard() {
-        console.log('📊 Initialisation Dashboard avec graphiques Chart.js');
+        console.log('Initialisation Dashboard avec graphiques Chart.js');
         
         if (typeof Chart === 'undefined') {
-            console.error('❌ Chart.js n\'est pas chargé');
+            console.error('Chart.js n\'est pas chargé');
             return;
         }
 
         const chartData = getChartData();
-        console.log('📊 Données des graphiques récupérées:', chartData);
+        console.log('Données des graphiques récupérées:', chartData);
 
         try {
             initInscriptionsChart(chartData.inscriptions);
@@ -1235,14 +1235,14 @@
                 animateProgressBars();
             }, 500);
 
-            console.log('✅ Dashboard initialisé avec succès');
+            console.log('Dashboard initialisé avec succès');
         } catch (error) {
-            console.error('❌ Erreur lors de l\'initialisation du dashboard:', error);
+            console.error('Erreur lors de l\'initialisation du dashboard:', error);
         }
     }
 
     /**
-     * Initialise les composants communs à toutes les pages
+     * J'initialise les composants communs à toutes les pages
      */
     function initCommonComponents() {
         // Auto-dismiss des alertes
@@ -1273,7 +1273,7 @@
             }
         });
         adminApp.charts = {};
-        console.log('🧹 Graphiques admin nettoyés');
+        console.log('Graphiques admin nettoyés');
     }
 
     /* ========================================
@@ -1306,6 +1306,6 @@
         app: adminApp
     };
 
-    console.log('✅ Admin.js fusionné chargé et prêt');
+    console.log('Admin.js fusionné chargé et prêt');
 
 })();

@@ -2,15 +2,15 @@
 // JavaScript pour la gestion du profil utilisateur EcoRide
 
 document.addEventListener('DOMContentLoaded', function() {
-    // Initialisation du formulaire de modification du profil
+    // J'initialise le formulaire de modification du profil
     initFormModifierProfil();
     
-    // Initialisation de la gestion des véhicules
+    // J'initialise la gestion des véhicules
     initGestionVehicules();
 });
 
 /**
- * Initialise le formulaire de modification du profil
+ * J'initialise le formulaire de modification du profil
  */
 function initFormModifierProfil() {
     const formModifierProfil = document.getElementById('formModifierProfil');
@@ -19,7 +19,7 @@ function initFormModifierProfil() {
         formModifierProfil.addEventListener('submit', function(e) {
             e.preventDefault();
             
-            // Validation côté client
+            // Je valide côté client
             if (validateProfilForm()) {
                 soumettreModificationProfil();
             }
@@ -28,18 +28,18 @@ function initFormModifierProfil() {
 }
 
 /**
- * Valide le formulaire de modification du profil
+ * Je valide le formulaire de modification du profil
  */
 function validateProfilForm() {
     const pseudo = document.getElementById('pseudo').value.trim();
     const email = document.getElementById('email').value.trim();
     
-    // Réinitialiser les erreurs
+    // Je réinitialise les erreurs
     clearFormErrors();
     
     let hasErrors = false;
     
-    // Validation du pseudo
+    // Je valide le pseudo
     if (pseudo.length < 3) {
         showFieldError('pseudo', 'Le pseudo doit contenir au moins 3 caractères.');
         hasErrors = true;
@@ -51,7 +51,7 @@ function validateProfilForm() {
         hasErrors = true;
     }
     
-    // Validation de l'email
+    // Je valide l'email
     if (!isValidEmail(email)) {
         showFieldError('email', 'Veuillez saisir une adresse email valide.');
         hasErrors = true;
@@ -61,16 +61,16 @@ function validateProfilForm() {
 }
 
 /**
- * Soumet la modification du profil via AJAX
+ * Je soumets la modification du profil via AJAX
  */
 function soumettreModificationProfil() {
     const formData = new FormData(document.getElementById('formModifierProfil'));
     const submitBtn = document.querySelector('#formModifierProfil button[type="submit"]');
     
-    // Afficher le loader
+    // J'affiche le loader
     showLoader(submitBtn, 'Enregistrement...');
     
-    // XMLHttpRequest au lieu de fetch()
+    // Je fais la requête XMLHttpRequest au lieu de fetch()
     const xhr = new XMLHttpRequest();
     xhr.open('POST', '/api/modifier-profil', true);
     xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
@@ -85,7 +85,7 @@ function soumettreModificationProfil() {
                     const data = JSON.parse(xhr.responseText);
                     
                     if (data.succes) {
-                        // Succès - Recharger la page pour voir les modifications
+                        // Succès - Je recharge la page pour voir les modifications
                         showSuccessMessage('Profil mis à jour avec succès !');
                         setTimeout(() => {
                             location.reload();
@@ -116,34 +116,34 @@ function soumettreModificationProfil() {
 }
 
 /**
- * Initialisation de la gestion des véhicules
+ * J'initialise la gestion des véhicules
  */
 function initGestionVehicules() {
-    // Charger les véhicules existants
+    // Je charge les véhicules existants
     chargerVehicules();
     
-    // Intercepter la soumission du formulaire d'ajout de véhicule
+    // J'intercepte la soumission du formulaire d'ajout de véhicule
     const formVehicule = document.getElementById('formAjouterVehicule');
     if (formVehicule) {
         formVehicule.addEventListener('submit', function(e) {
-            // EMPÊCHER la soumission normale (rechargement de page)
+            // J'empêche la soumission normale (rechargement de page)
             e.preventDefault();
             e.stopPropagation();
            
-            // Ajouter le véhicule via AJAX
+            // J'ajoute le véhicule via AJAX
             ajouterVehicule();
         });
     }
 }
 
 /**
- * Ajoute un véhicule via AJAX
+ * J'ajoute un véhicule via AJAX
  */
 function ajouterVehicule() {
     const formData = new FormData(document.getElementById('formAjouterVehicule'));
     const submitBtn = document.querySelector('#formAjouterVehicule button[type="submit"]');
     
-    // Afficher le loader
+    // J'affiche le loader
     showLoader(submitBtn, 'Enregistrement...');
     
     const xhr = new XMLHttpRequest();
@@ -160,19 +160,19 @@ function ajouterVehicule() {
                     const data = JSON.parse(xhr.responseText);
                     
                     if (data.succes) {
-                        // Fermer le modal
+                        // Je ferme le modal
                         const modal = bootstrap.Modal.getInstance(document.getElementById('modalAjouterVehicule'));
                         if (modal) {
                             modal.hide();
                         }
                         
-                        // Recharger la liste des véhicules
+                        // Je recharge la liste des véhicules
                         chargerVehicules();
                         
-                        // Réinitialiser le formulaire
+                        // Je réinitialise le formulaire
                         document.getElementById('formAjouterVehicule').reset();
                         
-                        // Afficher un message de succès
+                        // J'affiche un message de succès
                         showSuccessMessage('Véhicule ajouté avec succès !');
                         
                     } else {
@@ -201,7 +201,7 @@ function ajouterVehicule() {
 }
 
 /**
- * Charge la liste des véhicules
+ * Je charge la liste des véhicules
  */
 function chargerVehicules() {
     const xhr = new XMLHttpRequest();
@@ -252,7 +252,7 @@ function chargerVehicules() {
 }
 
 /**
- * Supprime un véhicule
+ * Je supprime un véhicule
  */
 function supprimerVehicule(vehiculeId) {
     if (!confirm('Êtes-vous sûr de vouloir supprimer ce véhicule ?')) {
@@ -300,7 +300,7 @@ function showFieldError(fieldId, message) {
     if (field) {
         field.classList.add('is-invalid');
         
-        // Créer ou mettre à jour le message d'erreur
+        // Je crée ou mets à jour le message d'erreur
         let feedback = field.parentNode.querySelector('.invalid-feedback');
         if (!feedback) {
             feedback = document.createElement('div');
@@ -313,17 +313,17 @@ function showFieldError(fieldId, message) {
 }
 
 function clearFormErrors() {
-    // Supprimer toutes les classes d'erreur
+    // Je supprime toutes les classes d'erreur
     document.querySelectorAll('.is-invalid').forEach(field => {
         field.classList.remove('is-invalid');
     });
     
-    // Masquer tous les messages d'erreur
+    // Je masque tous les messages d'erreur
     document.querySelectorAll('.invalid-feedback').forEach(feedback => {
         feedback.style.display = 'none';
     });
     
-    // Supprimer les messages d'erreur généraux
+    // Je supprime les messages d'erreur généraux
     const existingAlerts = document.querySelectorAll('.alert-danger');
     existingAlerts.forEach(alert => alert.remove());
 }
@@ -333,7 +333,7 @@ function showFormErrors(erreurs) {
                      document.querySelector('#modalModifierProfil .modal-body');
     
     if (modalBody) {
-        // Créer l'alerte d'erreur
+        // Je crée l'alerte d'erreur
         const alertDiv = document.createElement('div');
         alertDiv.className = 'alert alert-danger';
         
@@ -348,7 +348,7 @@ function showFormErrors(erreurs) {
             alertDiv.innerHTML = errorHtml;
         }
         
-        // Insérer l'alerte en haut du modal
+        // J'insère l'alerte en haut du modal
         modalBody.insertBefore(alertDiv, modalBody.firstChild);
     }
 }
@@ -358,11 +358,11 @@ function showGeneralError(message) {
 }
 
 function showSuccessMessage(message) {
-    // Supprimer les anciens messages
+    // Je supprime les anciens messages
     const existingAlerts = document.querySelectorAll('.alert');
     existingAlerts.forEach(alert => alert.remove());
     
-    // Créer un message de succès global
+    // Je crée un message de succès global
     const alertDiv = document.createElement('div');
     alertDiv.className = 'alert alert-success alert-dismissible fade show position-fixed';
     alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
@@ -373,7 +373,7 @@ function showSuccessMessage(message) {
     
     document.body.appendChild(alertDiv);
     
-    // Auto-suppression après 3 secondes
+    // Je supprime automatiquement après 3 secondes
     setTimeout(() => {
         if (alertDiv.parentNode) {
             alertDiv.remove();

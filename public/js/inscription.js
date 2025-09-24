@@ -8,30 +8,30 @@ document.addEventListener('DOMContentLoaded', function() {
         return;
     }
     
-    // Désactiver la validation HTML5 native pour utiliser notre validation JavaScript
+    // Je désactive la validation HTML5 native pour utiliser ma validation JavaScript
     formInscription.setAttribute('novalidate', 'true');
     
-    // Initialiser la validation en temps réel
+    // J'initialise la validation en temps réel
     initValidationTempsReel();
     
-    // Initialiser la fonctionnalité œil mot de passe
+    // J'initialise la fonctionnalité œil mot de passe
     initTogglePassword();
     
-    // Intercepter la soumission du formulaire pour AJAX
+    // J'intercepte la soumission du formulaire pour AJAX
     formInscription.addEventListener('submit', function(e) {
-        // Empêcher la soumission normale (rechargement de page)
+        // J'empêche la soumission normale (rechargement de page)
         e.preventDefault();
         e.stopPropagation();
         
-        // Validation côté client d'abord
+        // Je fais la validation côté client d'abord
         if (validateForm()) {
-            // Soumission AJAX si validation OK
+            // Je soumets en AJAX si validation OK
             soumettreInscriptionAjax();
         }
     });
     
     /**
-     * Initialise la fonctionnalité d'affichage/masquage du mot de passe
+     * J'initialise la fonctionnalité d'affichage/masquage du mot de passe
      */
     function initTogglePassword() {
         const togglePassword = document.getElementById('togglePassword');
@@ -41,15 +41,15 @@ document.addEventListener('DOMContentLoaded', function() {
             togglePassword.addEventListener('click', function(e) {
                 e.preventDefault();
                 
-                // Toggle du type de champ
+                // Je bascule le type de champ
                 if (passwordField.type === 'password') {
                     passwordField.type = 'text';
-                    // Changer l'icône : œil fermé
+                    // Je change l'icône : œil fermé
                     this.querySelector('i').classList.remove('fa-eye');
                     this.querySelector('i').classList.add('fa-eye-slash');
                 } else {
                     passwordField.type = 'password';
-                    // Changer l'icône : œil ouvert
+                    // Je change l'icône : œil ouvert
                     this.querySelector('i').classList.remove('fa-eye-slash');
                     this.querySelector('i').classList.add('fa-eye');
                 }
@@ -58,10 +58,10 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     /**
-     * Validation en temps réel pendant la saisie
+     * Je valide en temps réel pendant la saisie
      */
     function initValidationTempsReel() {
-        // Validation du pseudo en temps réel
+        // Je valide le pseudo en temps réel
         const pseudoField = document.getElementById('pseudo');
         if (pseudoField) {
             pseudoField.addEventListener('input', function() {
@@ -80,7 +80,7 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
         
-        // Validation de l'email en temps réel
+        // Je valide l'email en temps réel
         const emailField = document.getElementById('email');
         if (emailField) {
             emailField.addEventListener('input', function() {
@@ -95,7 +95,7 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
         
-        // Validation du mot de passe en temps réel
+        // Je valide le mot de passe en temps réel
         const motDePasseField = document.getElementById('mot_de_passe');
         if (motDePasseField) {
             motDePasseField.addEventListener('input', function() {
@@ -110,7 +110,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 }
                 
-                // Revalider la confirmation si elle est remplie
+                // Je revalide la confirmation si elle est remplie
                 const confirmerField = document.getElementById('confirmer_mot_de_passe');
                 if (confirmerField && confirmerField.value.length > 0) {
                     validateConfirmationMotDePasse();
@@ -118,7 +118,7 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
         
-        // Validation de la confirmation du mot de passe en temps réel
+        // Je valide la confirmation du mot de passe en temps réel
         const confirmerField = document.getElementById('confirmer_mot_de_passe');
         if (confirmerField) {
             confirmerField.addEventListener('input', function() {
@@ -126,7 +126,7 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
         
-        // Validation du consentement RGPD
+        // Je valide le consentement RGPD
         const rgpdField = document.getElementById('consentement_rgpd');
         if (rgpdField) {
             rgpdField.addEventListener('change', function() {
@@ -141,21 +141,21 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     /**
-     * Validation complète du formulaire avant soumission
+     * Je valide complètement le formulaire avant soumission
      */
     function validateForm() {
-        // Réinitialiser les erreurs
+        // Je réinitialise les erreurs
         clearAllErrors();
         
         let hasErrors = false;
         
-        // Validation des champs obligatoires
+        // Je valide les champs obligatoires
         if (!validatePseudo()) hasErrors = true;
         if (!validateEmail()) hasErrors = true;
         if (!validateMotDePasse()) hasErrors = true;
         if (!validateConfirmationMotDePasse()) hasErrors = true;
         
-        // Validation du consentement RGPD
+        // Je valide le consentement RGPD
         const consentementRgpd = document.getElementById('consentement_rgpd');
         if (consentementRgpd && !consentementRgpd.checked) {
             showFieldError('consentement_rgpd', 'Vous devez accepter la politique de confidentialité.');
@@ -166,7 +166,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     /**
-     * Validation du pseudo
+     * Je valide le pseudo
      */
     function validatePseudo() {
         const pseudoField = document.getElementById('pseudo');
@@ -193,7 +193,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     /**
-     * Validation de l'email
+     * Je valide l'email
      */
     function validateEmail() {
         const emailField = document.getElementById('email');
@@ -214,7 +214,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     /**
-     * Validation du mot de passe
+     * Je valide le mot de passe
      */
     function validateMotDePasse() {
         const motDePasseField = document.getElementById('mot_de_passe');
@@ -235,7 +235,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     /**
-     * Validation de la confirmation du mot de passe
+     * Je valide la confirmation du mot de passe
      */
     function validateConfirmationMotDePasse() {
         const motDePasseField = document.getElementById('mot_de_passe');
@@ -261,20 +261,20 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     /**
-     * Soumission AJAX du formulaire d'inscription EcoRide
+     * Je soumets le formulaire d'inscription EcoRide en AJAX
      */
     function soumettreInscriptionAjax() {
-        // Afficher le loader
+        // J'affiche le loader
         showLoader();
         
-        // Récupération des données du formulaire
+        // Je récupère les données du formulaire
         const formData = new FormData();
         formData.append('pseudo', document.getElementById('pseudo').value.trim());
         formData.append('email', document.getElementById('email').value.trim());
         formData.append('mot_de_passe', document.getElementById('mot_de_passe').value);
         formData.append('confirmer_mot_de_passe', document.getElementById('confirmer_mot_de_passe').value);
         
-        // Champs optionnels (seulement s'ils existent et ont une valeur)
+        // Je traite les champs optionnels (seulement s'ils existent et ont une valeur)
         const optionalFields = ['nom', 'prenom', 'telephone', 'ville'];
         optionalFields.forEach(fieldName => {
             const field = document.getElementById(fieldName);
@@ -283,7 +283,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
         
-        // Champs booléens
+        // Je traite les champs booléens
         const consentementField = document.getElementById('consentement_rgpd');
         if (consentementField && consentementField.checked) {
             formData.append('consentement_rgpd', '1');
@@ -294,15 +294,15 @@ document.addEventListener('DOMContentLoaded', function() {
             formData.append('permis_conduire', '1');
         }
         
-        // Configuration de la requête AJAX
+        // Je configure la requête AJAX
         const xhr = new XMLHttpRequest();
         xhr.open('POST', '/api/inscription', true);
         
-        // Headers AJAX
+        // Je définis les headers AJAX
         xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
         xhr.setRequestHeader('Accept', 'application/json');
         
-        // Gestion de la réponse
+        // Je gère la réponse
         xhr.onreadystatechange = function() {
             if (xhr.readyState === 4) {
                 hideLoader();
@@ -315,7 +315,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             // Inscription réussie
                             showSuccessMessage(data.message);
                             
-                            // Redirection vers la connexion après 2 secondes
+                            // Je redirige vers la connexion après 2 secondes
                             setTimeout(() => {
                                 window.location.href = '/connexion';
                             }, 2000);
@@ -337,18 +337,18 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         };
         
-        // Gestion des erreurs réseau
+        // Je gère les erreurs réseau
         xhr.onerror = function() {
             hideLoader();
             showGeneralError('Erreur de connexion réseau.');
         };
         
-        // Envoi de la requête
+        // J'envoie la requête
         xhr.send(formData);
     }
     
     /**
-     * Affiche un message d'erreur sur un champ spécifique
+     * J'affiche un message d'erreur sur un champ spécifique
      */
     function showFieldError(fieldId, message) {
         const field = document.getElementById(fieldId);
@@ -356,7 +356,7 @@ document.addEventListener('DOMContentLoaded', function() {
             field.classList.remove('is-valid');
             field.classList.add('is-invalid');
             
-            // Créer ou mettre à jour le message d'erreur
+            // Je crée ou mets à jour le message d'erreur
             let feedback = field.parentNode.querySelector('.invalid-feedback');
             if (!feedback) {
                 feedback = document.createElement('div');
@@ -369,7 +369,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     /**
-     * Affiche un feedback de succès sur un champ
+     * J'affiche un feedback de succès sur un champ
      */
     function showFieldSuccess(fieldId) {
         const field = document.getElementById(fieldId);
@@ -377,7 +377,7 @@ document.addEventListener('DOMContentLoaded', function() {
             field.classList.remove('is-invalid');
             field.classList.add('is-valid');
             
-            // Masquer le message d'erreur s'il existe
+            // Je masque le message d'erreur s'il existe
             const feedback = field.parentNode.querySelector('.invalid-feedback');
             if (feedback) {
                 feedback.style.display = 'none';
@@ -386,7 +386,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     /**
-     * Efface les erreurs d'un champ spécifique
+     * J'efface les erreurs d'un champ spécifique
      */
     function clearFieldError(fieldId) {
         const field = document.getElementById(fieldId);
@@ -401,27 +401,27 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     /**
-     * Efface toutes les erreurs du formulaire
+     * J'efface toutes les erreurs du formulaire
      */
     function clearAllErrors() {
-        // Supprimer toutes les classes d'erreur et de succès
+        // Je supprime toutes les classes d'erreur et de succès
         document.querySelectorAll('.is-invalid, .is-valid').forEach(field => {
             field.classList.remove('is-invalid', 'is-valid');
         });
         
-        // Masquer tous les messages d'erreur
+        // Je masque tous les messages d'erreur
         document.querySelectorAll('.invalid-feedback').forEach(feedback => {
             feedback.style.display = 'none';
         });
         
-        // Supprimer les messages d'erreur généraux
+        // Je supprime les messages d'erreur généraux
         document.querySelectorAll('.alert-danger, .alert-success').forEach(alert => {
             alert.remove();
         });
     }
     
     /**
-     * Affiche plusieurs messages d'erreur généraux
+     * J'affiche plusieurs messages d'erreur généraux
      */
     function showGeneralErrors(erreurs) {
         const alertDiv = document.createElement('div');
@@ -442,29 +442,29 @@ document.addEventListener('DOMContentLoaded', function() {
         errorHtml += '</div></div>';
         alertDiv.innerHTML = errorHtml;
         
-        // Insérer le message en haut du formulaire
+        // J'insère le message en haut du formulaire
         const form = document.getElementById('formInscription');
         form.parentNode.insertBefore(alertDiv, form);
         
-        // Faire défiler vers le message
+        // Je fais défiler vers le message
         alertDiv.scrollIntoView({ behavior: 'smooth' });
     }
     
     /**
-     * Affiche un message d'erreur général
+     * J'affiche un message d'erreur général
      */
     function showGeneralError(message) {
         showGeneralErrors([message]);
     }
     
     /**
-     * Affiche un message de succès
+     * J'affiche un message de succès
      */
     function showSuccessMessage(message) {
-        // Supprimer les anciens messages
+        // Je supprime les anciens messages
         document.querySelectorAll('.alert').forEach(alert => alert.remove());
         
-        // Créer et afficher un message de succès
+        // Je crée et affiche un message de succès
         const alertDiv = document.createElement('div');
         alertDiv.className = 'alert alert-success border-0 shadow-sm';
         alertDiv.innerHTML = `
@@ -474,16 +474,16 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
         `;
         
-        // Insérer le message en haut du formulaire
+        // J'insère le message en haut du formulaire
         const form = document.getElementById('formInscription');
         form.parentNode.insertBefore(alertDiv, form);
         
-        // Faire défiler vers le message
+        // Je fais défiler vers le message
         alertDiv.scrollIntoView({ behavior: 'smooth' });
     }
     
     /**
-     * Affiche le loader sur le bouton de soumission
+     * J'affiche le loader sur le bouton de soumission
      */
     function showLoader() {
         const submitBtn = document.querySelector('#formInscription button[type="submit"]');
@@ -494,7 +494,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     /**
-     * Masque le loader et restaure le bouton
+     * Je masque le loader et restaure le bouton
      */
     function hideLoader() {
         const submitBtn = document.querySelector('#formInscription button[type="submit"]');
@@ -505,7 +505,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     /**
-     * Valide le format d'une adresse email
+     * Je valide le format d'une adresse email
      */
     function isValidEmail(email) {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;

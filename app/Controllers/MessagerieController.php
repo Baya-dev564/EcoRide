@@ -12,7 +12,7 @@ class MessagerieController
     }
     
     /**
-     * ✅ J'affiche la page principale de messagerie - CORRIGÉ
+     * J'affiche la page principale de messagerie
      */
     public function index()
     {
@@ -28,18 +28,18 @@ class MessagerieController
             // Je récupère les conversations de l'utilisateur
             $conversations = $this->messagerieMongoDB->getConversationsUtilisateur($userId);
             
-            // 🔍 DEBUG AJOUTÉ ICI
+            // Je debug pour vérifier la récupération
             error_log("DEBUG contrôleur - conversations récupérées: " . count($conversations));
             
-            // Ajoute ce debug pour voir le contenu !
+            // Je debug le contenu des conversations
             foreach ($conversations as $conv) {
                 error_log("DEBUG - Conversation: " . json_encode($conv));
             }
             
-            // ✅ CORRIGÉ : Je transforme les OBJETS pour l'affichage
+            // Je transforme les objets MongoDB pour l'affichage
             $conversationsFormatees = [];
             foreach ($conversations as $conversation) {
-                // ✅ UTILISE -> POUR LES OBJETS MONGODB !
+                // J'utilise -> pour les objets MongoDB
                 $conversationsFormatees[] = [
                     'id' => (string)$conversation->_id,
                     'participants' => $conversation->participants, // Déjà un array d'objets
@@ -63,7 +63,7 @@ class MessagerieController
     }
     
     /**
-     * ✅ J'affiche une conversation spécifique - CORRIGÉ AVEC NOTIFICATIONS
+     * J'affiche une conversation spécifique avec marquage des messages comme lus
      */
     public function conversation($conversationId)
     {
@@ -75,13 +75,13 @@ class MessagerieController
         $userId = $_SESSION['user_id'];
         
         try {
-            // ✅ NOUVEAU : Je marque les messages comme lus dès que j'ouvre la conversation
+            // Je marque les messages comme lus dès que j'ouvre la conversation
             $this->messagerieMongoDB->marquerMessagesCommuLus($conversationId, $userId);
             
             // Je récupère les messages de la conversation
             $messages = $this->messagerieMongoDB->getMessages($conversationId);
             
-            // ✅ CORRIGÉ : Je transforme les OBJETS pour l'affichage
+            // Je transforme les objets MongoDB pour l'affichage
             $messagesFormats = [];
             foreach ($messages as $message) {
                 $messagesFormats[] = [
@@ -106,7 +106,7 @@ class MessagerieController
     }
 
     /**
-     * ✅ J'envoie un nouveau message - CORRIGÉ AVEC NOTIFICATIONS
+     * J'envoie un nouveau message avec mise à jour des notifications
      */
     public function envoyerMessage()
     {
@@ -145,7 +145,7 @@ class MessagerieController
             // J'envoie le message
             $this->messagerieMongoDB->envoyerMessage($conversationId, $userId, $pseudoExpediteur, $contenu);
             
-            // ✅ NOUVEAU : J'incrémente le compteur pour le destinataire
+            // J'incrémente le compteur pour le destinataire
             $conversation = $this->messagerieMongoDB->getConversation($conversationId);
             $participants = $conversation->participants ?? [];
             
@@ -167,7 +167,7 @@ class MessagerieController
     }
     
     /**
-     * ✅ Je crée une nouvelle conversation
+     * Je crée une nouvelle conversation avec message initial
      */
     public function nouvelleConversation()
     {
@@ -204,9 +204,9 @@ class MessagerieController
         }
         
         try {
-            // ✅ RECHERCHE DU VRAI USER_ID DANS LA BASE SQL
+            // Je recherche le vrai user_id dans la base SQL
             if (!isset($input['destinataire_id'])) {
-                // Chercher l'utilisateur par pseudo
+                // Je cherche l'utilisateur par pseudo
                 global $pdo;
                 $stmt = $pdo->prepare("SELECT id FROM utilisateurs WHERE pseudo = ?");
                 $stmt->execute([$destinatairePseudo]);
@@ -223,13 +223,13 @@ class MessagerieController
                 $user2Id = $input['destinataire_id'];
             }
             
-            // ✅ Je crée la conversation
+            // Je crée la conversation
             $conversationId = $this->messagerieMongoDB->creerConversation($user1Id, $user2Id, $pseudo1, $destinatairePseudo, $trajetId);
             
-            // ✅ J'envoie le message initial
+            // J'envoie le message initial
             $this->messagerieMongoDB->envoyerMessage((string)$conversationId, $user1Id, $pseudo1, $messageInitial);
             
-            // ✅ NOUVEAU : J'incrémente le compteur pour le destinataire
+            // J'incrémente le compteur pour le destinataire
             $this->messagerieMongoDB->incrementerMessagesNonLus((string)$conversationId, $user2Id);
             
             echo json_encode([
@@ -245,7 +245,7 @@ class MessagerieController
     }
     
     /**
-     * ✅ Je récupère les nouveaux messages (AJAX) - CORRIGÉ
+     * Je récupère les nouveaux messages via AJAX
      */
     public function getNewMessages($conversationId)
     {
@@ -258,7 +258,7 @@ class MessagerieController
         try {
             $messages = $this->messagerieMongoDB->getMessages($conversationId);
             
-            // ✅ CORRIGÉ : Gestion des objets MongoDB
+            // Je gère les objets MongoDB correctement
             $messagesFormats = [];
             foreach ($messages as $message) {
                 $messagesFormats[] = [
@@ -279,7 +279,7 @@ class MessagerieController
     }
 
     /**
-     * ✅ API pour chercher des utilisateurs par pseudo
+     * API pour chercher des utilisateurs par pseudo
      */
     public function rechercherUtilisateurs()
     {
@@ -333,49 +333,49 @@ class MessagerieController
     }
 
     /**
-     * ✅ API pour obtenir les motifs de contact prédéfinis
+     * API pour obtenir les motifs de contact prédéfinis
      */
     public function getMotifs()
     {
         $motifs = [
             [
                 'id' => 'trajet_partage',
-                'libelle' => '🚗 Partage de trajet',
+                'libelle' => 'Partage de trajet',
                 'description' => 'Organiser un covoiturage'
             ],
             [
                 'id' => 'question_trajet',
-                'libelle' => '❓ Question sur un trajet',
+                'libelle' => 'Question sur un trajet',
                 'description' => 'Demander des informations'
             ],
             [
                 'id' => 'modification_horaire',
-                'libelle' => '⏰ Modification d\'horaire',
+                'libelle' => 'Modification d\'horaire',
                 'description' => 'Changer les horaires convenus'
             ],
             [
                 'id' => 'annulation',
-                'libelle' => '❌ Annulation',
+                'libelle' => 'Annulation',
                 'description' => 'Annuler un trajet prévu'
             ],
             [
                 'id' => 'feedback',
-                'libelle' => '⭐ Retour d\'expérience',
+                'libelle' => 'Retour d\'expérience',
                 'description' => 'Partager un avis'
             ],
             [
                 'id' => 'probleme_technique',
-                'libelle' => '🔧 Problème technique',
+                'libelle' => 'Problème technique',
                 'description' => 'Signaler un bug ou dysfonctionnement'
             ],
             [
                 'id' => 'proposition_reguliere',
-                'libelle' => '🔄 Trajet régulier',
+                'libelle' => 'Trajet régulier',
                 'description' => 'Proposer des trajets récurrents'
             ],
             [
                 'id' => 'autre',
-                'libelle' => '💬 Autre sujet',
+                'libelle' => 'Autre sujet',
                 'description' => 'Discussion libre'
             ]
         ];
@@ -384,7 +384,7 @@ class MessagerieController
     }
 
     /**
-     * ✅ Je compte les messages non lus pour l'utilisateur connecté
+     * Je compte les messages non lus pour l'utilisateur connecté
      */
     public function getUnreadCount()
     {

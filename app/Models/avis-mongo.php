@@ -1,7 +1,7 @@
 <?php
 /**
  * Modèle AvisMongo pour EcoRide - Système NoSQL MongoDB + MySQL Hybride
- * TP Développement Web - Architecture MVC hybride 
+ * Architecture MVC hybride pour la gestion des avis utilisateurs
  * 
  * ARCHITECTURE CHOISIE :
  * - MongoDB : Stockage des avis (données NoSQL pour flexibilité)
@@ -9,25 +9,21 @@
  * - PHP : Logique de jointure entre les deux bases (performance optimisée)
  * 
  * Développé pour environnement Docker avec PHP natif
- * @author Développeur EcoRide 
- * @version 2.2 - CORRECTION système de modération avec affichage tous avis validés
  */
 
 class AvisMongo 
 {
-    // ========== PROPRIÉTÉS DE CONNEXION ==========
-    
-    /** @var MongoDB\Driver\Manager - Gestionnaire de connexion MongoDB */
+    /** Je gestionnaire de connexion MongoDB */
     private $manager;
     
-    /** @var string - Nom de la base de données MongoDB */
+    /** Je nom de la base de données MongoDB */
     private $database = 'EcoRide';
     
-    /** @var string - Nom de la collection MongoDB pour les avis */
+    /** Je nom de la collection MongoDB pour les avis */
     private $collection = 'avis';
 
     /**
-     * Constructeur - J'établis la connexion avec MongoDB dans Docker
+     * Je constructeur - J'établis la connexion avec MongoDB dans Docker
      * 
      * CONNEXION SÉCURISÉE DOCKER :
      * - J'utilise les identifiants définis dans docker-compose.yml
@@ -38,12 +34,11 @@ class AvisMongo
     {
         try {
             // Je connecte MongoDB avec paramètres Docker Compose
-            // Format: mongodb://user:password@container:port/database?authSource=admin
             $this->manager = new MongoDB\Driver\Manager(
                 "mongodb://ecoride:ecoride123@mongo:27017/EcoRide?authSource=admin"
             );
             
-            // Je log le succès pour debug (retiré en production)
+            // Je log le succès pour debug
             error_log("DEBUG: Connexion MongoDB établie avec succès");
             
         } catch (Exception $e) {
@@ -52,19 +47,14 @@ class AvisMongo
         }
     }
 
-    // ========== MÉTHODES CRUD MONGODB ==========
-
     /**
-     * J'ajoute un nouvel avis dans MongoDB - AVEC MODÉRATION
+     * J'ajoute un nouvel avis dans MongoDB avec système de modération
      * 
-     * LOGIQUE MÉTIER MODIFIÉE :
-     * - Je valide les données en amont (contrôleur)
+     * LOGIQUE MÉTIER :
+     * - Je valide les données en amont
      * - Je stocke avec timestamp MongoDB natif pour tri chronologique
-     * - Je mets statut 'en_attente' par défaut (NOUVEAU : système de modération)
+     * - Je mets statut 'en_attente' par défaut pour modération
      * - Je retourne une réponse standardisée success/error pour API JSON
-     * 
-     * @param array $donnees - Données validées de l'avis
-     * @return array - Résultat standardisé de l'opération
      */
     public function ajouterAvis($donnees) 
     {
@@ -77,7 +67,7 @@ class AvisMongo
                 'note' => (int)$donnees['note'], // Je valide range 1-5 en amont
                 'commentaire' => $donnees['commentaire'], // Je limite texte libre 500 chars
                 'date_creation' => new MongoDB\BSON\UTCDateTime(), // Je timestamp MongoDB natif
-                'statut' => 'en_attente' // MODIFIÉ : J'attends validation admin
+                'statut' => 'en_attente' // J'attends validation admin
             ];
 
             // J'effectue l'opération d'écriture atomique MongoDB
@@ -87,10 +77,10 @@ class AvisMongo
             // J'exécute l'écriture sur le cluster MongoDB
             $result = $this->manager->executeBulkWrite($this->database . '.' . $this->collection, $bulk);
             
-            // Je log pour suivi d'activité (optionnel en production)
+            // Je log pour suivi d'activité
             error_log("DEBUG: Avis ajouté en attente - ID: " . (string)$id);
             
-            // Je retourne une réponse standardisée pour API JSON - MESSAGE MODIFIÉ
+            // Je retourne une réponse standardisée pour API JSON
             return [
                 'success' => true,
                 'avis_id' => (string)$id, // Je convertis ObjectId → string pour JSON
@@ -101,7 +91,7 @@ class AvisMongo
             // Je log l'erreur technique pour debug
             error_log("ERREUR ajouterAvis MongoDB: " . $e->getMessage());
             
-            // Je retourne une erreur standardisée (pas d'info technique côté client)
+            // Je retourne une erreur standardisée
             return [
                 'success' => false,
                 'error' => 'Erreur technique lors de l\'ajout de l\'avis'
@@ -110,24 +100,21 @@ class AvisMongo
     }
 
     /**
-     * NOUVELLE MÉTHODE CORRIGÉE : Je récupère TOUS les avis validés (pour page publique utilisateurs)
+     * Je récupère tous les avis validés pour la page publique utilisateurs
      * 
      * UTILITÉ PRINCIPALE :
      * - Page publique /avis : J'affiche tous les avis validés par l'admin
      * - DIFFÉRENT de getTousLesAvis() qui est pour l'admin (tous statuts)
-     * - REMPLACE getAvisParTrajet() pour la page publique
      * 
      * ARCHITECTURE HYBRIDE :
      * - Je récupère depuis MongoDB (tous les avis validés)
      * - J'enrichis avec pseudos MySQL
      * - Je trie chronologique pour meilleur UX
-     * 
-     * @return array - Tous les avis actifs formatés avec pseudos
      */
     public function getTousLesAvisValidés() 
     {
         try {
-            // ÉTAPE 1 : Je récupère TOUS les avis VALIDÉS (pour utilisateurs)
+            // Je récupère tous les avis validés
             $filter = ['statut' => 'actif']; // Seulement les avis validés par l'admin
             $options = ['sort' => ['date_creation' => -1]]; // Je mets plus récents en premier
             $query = new MongoDB\Driver\Query($filter, $options);
@@ -149,13 +136,13 @@ class AvisMongo
                 ];
             }
 
-            // ÉTAPE 2 : J'extrais les IDs utilisateur uniques
+            // J'extrais les IDs utilisateur uniques
             $user_ids = array_unique(array_column($avis_mongo, 'utilisateur_id'));
 
-            // ÉTAPE 3 : J'enrichis avec pseudos MySQL
+            // J'enrichis avec pseudos MySQL
             $pseudos = $this->getPseudosUtilisateurs($user_ids);
 
-            // ÉTAPE 4 : Je fusionne avec pseudos à jour
+            // Je fusionne avec pseudos à jour
             $avis_formates = [];
             foreach ($avis_mongo as $avis) {
                 $pseudo_mysql = $pseudos[$avis['utilisateur_id']] ?? null;
@@ -191,23 +178,14 @@ class AvisMongo
      * Étape 2: J'extrais les IDs utilisateur uniques (évite doublons)
      * Étape 3: Je requête MySQL groupée pour les pseudos (1 seule requête)
      * Étape 4: Je fusionne les données en PHP (jointure manuelle optimisée)
-     * 
-     * AVANTAGES vs duplication :
-     * - Source unique de vérité pour les utilisateurs (MySQL)
-     * - Pseudos toujours à jour (changements auto-répercutés)
-     * - Pas de synchronisation base à base
-     * - Performance: O(1) requête MySQL même pour 1000 avis
-     * 
-     * @param int $trajet_id - ID du trajet spécifique
-     * @return array - Avis formatés avec pseudos MySQL pour ce trajet
      */
     public function getAvisParTrajet($trajet_id) 
     {
         try {
-            // ÉTAPE 1 : Je récupère avis MongoDB (CORRIGÉ : filtre VRAIMENT par trajet)
+            // Je récupère avis MongoDB filtrés par trajet
             if ($trajet_id && $trajet_id !== '') {
                 $filter = [
-                    'trajet_id' => (int)$trajet_id, // ✅ JE FILTRE PAR TRAJET MAINTENANT !
+                    'trajet_id' => (int)$trajet_id, // Je filtre par trajet maintenant
                     'statut' => 'actif'
                 ];
                 error_log("DEBUG getAvisParTrajet: Filtre trajet_id = $trajet_id");
@@ -227,21 +205,21 @@ class AvisMongo
                 $avis_mongo[] = [
                     'id' => (string)$avis->_id,
                     'trajet_id' => $avis->trajet_id,
-                    'utilisateur_id' => $avis->utilisateur_id, // CLEF pour jointure MySQL
+                    'utilisateur_id' => $avis->utilisateur_id, // Clef pour jointure MySQL
                     'note' => $avis->note,
                     'commentaire' => $avis->commentaire,
                     'date_creation' => $avis->date_creation->toDateTime()->format('Y-m-d H:i:s')
                 ];
             }
 
-            // ÉTAPE 2 : J'extrais les IDs utilisateur uniques (optimisation)
+            // J'extrais les IDs utilisateur uniques (optimisation)
             $user_ids = array_unique(array_column($avis_mongo, 'utilisateur_id'));
             error_log("DEBUG: IDs utilisateur à récupérer: " . count($user_ids));
 
-            // ÉTAPE 3 : Je récupère pseudos MySQL (1 seule requête groupée)
+            // Je récupère pseudos MySQL (1 seule requête groupée)
             $pseudos = $this->getPseudosUtilisateurs($user_ids);
 
-            // ÉTAPE 4 : Je fusionne MongoDB + MySQL (jointure manuelle PHP)
+            // Je fusionne MongoDB + MySQL (jointure manuelle PHP)
             $avis_formates = [];
             foreach ($avis_mongo as $avis) {
                 // Je fais la jointure sur utilisateur_id
@@ -269,25 +247,17 @@ class AvisMongo
     }
 
     /**
-     * MÉTHODE EXISTANTE : Je récupère TOUS les avis (pour l'administration)
+     * Je récupère tous les avis pour l'administration
      * 
      * UTILITÉ ADMIN :
      * - Gestion/modération de tous les avis de la plateforme
      * - Statistiques globales et rapports
      * - Surveillance de la qualité des avis
-     * 
-     * ARCHITECTURE HYBRIDE :
-     * - Je récupère MongoDB (tous statuts confondus)
-     * - J'enrichis avec pseudos MySQL
-     * - Je trie chronologique pour faciliter modération
-     * 
-     * @param int $limit - Limite du nombre d'avis (défaut 100)
-     * @return array - Tous les avis formatés avec pseudos
      */
     public function getTousLesAvis($limit = 100) 
     {
         try {
-            // ÉTAPE 1 : Je récupère TOUS les avis MongoDB (incluant tous statuts pour admin)
+            // Je récupère tous les avis MongoDB (incluant tous statuts pour admin)
             $filter = []; // Pas de filtre statut pour l'admin - il voit tout
             $options = [
                 'sort' => ['date_creation' => -1], // Je mets plus récents en premier
@@ -308,18 +278,18 @@ class AvisMongo
                     'note' => $avis->note,
                     'commentaire' => $avis->commentaire,
                     'date_creation' => $avis->date_creation->toDateTime()->format('Y-m-d H:i:s'),
-                    'statut' => $avis->statut ?? 'en_attente' // Je fallback statut MODIFIÉ
+                    'statut' => $avis->statut ?? 'en_attente' // Je fallback statut
                 ];
             }
 
-            // ÉTAPE 2 : J'extrais IDs utilisateur uniques
+            // J'extrais IDs utilisateur uniques
             $user_ids = array_unique(array_column($avis_mongo, 'utilisateur_id'));
             error_log("DEBUG getTousLesAvis: " . count($user_ids) . " utilisateurs uniques");
 
-            // ÉTAPE 3 : J'enrichis pseudos MySQL (mise à jour cache)
+            // J'enrichis pseudos MySQL (mise à jour cache)
             $pseudos = $this->getPseudosUtilisateurs($user_ids);
 
-            // ÉTAPE 4 : Je fusionne et mets à jour cache pseudos
+            // Je fusionne et mets à jour cache pseudos
             $avis_formates = [];
             foreach ($avis_mongo as $avis) {
                 // Je priorise pseudo MySQL > cache MongoDB > fallback
@@ -349,20 +319,17 @@ class AvisMongo
     }
 
     /**
-     * MÉTHODE EXISTANTE : Je récupère les avis en attente de validation (pour l'admin)
+     * Je récupère les avis en attente de validation pour l'admin
      * 
      * UTILITÉ ADMIN :
      * - File d'attente de modération
      * - Priorisation des avis à valider
      * - Workflow de validation efficace
-     * 
-     * @param int $limit - Limite du nombre d'avis (défaut 50)
-     * @return array - Avis en attente avec pseudos
      */
     public function getAvisEnAttente($limit = 50) 
     {
         try {
-            // ÉTAPE 1 : Je récupère avis en attente MongoDB
+            // Je récupère avis en attente MongoDB
             $filter = ['statut' => 'en_attente']; // Seulement ceux à valider
             $options = [
                 'sort' => ['date_creation' => 1], // Je mets plus anciens en premier (FIFO)
@@ -387,11 +354,11 @@ class AvisMongo
                 ];
             }
 
-            // ÉTAPE 2 : J'enrichis pseudos MySQL
+            // J'enrichis pseudos MySQL
             $user_ids = array_unique(array_column($avis_mongo, 'utilisateur_id'));
             $pseudos = $this->getPseudosUtilisateurs($user_ids);
 
-            // ÉTAPE 3 : Je fusionne avec pseudos à jour
+            // Je fusionne avec pseudos à jour
             $avis_formates = [];
             foreach ($avis_mongo as $avis) {
                 $pseudo_mysql = $pseudos[$avis['utilisateur_id']] ?? null;
@@ -420,10 +387,7 @@ class AvisMongo
     }
 
     /**
-     * MÉTHODE EXISTANTE : Je valide un avis (le rend visible)
-     * 
-     * @param string $avis_id - ID de l'avis à valider
-     * @return array - Résultat de l'opération
+     * Je valide un avis (le rend visible)
      */
     public function validerAvis($avis_id) 
     {
@@ -431,10 +395,7 @@ class AvisMongo
     }
 
     /**
-     * MÉTHODE EXISTANTE : Je rejette un avis (le marque comme refusé)
-     * 
-     * @param string $avis_id - ID de l'avis à rejeter
-     * @return array - Résultat de l'opération
+     * Je rejette un avis (le marque comme refusé)
      */
     public function rejeterAvis($avis_id) 
     {
@@ -449,28 +410,19 @@ class AvisMongo
      * - Je prépare PDO pour sécurité injection SQL
      * - Je gère les utilisateurs supprimés/introuvables
      * - Je connecte Docker MySQL avec paramètres adaptés
-     * 
-     * SÉCURITÉ :
-     * - Je requête préparée PDO (protection injection SQL)
-     * - Je valide les IDs en entrée
-     * - Je fallback gracieux si utilisateur introuvable
-     * 
-     * @param array $user_ids - Liste des IDs utilisateur à récupérer
-     * @return array - Tableau associatif [user_id => pseudo]
      */
     private function getPseudosUtilisateurs($user_ids) 
     {
-        // Je valide l'entrée : si aucun ID, je retourne vide (évite requête inutile)
+        // Je valide l'entrée : si aucun ID, je retourne vide
         if (empty($user_ids)) {
             return [];
         }
         
         try {
-            // CONNEXION MYSQL DOCKER
-            // Je paramètre adaptés à l'environnement Docker Compose
+            // Connexion MySQL Docker
             $dsn = "mysql:host=mysql;dbname=ecoride;charset=utf8mb4";
             $username = "root"; // J'adapte selon ta config Docker
-            $password = "root"; // J'adapte selon ta config Docker
+            $password = "ecoride123"; // J'adapte selon ta config Docker
             
             // Je configure PDO pour robustesse et sécurité
             $pdo = new PDO($dsn, $username, $password, [
@@ -479,8 +431,7 @@ class AvisMongo
                 PDO::ATTR_EMULATE_PREPARES => false // Je utilise vraies requêtes préparées
             ]);
             
-            // REQUÊTE IN() OPTIMISÉE
-            // Je construis des placeholders sécurisés pour IN()
+            // Requête IN() optimisée
             $placeholders = str_repeat('?,', count($user_ids) - 1) . '?';
             $sql = "SELECT id, pseudo, nom, prenom FROM utilisateurs WHERE id IN ($placeholders)";
             
@@ -489,7 +440,6 @@ class AvisMongo
             $stmt->execute($user_ids);
             $users = $stmt->fetchAll();
             
-            // CONSTRUCTION INDEX PERFORMANT
             // Je crée tableau associatif [user_id => pseudo] pour lookup O(1)
             $pseudos = [];
             foreach ($users as $user) {
@@ -499,13 +449,13 @@ class AvisMongo
                                        'Utilisateur';
             }
             
-            // Je log pour suivi performance (optionnel)
+            // Je log pour suivi performance
             error_log("DEBUG: " . count($pseudos) . " pseudos MySQL récupérés");
             
             return $pseudos;
             
         } catch (Exception $e) {
-            // Je log erreur technique pour debug (critique pour fonctionnalité)
+            // Je log erreur technique pour debug
             error_log("ERREUR CRITIQUE getPseudosUtilisateurs MySQL: " . $e->getMessage());
             
             // Je retourne gracieux : array vide = fallback "Utilisateur" partout
@@ -513,21 +463,16 @@ class AvisMongo
         }
     }
 
-    // ========== AUTRES MÉTHODES MONGODB ==========
-
     /**
      * Je récupère un avis spécifique par son ID MongoDB
      * 
      * UTILITÉ : Affichage détail d'avis, modération, édition
      * SÉCURITÉ : Je valide ObjectId MongoDB pour éviter erreurs
-     * 
-     * @param string $id - ID MongoDB de l'avis (_id)
-     * @return array|null - L'avis trouvé ou null si pas trouvé
      */
     public function getAvisParId($id) 
     {
         try {
-            // Je valide format ObjectId MongoDB (évite exceptions)
+            // Je valide format ObjectId MongoDB
             $filter = [
                 '_id' => new MongoDB\BSON\ObjectId($id),
                 'statut' => 'actif' // Seulement les avis validés
@@ -559,15 +504,56 @@ class AvisMongo
             return null;
         }
     }
+  
+    /**
+ * Je récupère tous les avis avec filtres pour l'administration
+ */
+public function obtenirTousLesAvis($filtres = [])
+{
+    try {
+        // Je filtre selon les paramètres
+        $filter = [];
+        
+        if (!empty($filtres['statut'])) {
+            $filter['statut'] = $filtres['statut'];
+        }
+        
+        if (!empty($filtres['note'])) {
+            $filter['note'] = (int)$filtres['note'];
+        }
+        
+        $options = ['sort' => ['date_creation' => -1]];
+        $query = new MongoDB\Driver\Query($filter, $options);
+        
+        $cursor = $this->manager->executeQuery($this->database . '.' . $this->collection, $query);
+        
+        $avis_mongo = [];
+        foreach ($cursor as $avis) {
+            $avis_mongo[] = [
+                'id' => (string)$avis->_id,
+                'trajet_id' => $avis->trajet_id ?? '',
+                'utilisateur_id' => $avis->utilisateur_id,
+                'nom_utilisateur' => $avis->nom_utilisateur ?? '',
+                'note' => $avis->note,
+                'commentaire' => $avis->commentaire,
+                'date_creation' => $avis->date_creation->toDateTime()->format('Y-m-d H:i:s'),
+                'statut' => $avis->statut ?? 'en_attente'
+            ];
+        }
+        
+        return $avis_mongo;
+        
+    } catch (Exception $e) {
+        error_log("Erreur obtenirTousLesAvis: " . $e->getMessage());
+        return [];
+    }
+}
 
     /**
      * Je récupère tous les avis d'un utilisateur spécifique
      * 
      * UTILITÉ : Profile utilisateur, historique personnel
      * PERFORMANCE : Je index sur utilisateur_id + tri date optimisé
-     * 
-     * @param int $user_id - ID de l'utilisateur
-     * @return array - Liste des avis de cet utilisateur
      */
     public function getAvisParUtilisateur($user_id) 
     {
@@ -614,16 +600,13 @@ class AvisMongo
      * PERFORMANCE : J'utilise pipeline d'agrégation natif MongoDB
      * AVANTAGE : Je calcule côté base (plus rapide que PHP)
      * UTILITÉ : Affichage note trajet, classements, stats
-     * 
-     * @param int $trajet_id - ID du trajet
-     * @return array - Moyenne et nombre total d'avis
      */
     public function calculerNoteMoyenne($trajet_id) 
     {
         try {
             // Je pipeline d'agrégation MongoDB (calcul côté base)
             $pipeline = [
-                // Je filtre les avis pertinents (SEULEMENT LES VALIDÉS)
+                // Je filtre les avis pertinents (seulement les validés)
                 ['$match' => ['trajet_id' => (int)$trajet_id, 'statut' => 'actif']],
                 // J'agrège : moyenne + comptage
                 ['$group' => [
@@ -672,9 +655,6 @@ class AvisMongo
      * BONNE PRATIQUE NoSQL : Soft delete au lieu de suppression physique
      * AVANTAGES : Auditabilité, récupération possible, statistiques
      * SÉCURITÉ : Je valide ObjectId pour éviter erreurs
-     * 
-     * @param string $avis_id - ID MongoDB de l'avis
-     * @return array - Résultat de l'opération
      */
     public function supprimerAvis($avis_id) 
     {
@@ -702,21 +682,17 @@ class AvisMongo
     }
     
     /**
-     * MÉTHODE EXISTANTE : Je modifie le statut d'un avis (pour l'administration)
+     * Je modifie le statut d'un avis pour l'administration
      * 
      * UTILITÉ ADMIN :
      * - Je modère les avis (masquer, signaler, réactiver)
      * - Je gère les contenus inappropriés
      * - Je workflow de validation des avis
-     * 
-     * @param string $avis_id - ID MongoDB de l'avis
-     * @param string $nouveau_statut - Nouveau statut (actif, masque, signale, supprime, en_attente, refuse)
-     * @return array - Résultat de l'opération
      */
     public function modifierStatutAvis($avis_id, $nouveau_statut) 
     {
         try {
-            // Je valide les statuts autorisés (AJOUT DE NOUVEAUX STATUTS)
+            // Je valide les statuts autorisés
             $statuts_valides = ['actif', 'masque', 'signale', 'supprime', 'en_attente', 'refuse'];
             if (!in_array($nouveau_statut, $statuts_valides)) {
                 return [
@@ -761,8 +737,6 @@ class AvisMongo
     }
 }
 
-// ========== CLASSE AVIS POUR COMPATIBILITÉ VUE ==========
-
 /**
  * Classe Avis pour objets compatibles avec la vue HTML Bootstrap
  * 
@@ -776,9 +750,7 @@ class Avis
     public $trajet_id, $conducteur_id, $note_globale, $criteres, $commentaire, $tags, $date_creation, $statut, $pseudo, $_id, $user_id;
 
     /**
-     * Constructeur - J'hydrate depuis tableau MongoDB
-     * 
-     * @param array $data - Données depuis MongoDB/MySQL fusion
+     * Je constructeur - J'hydrate depuis tableau MongoDB
      */
     public function __construct($data = []) 
     {
@@ -793,10 +765,10 @@ class Avis
         $this->commentaire = $data['commentaire'] ?? '';
         $this->tags = $data['tags'] ?? [];
         $this->date_creation = $data['date_creation'] ?? date('Y-m-d H:i:s');
-        $this->statut = $data['statut'] ?? 'en_attente'; // MODIFIÉ : Je défaut en_attente
+        $this->statut = $data['statut'] ?? 'en_attente'; // Je défaut en_attente
     }
 
-    // ========== GETTERS POUR VUE HTML ==========
+    // Getters pour vue HTML
     
     /** Je récupère l'ID unique de l'avis */
     public function getId() { return $this->_id; }

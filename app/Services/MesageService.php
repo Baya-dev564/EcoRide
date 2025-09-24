@@ -14,7 +14,7 @@ class MessageService
     
     public function __construct()
     {
-        // J'utilise la même connexion qui marche
+        // J'utilise la même connexion qui fonctionne
         $this->mongo = new Manager("mongodb://ecoride:ecoride123@172.18.0.3:27017");
     }
     

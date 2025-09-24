@@ -11,13 +11,11 @@ document.addEventListener('DOMContentLoaded', function() {
     const formRecherche = document.getElementById('formRechercheTrajet');
     if (formRecherche) {
         formRecherche.addEventListener('submit', function(e) {
-            // Traitement de la recherche
+            // Je traite la recherche
         });
     }
 
-    // ========================================
-    // AUTOCOMPLETE POUR LA RECHERCHE DE TRAJETS
-    // ========================================
+    // Autocomplete pour la recherche de trajets
     
     // J'initialise l'autocomplete pour le départ de recherche
     if (document.getElementById('lieu_depart') && typeof PlacesAutocomplete !== 'undefined') {
@@ -31,7 +29,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     document.getElementById('search_depart_lng').value = place.longitude;
                 }
                 
-                console.log('🟢 Point de départ recherche sélectionné:', place.name);
+                console.log('Point de départ recherche sélectionné:', place.name);
             }
         });
     }
@@ -48,14 +46,12 @@ document.addEventListener('DOMContentLoaded', function() {
                     document.getElementById('search_arrivee_lng').value = place.longitude;
                 }
                 
-                console.log('🔴 Point d\'arrivée recherche sélectionné:', place.name);
+                console.log('Point d\'arrivée recherche sélectionné:', place.name);
             }
         });
     }
 
-    // ========================================
-    // GESTION DE LA RÉSERVATION (PAGE DÉTAILS)
-    // ========================================
+    // Gestion de la réservation (page détails)
     
     const formReservation = document.getElementById('formReservation');
     const btnReserver = document.getElementById('btnReserver');

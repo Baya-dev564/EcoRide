@@ -1,11 +1,7 @@
 /**
  * Script JavaScript personnalisé pour le système d'avis EcoRide
- * Gère l'interactivité et les fonctionnalités dynamiques des avis
+ * Je gère l'interactivité et les fonctionnalités dynamiques des avis
  */
-
-// ===========================================
-// VARIABLES GLOBALES ET CONFIGURATION
-// ===========================================
 
 // Configuration générale du système d'avis
 const AVIS_CONFIG = {
@@ -24,9 +20,7 @@ let cachedElements = {
     avisCards: null
 };
 
-// ===========================================
-// FONCTIONS UTILITAIRES
-// ===========================================
+// Fonctions utilitaires
 
 /**
  * Fonction pour récupérer un élément DOM avec cache
@@ -97,10 +91,6 @@ function hideLoader() {
     }
 }
 
-// ===========================================
-// GESTION DES FILTRES
-// ===========================================
-
 /**
  * Classe pour gérer les filtres des avis
  */
@@ -115,7 +105,7 @@ class AvisFilter {
     }
     
     /**
-     * Initialise les événements des filtres
+     * J'initialise les événements des filtres
      */
     initEvents() {
         if (this.filterForm) {
@@ -137,29 +127,29 @@ class AvisFilter {
     }
     
     /**
-     * Applique les filtres sélectionnés
+     * J'applique les filtres sélectionnés
      */
     applyFilters() {
         const noteMin = parseInt(this.noteFilter.value) || 0;
         const datePeriod = this.dateFilter.value;
         
-        // Récupération de toutes les cartes d'avis
+        // Je récupère toutes les cartes d'avis
         const avisCards = getElements('.avis-card');
         let visibleCount = 0;
         
-        // Affichage du loader pendant le filtrage
+        // J'affiche le loader pendant le filtrage
         showLoader(this.avisContainer);
         
-        // Simulation d'un délai pour l'effet de chargement
+        // Je simule un délai pour l'effet de chargement
         setTimeout(() => {
             avisCards.forEach(card => {
                 const noteCard = parseInt(card.dataset.note) || 0;
                 const dateCard = new Date(card.querySelector('.text-muted').textContent.split(' ')[1]);
                 
-                // Vérification du filtre par note
+                // Je vérifie le filtre par note
                 const noteMatch = noteCard >= noteMin;
                 
-                // Vérification du filtre par date
+                // Je vérifie le filtre par date
                 const dateMatch = this.checkDateFilter(dateCard, datePeriod);
                 
                 if (noteMatch && dateMatch) {
@@ -170,13 +160,13 @@ class AvisFilter {
                 }
             });
             
-            // Mise à jour du compteur
+            // Je mets à jour le compteur
             this.updateCounter(visibleCount);
             
-            // Masquage du loader
+            // Je masque le loader
             hideLoader();
             
-            // Affichage d'un message si aucun résultat
+            // J'affiche un message si aucun résultat
             if (visibleCount === 0) {
                 this.showNoResultsMessage();
             } else {
@@ -186,7 +176,7 @@ class AvisFilter {
     }
     
     /**
-     * Vérifie si une date correspond au filtre sélectionné
+     * Je vérifie si une date correspond au filtre sélectionné
      * @param {Date} date - Date à vérifier
      * @param {string} period - Période sélectionnée
      * @returns {boolean} True si la date correspond
@@ -211,7 +201,7 @@ class AvisFilter {
     }
     
     /**
-     * Affiche une carte d'avis avec animation
+     * J'affiche une carte d'avis avec animation
      * @param {Element} card - Carte à afficher
      */
     showCard(card) {
@@ -227,7 +217,7 @@ class AvisFilter {
     }
     
     /**
-     * Masque une carte d'avis avec animation
+     * Je masque une carte d'avis avec animation
      * @param {Element} card - Carte à masquer
      */
     hideCard(card) {
@@ -241,7 +231,7 @@ class AvisFilter {
     }
     
     /**
-     * Met à jour le compteur d'avis
+     * Je mets à jour le compteur d'avis
      * @param {number} count - Nombre d'avis visibles
      */
     updateCounter(count) {
@@ -253,10 +243,10 @@ class AvisFilter {
     }
     
     /**
-     * Affiche le message "Aucun résultat"
+     * J'affiche le message "Aucun résultat"
      */
     showNoResultsMessage() {
-        this.hideNoResultsMessage(); // Supprimer le message précédent s'il existe
+        this.hideNoResultsMessage(); // Je supprime le message précédent s'il existe
         
         const message = document.createElement('div');
         message.className = 'alert alert-warning text-center py-4';
@@ -275,7 +265,7 @@ class AvisFilter {
     }
     
     /**
-     * Masque le message "Aucun résultat"
+     * Je masque le message "Aucun résultat"
      */
     hideNoResultsMessage() {
         const message = getElement('#noResultsMessage');
@@ -285,7 +275,7 @@ class AvisFilter {
     }
     
     /**
-     * Efface tous les filtres
+     * J'efface tous les filtres
      */
     clearFilters() {
         this.noteFilter.value = '';
@@ -293,10 +283,6 @@ class AvisFilter {
         this.applyFilters();
     }
 }
-
-// ===========================================
-// GESTION DU TRI
-// ===========================================
 
 /**
  * Classe pour gérer le tri des avis
@@ -310,7 +296,7 @@ class AvisSort {
     }
     
     /**
-     * Initialise les événements de tri
+     * J'initialise les événements de tri
      */
     initEvents() {
         this.sortButtons.forEach(button => {
@@ -324,13 +310,13 @@ class AvisSort {
     }
     
     /**
-     * Trie les avis selon le type spécifié
+     * Je trie les avis selon le type spécifié
      * @param {string} sortType - Type de tri (date, note, note-desc)
      */
     sortAvis(sortType) {
         const avisCards = Array.from(getElements('.avis-card'));
         
-        // Tri des cartes selon le type
+        // Je trie les cartes selon le type
         avisCards.sort((a, b) => {
             switch (sortType) {
                 case 'date':
@@ -345,7 +331,7 @@ class AvisSort {
             }
         });
         
-        // Réorganisation des cartes dans le DOM
+        // Je réorganise les cartes dans le DOM
         avisCards.forEach((card, index) => {
             card.style.order = index;
             card.style.animation = `fadeIn 0.5s ease ${index * 0.1}s both`;
@@ -353,7 +339,7 @@ class AvisSort {
     }
     
     /**
-     * Met à jour l'apparence du bouton de tri actif
+     * Je mets à jour l'apparence du bouton de tri actif
      * @param {Element} activeButton - Bouton actuellement actif
      */
     updateSortButton(activeButton) {
@@ -363,10 +349,6 @@ class AvisSort {
         activeButton.classList.add('active');
     }
 }
-
-// ===========================================
-// GESTION DES ÉTOILES (POUR LE FORMULAIRE)
-// ===========================================
 
 /**
  * Classe pour gérer l'affichage interactif des étoiles
@@ -382,7 +364,7 @@ class StarRating {
     }
     
     /**
-     * Initialise les événements des étoiles
+     * J'initialise les événements des étoiles
      */
     initEvents() {
         this.stars.forEach((star, index) => {
@@ -401,7 +383,7 @@ class StarRating {
     }
     
     /**
-     * Définit la note sélectionnée
+     * Je définis la note sélectionnée
      * @param {number} rating - Note sélectionnée
      */
     setRating(rating) {
@@ -411,7 +393,7 @@ class StarRating {
     }
     
     /**
-     * Met en surbrillance les étoiles
+     * Je mets en surbrillance les étoiles
      * @param {number} count - Nombre d'étoiles à mettre en surbrillance
      */
     highlightStars(count) {
@@ -427,10 +409,6 @@ class StarRating {
     }
 }
 
-// ===========================================
-// GESTION DES ANIMATIONS
-// ===========================================
-
 /**
  * Classe pour gérer les animations des avis
  */
@@ -441,7 +419,7 @@ class AvisAnimations {
     }
     
     /**
-     * Initialise les animations au défilement
+     * J'initialise les animations au défilement
      */
     initScrollAnimations() {
         // Intersection Observer pour les animations d'apparition
@@ -453,14 +431,14 @@ class AvisAnimations {
             });
         });
         
-        // Observation des cartes d'avis
+        // J'observe les cartes d'avis
         getElements('.avis-card').forEach(card => {
             observer.observe(card);
         });
     }
     
     /**
-     * Initialise les animations au survol
+     * J'initialise les animations au survol
      */
     initHoverAnimations() {
         getElements('.avis-card').forEach(card => {
@@ -477,16 +455,12 @@ class AvisAnimations {
     }
 }
 
-// ===========================================
-// GESTION DES NOTIFICATIONS
-// ===========================================
-
 /**
  * Classe pour gérer les notifications utilisateur
  */
 class AvisNotifications {
     /**
-     * Affiche une notification de succès
+     * J'affiche une notification de succès
      * @param {string} message - Message à afficher
      */
     static showSuccess(message) {
@@ -494,7 +468,7 @@ class AvisNotifications {
     }
     
     /**
-     * Affiche une notification d'erreur
+     * J'affiche une notification d'erreur
      * @param {string} message - Message à afficher
      */
     static showError(message) {
@@ -502,16 +476,16 @@ class AvisNotifications {
     }
     
     /**
-     * Affiche une notification
+     * J'affiche une notification
      * @param {string} message - Message à afficher
      * @param {string} type - Type de notification (success, error, info)
      */
     static showNotification(message, type = 'info') {
-        // Suppression des notifications précédentes
+        // Je supprime les notifications précédentes
         const existingNotifications = getElements('.avis-notification');
         existingNotifications.forEach(notif => notif.remove());
         
-        // Création de la notification
+        // Je crée la notification
         const notification = document.createElement('div');
         notification.className = `alert alert-${type === 'error' ? 'danger' : type} alert-dismissible fade show avis-notification`;
         notification.style.position = 'fixed';
@@ -526,10 +500,10 @@ class AvisNotifications {
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         `;
         
-        // Ajout au DOM
+        // J'ajoute au DOM
         document.body.appendChild(notification);
         
-        // Suppression automatique après 5 secondes
+        // Je supprime automatiquement après 5 secondes
         setTimeout(() => {
             if (notification.parentNode) {
                 notification.remove();
@@ -538,41 +512,37 @@ class AvisNotifications {
     }
 }
 
-// ===========================================
-// INITIALISATION DE L'APPLICATION
-// ===========================================
-
 /**
  * Fonction d'initialisation principale
  */
 function initAvisSystem() {
-    // Vérification que le DOM est chargé
+    // Je vérifie que le DOM est chargé
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', initAvisSystem);
         return;
     }
     
-    // Initialisation des différentes fonctionnalités
+    // J'initialise les différentes fonctionnalités
     const avisFilter = new AvisFilter();
     const avisSort = new AvisSort();
     const avisAnimations = new AvisAnimations();
     
-    // Initialisation des étoiles pour les formulaires
+    // J'initialise les étoiles pour les formulaires
     getElements('.star-rating').forEach(container => {
         new StarRating(container);
     });
     
-    // Gestion des messages d'URL (success, error)
+    // Je gère les messages d'URL (success, error)
     handleUrlMessages();
     
-    // Exposition des instances globales pour le débogage
+    // J'expose les instances globales pour le débogage
     window.avisFilter = avisFilter;
     window.avisSort = avisSort;
     window.avisAnimations = avisAnimations;
 }
 
 /**
- * Gestion des messages passés en paramètre URL
+ * Je gère les messages passés en paramètre URL
  */
 function handleUrlMessages() {
     const urlParams = new URLSearchParams(window.location.search);
@@ -586,9 +556,5 @@ function handleUrlMessages() {
     }
 }
 
-// ===========================================
-// LANCEMENT DE L'APPLICATION
-// ===========================================
-
-// Initialisation automatique du système
+// J'initialise automatiquement le système
 initAvisSystem();

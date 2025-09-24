@@ -1,6 +1,6 @@
 <?php
 /**
- * Contrôleur pour la gestion du profil utilisateur EcoRide
+ * UserController - Contrôleur pour la gestion du profil utilisateur EcoRide
  * 
  * Ce contrôleur gère toutes les opérations liées au profil utilisateur :
  * - Affichage du profil avec statistiques personnalisées et impact écologique
@@ -9,40 +9,33 @@
  * - Historique des activités (trajets proposés et réservations effectuées)
  * - Calcul de l'impact écologique personnel (CO₂ économisé)
  * - API AJAX pour une expérience utilisateur fluide
- * 
- * Architecture : Utilise la connexion PDO centralisée depuis config/database.php
  */
 
 class UserController
 {
     /**
-     * Affiche le profil complet de l'utilisateur connecté
+     * J'affiche le profil complet de l'utilisateur connecté
      */
     public function profil()
     {
-         
-        
-        // Vérification que l'utilisateur est connecté (sécurité obligatoire)
+        // Je vérifie que l'utilisateur est connecté
         if (!isset($_SESSION['user'])) {
             $_SESSION['message'] = 'Vous devez être connecté pour accéder à votre profil.';
             header('Location: /connexion');
             exit;
         }
         
-        // CORRECTION : Utilisation de l'architecture centralisée
-        // Inclusion de la configuration de base de données centralisée
+        // J'utilise l'architecture centralisée
         require_once __DIR__ . '/../../config/database.php';
         require_once __DIR__ . '/../Models/User.php';
         
-        // Récupération de la connexion PDO globale
+        // Je récupère la connexion PDO globale
         global $pdo;
         
-        // Instanciation du modèle User avec la connexion PDO
-        // IMPORTANT : Passage de $pdo au constructeur (architecture corrigée)
+        // J'instancie le modèle User avec la connexion PDO
         $userModel = new User($pdo);
         
-        // Récupération des données utilisateur actualisées depuis la base
-        // Important pour avoir les crédits et informations à jour
+        // Je récupère les données utilisateur actualisées depuis la base
         $userData = $userModel->getUserById($_SESSION['user']['id']);
         
         if (!$userData) {
@@ -51,47 +44,40 @@ class UserController
             exit;
         }
         
-        // Mise à jour des données de session avec les informations actuelles
-        // Garantit que les crédits affichés sont corrects
+        // Je mets à jour les données de session avec les informations actuelles
         $_SESSION['user'] = $userData;
         
-        // Variables pour la vue Bootstrap 5
+        // Je prépare les variables pour la vue Bootstrap 5
         $title = "Mon profil | EcoRide - Votre espace personnel";
         $user = $userData;
         $message = $_SESSION['message'] ?? '';
-        unset($_SESSION['message']); // Nettoyage après affichage
+        unset($_SESSION['message']); // Je nettoie après affichage
         
-        // Calcul des statistiques personnalisées pour l'affichage
-        // Selon l'énoncé : montrer l'impact écologique de l'utilisateur
+        // Je calcule les statistiques personnalisées pour l'affichage
         $stats = $this->getStatistiquesUtilisateur($userData['id']);
         
-        // Affichage de la vue profil avec Bootstrap 5 et JavaScript
+        // J'affiche la vue profil avec Bootstrap 5 et JavaScript
         require __DIR__ . '/../Views/user/profil.php';
-        
     }
     
     /**
-     * Traite la modification du profil utilisateur via AJAX
-     * 
-     * Cette méthode gère la modification des informations personnelles
-     * de l'utilisateur avec validation côté serveur et mi2se à jour sécurisée.
-     * Elle vérifie l'unicité du pseudo et de l'email .
+     * Je traite la modification du profil utilisateur via AJAX
      */
     public function modifierProfil()
     {
-        // Vérification que l'utilisateur est connecté
+        // Je vérifie que l'utilisateur est connecté
         if (!isset($_SESSION['user'])) {
             echo json_encode(['succes' => false, 'erreur' => 'Vous devez être connecté.']);
             return;
         }
         
-        // Vérification que c'est une requête POST pour sécurité
+        // Je vérifie que c'est une requête POST pour sécurité
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             echo json_encode(['succes' => false, 'erreur' => 'Méthode non autorisée.']);
             return;
         }
         
-        // Récupération et nettoyage des données du formulaire
+        // Je récupère et nettoie les données du formulaire
         $data = [
             'pseudo' => trim($_POST['pseudo'] ?? ''),
             'email' => trim($_POST['email'] ?? ''),
@@ -105,8 +91,7 @@ class UserController
             'permis_conduire' => isset($_POST['permis_conduire']) ? 1 : 0
         ];
         
-        
-        // Validation des données côté serveur (sécurité)
+        // Je valide les données côté serveur pour la sécurité
         $erreurs = $this->validerDonneesProfil($data, $_SESSION['user']['id']);
         
         if (!empty($erreurs)) {
@@ -114,29 +99,29 @@ class UserController
             return;
         }
         
-        // CORRECTION : Utilisation du modèle avec architecture centralisée
+        // J'utilise le modèle avec architecture centralisée
         require_once __DIR__ . '/../../config/database.php';
         require_once __DIR__ . '/../Models/User.php';
         
         global $pdo;
         $userModel = new User($pdo);
         
-        // Mise à jour via le modèle User (logique métier dans le modèle)
+        // Je mets à jour via le modèle User
         $resultat = $userModel->mettreAJourProfil($_SESSION['user']['id'], $data);
         
         if ($resultat['succes']) {
-            // Mise à jour des données de session avec les nouvelles informations
+            // Je mets à jour les données de session avec les nouvelles informations
             foreach ($data as $key => $value) {
                 $_SESSION['user'][$key] = $value;
             }
             
-            // Réponse JSON de succès pour le JavaScript
+            // Je retourne une réponse JSON de succès pour le JavaScript
             echo json_encode([
                 'succes' => true,
                 'message' => 'Profil mis à jour avec succès !'
             ]);
         } else {
-            // Réponse JSON d'erreur pour le JavaScript
+            // Je retourne une réponse JSON d'erreur pour le JavaScript
             echo json_encode([
                 'succes' => false,
                 'erreur' => $resultat['erreur']
@@ -145,19 +130,11 @@ class UserController
     }
     
     /**
-     * Affiche l'historique complet des activités de l'utilisateur
-     * 
-     * Cette méthode récupère et affiche l'historique complet des activités
-     * de l'utilisateur selon l'énoncé EcoRide :
-     * - Trajets proposés avec statistiques de réservation
-     * - Réservations effectuées avec détails des trajets
-     * - Calcul de l'impact écologique total
-     * 
-     * Route : GET /historique
+     * J'affiche l'historique complet des activités de l'utilisateur
      */
     public function historique()
     {
-        // Vérification que l'utilisateur est connecté
+        // Je vérifie que l'utilisateur est connecté
         if (!isset($_SESSION['user'])) {
             $_SESSION['message'] = 'Vous devez être connecté pour voir votre historique.';
             header('Location: /connexion');
@@ -172,42 +149,38 @@ class UserController
         $tripModel = new Trip($pdo);
         $reservationModel = new Reservation($pdo);
         
-        // Récupération de l'historique complet
+        // Je récupère l'historique complet
         $trajetsProposés = $tripModel->getTrajetsUtilisateur($_SESSION['user']['id']);
         $reservations = $reservationModel->getReservationsUtilisateur($_SESSION['user']['id']);
         
-        // Variables pour la vue Bootstrap 5
+        // Je prépare les variables pour la vue Bootstrap 5
         $title = "Mon historique | EcoRide - Votre impact écologique";
         $user = $_SESSION['user'];
         $message = $_SESSION['message'] ?? '';
         unset($_SESSION['message']);
         
-        // Affichage de la vue historique avec Bootstrap 5
+        // J'affiche la vue historique avec Bootstrap 5
         require __DIR__ . '/../Views/user/historique.php';
     }
     
     /**
-     * Ajoute un véhicule pour l'utilisateur connecté via AJAX
-     * 
-     * Cette méthode gère l'ajout d'un nouveau véhicule dans le profil
-     * utilisateur selon l'énoncé EcoRide. Elle supporte les véhicules
-     * électriques avec badge spécial pour encourager l'éco-mobilité.
+     * J'ajoute un véhicule pour l'utilisateur connecté via AJAX
      */
     public function ajouterVehicule()
     {
-        // Vérification que l'utilisateur est connecté
+        // Je vérifie que l'utilisateur est connecté
         if (!isset($_SESSION['user'])) {
             echo json_encode(['succes' => false, 'erreur' => 'Vous devez être connecté.']);
             return;
         }
         
-        // Vérification que c'est une requête POST pour sécurité
+        // Je vérifie que c'est une requête POST pour sécurité
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             echo json_encode(['succes' => false, 'erreur' => 'Méthode non autorisée.']);
             return;
         }
         
-        // Récupération des données du formulaire véhicule
+        // Je récupère les données du formulaire véhicule
         $data = [
             'marque' => trim($_POST['marque'] ?? ''),
             'modele' => trim($_POST['modele'] ?? ''),
@@ -217,7 +190,7 @@ class UserController
             'electrique' => isset($_POST['electrique']) ? 1 : 0
         ];
         
-        // Validation des données véhicule
+        // Je valide les données véhicule
         $erreurs = $this->validerDonneesVehicule($data);
         
         if (!empty($erreurs)) {
@@ -226,34 +199,30 @@ class UserController
         }
         
         try {
-            //Utilisation de la connexion centralisée
+            // J'utilise la connexion centralisée
             require_once __DIR__ . '/../../config/database.php';
             global $pdo;
             
-            // Insertion du véhicule en base de données avec toutes les colonnes nécessaires
-          
-          $sql = "INSERT INTO vehicules (utilisateur_id, marque, modele, plaque_immatriculation, couleur, electrique, nb_places, created_at) 
-           VALUES (?, ?, ?, ?, ?, ?, ?, NOW())";
-
+            // J'insère le véhicule en base de données avec toutes les colonnes nécessaires
+            $sql = "INSERT INTO vehicules (utilisateur_id, marque, modele, plaque_immatriculation, couleur, electrique, nb_places, created_at) 
+                    VALUES (?, ?, ?, ?, ?, ?, ?, NOW())";
 
             $stmt = $pdo->prepare($sql);
-            $resultat = 
-            $stmt->execute([
-            $_SESSION['user']['id'],
-            $data['marque'],
-            $data['modele'],
-            $data['plaque_immatriculation'],
-            $data['couleur'],
-            $data['electrique'],
-            $data['places_disponibles'] // Le formulaire envoie places_disponibles mais on l'insère dans nb_places
-             ]);
-
+            $resultat = $stmt->execute([
+                $_SESSION['user']['id'],
+                $data['marque'],
+                $data['modele'],
+                $data['plaque_immatriculation'],
+                $data['couleur'],
+                $data['electrique'],
+                $data['places_disponibles'] // Le formulaire envoie places_disponibles mais je l'insère dans nb_places
+            ]);
 
             if ($resultat) {
-                // Message de succès avec encouragement écologique
+                // Je prépare un message de succès avec encouragement écologique
                 $message = 'Véhicule ajouté avec succès !';
                 if ($data['electrique']) {
-                    $message .= ' Merci de contribuer à la mobilité écologique ! 🌱';
+                    $message .= ' Merci de contribuer à la mobilité écologique !';
                 }
                 
                 echo json_encode([
@@ -277,38 +246,35 @@ class UserController
     }
 
     /**
-     * Récupère les véhicules de l'utilisateur connecté via AJAX
-     * 
-     * Cette méthode retourne la liste complète des véhicules de l'utilisateur
-     * au format JSON pour l'affichage dynamique dans le profil avec JavaScript.
+     * Je récupère les véhicules de l'utilisateur connecté via AJAX
      */
     public function mesVehicules()
     {
-        // Vérification que l'utilisateur est connecté
+        // Je vérifie que l'utilisateur est connecté
         if (!isset($_SESSION['user'])) {
             echo json_encode(['succes' => false, 'erreur' => 'Vous devez être connecté.']);
             return;
         }
         
         try {
-            // CORRECTION : Utilisation de la connexion centralisée
+            // J'utilise la connexion centralisée
             require_once __DIR__ . '/../../config/database.php';
             global $pdo;
             
-            // Récupération des véhicules de l'utilisateur avec tri par date
+            // Je récupère les véhicules de l'utilisateur avec tri par date
             $sql = "SELECT * FROM vehicules WHERE utilisateur_id = ? ORDER BY created_at DESC";
             $stmt = $pdo->prepare($sql);
             $stmt->execute([$_SESSION['user']['id']]);
             
             $vehicules = $stmt->fetchAll(PDO::FETCH_ASSOC);
             
-            // Enrichissement des données pour l'affichage
+            // J'enrichis les données pour l'affichage
             foreach ($vehicules as &$vehicule) {
                 $vehicule['date_ajout_formatee'] = date('d/m/Y', strtotime($vehicule['created_at']));
                 $vehicule['badge_ecologique'] = $vehicule['electrique'] ? 'Véhicule électrique' : null;
             }
             
-            // Réponse JSON avec la liste des véhicules
+            // Je retourne une réponse JSON avec la liste des véhicules
             echo json_encode([
                 'succes' => true,
                 'vehicules' => $vehicules
@@ -324,20 +290,17 @@ class UserController
     }
 
     /**
-     * Supprime un véhicule de l'utilisateur via AJAX
-     * 
-     * Cette méthode gère la suppression sécurisée d'un véhicule du profil
-     * utilisateur avec vérification de propriété pour éviter les abus.
+     * Je supprime un véhicule de l'utilisateur via AJAX
      */
     public function supprimerVehicule($vehiculeId)
     {
-        // Vérification que l'utilisateur est connecté
+        // Je vérifie que l'utilisateur est connecté
         if (!isset($_SESSION['user'])) {
             echo json_encode(['succes' => false, 'erreur' => 'Vous devez être connecté.']);
             return;
         }
         
-        // Validation de l'ID du véhicule
+        // Je valide l'ID du véhicule
         $vehiculeId = intval($vehiculeId);
         if ($vehiculeId <= 0) {
             echo json_encode(['succes' => false, 'erreur' => 'ID de véhicule invalide.']);
@@ -348,8 +311,7 @@ class UserController
             require_once __DIR__ . '/../../config/database.php';
             global $pdo;
             
-            // Suppression sécurisée : vérification de propriété dans la requête SQL
-            // Sécurité : un utilisateur ne peut supprimer que ses propres véhicules
+            // Je supprime de façon sécurisée avec vérification de propriété
             $sql = "DELETE FROM vehicules WHERE id = ? AND utilisateur_id = ?";
             $stmt = $pdo->prepare($sql);
             $resultat = $stmt->execute([$vehiculeId, $_SESSION['user']['id']]);
@@ -376,33 +338,30 @@ class UserController
     }
     
     /**
-     * Modifie un véhicule existant via AJAX
-     * 
-     * Cette méthode permet de modifier les caractéristiques d'un véhicule
-     * existant avec validation et vérification de propriété.
+     * Je modifie un véhicule existant via AJAX
      */
     public function modifierVehicule($vehiculeId)
     {
-        // Vérification que l'utilisateur est connecté
+        // Je vérifie que l'utilisateur est connecté
         if (!isset($_SESSION['user'])) {
             echo json_encode(['succes' => false, 'erreur' => 'Vous devez être connecté.']);
             return;
         }
         
-        // Vérification que c'est une requête POST
+        // Je vérifie que c'est une requête POST
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             echo json_encode(['succes' => false, 'erreur' => 'Méthode non autorisée.']);
             return;
         }
         
-        // Validation de l'ID du véhicule
+        // Je valide l'ID du véhicule
         $vehiculeId = intval($vehiculeId);
         if ($vehiculeId <= 0) {
             echo json_encode(['succes' => false, 'erreur' => 'ID de véhicule invalide.']);
             return;
         }
         
-        // Récupération des données de modification
+        // Je récupère les données de modification
         $data = [
             'marque' => trim($_POST['marque'] ?? ''),
             'modele' => trim($_POST['modele'] ?? ''),
@@ -412,7 +371,7 @@ class UserController
             'electrique' => isset($_POST['electrique']) ? 1 : 0
         ];
         
-        // Validation des données
+        // Je valide les données
         $erreurs = $this->validerDonneesVehicule($data);
         
         if (!empty($erreurs)) {
@@ -424,7 +383,7 @@ class UserController
             require_once __DIR__ . '/../../config/database.php';
             global $pdo;
             
-            // Mise à jour sécurisée avec vérification de propriété
+            // Je mets à jour de façon sécurisée avec vérification de propriété
             $sql = "UPDATE vehicules 
                     SET marque = ?, modele = ?, couleur = ?, plaque_immatriculation = ?, places_disponibles = ?, electrique = ?, updated_at = NOW() 
                     WHERE id = ? AND utilisateur_id = ?";
@@ -463,25 +422,22 @@ class UserController
     }
     
     /**
-     * Récupère les statistiques de crédits de l'utilisateur via AJAX
-     * 
-     * Cette méthode retourne l'historique détaillé des transactions de crédits
-     * pour affichage dans le profil utilisateur.
+     * Je récupère les statistiques de crédits de l'utilisateur via AJAX
      */
     public function historiqueCredits()
     {
-        // Vérification que l'utilisateur est connecté
+        // Je vérifie que l'utilisateur est connecté
         if (!isset($_SESSION['user'])) {
             echo json_encode(['succes' => false, 'erreur' => 'Vous devez être connecté.']);
             return;
         }
         
         try {
-            // CORRECTION : Utilisation de la connexion centralisée
+            // J'utilise la connexion centralisée
             require_once __DIR__ . '/../../config/database.php';
             global $pdo;
             
-            // Récupération de l'historique des transactions de crédits
+            // Je récupère l'historique des transactions de crédits
             $sql = "SELECT tc.*, t.lieu_depart, t.lieu_arrivee 
                     FROM transactions_credits tc
                     LEFT JOIN trajets t ON tc.trajet_id = t.id
@@ -494,7 +450,7 @@ class UserController
             
             $transactions = $stmt->fetchAll(PDO::FETCH_ASSOC);
             
-            // Enrichissement des données pour l'affichage
+            // J'enrichis les données pour l'affichage
             foreach ($transactions as &$transaction) {
                 $transaction['date_formatee'] = date('d/m/Y H:i', strtotime($transaction['date_transaction']));
                 $transaction['type_libelle'] = $transaction['type_transaction'] === 'credit' ? 'Crédit' : 'Débit';
@@ -516,55 +472,47 @@ class UserController
     }
     
     /**
-     * Récupère les statistiques personnalisées de l'utilisateur
-     * 
-     * Cette méthode calcule les statistiques personnelles de l'utilisateur
-     *  trajets proposés, réservations, crédits, impact écologique.
-     * Elle utilise la connexion centralisée pour toutes les requêtes.
-     * 
-     * @param int $userId ID de l'utilisateur
-     * @return array Statistiques complètes pour l'affichage
+     * Je récupère les statistiques personnalisées de l'utilisateur
      */
     private function getStatistiquesUtilisateur($userId)
     {
         try {
-            
             require_once __DIR__ . '/../../config/database.php';
             global $pdo;
             
-            // Nombre de trajets proposés par l'utilisateur
+            // Je compte le nombre de trajets proposés par l'utilisateur
             $sql = "SELECT COUNT(*) FROM trajets WHERE conducteur_id = ?";
             $stmt = $pdo->prepare($sql);
             $stmt->execute([$userId]);
             $trajetsProposés = $stmt->fetchColumn();
             
-            // Nombre de réservations effectuées par l'utilisateur
+            // Je compte le nombre de réservations effectuées par l'utilisateur
             $sql = "SELECT COUNT(*) FROM reservations WHERE passager_id = ? AND statut = 'confirme'";
             $stmt = $pdo->prepare($sql);
             $stmt->execute([$userId]);
             $reservationsEffectuées = $stmt->fetchColumn();
             
-            // Total des crédits gagnés (revenus des trajets)
+            // Je calcule le total des crédits gagnés
             $sql = "SELECT COALESCE(SUM(montant), 0) FROM transactions_credits 
                     WHERE utilisateur_id = ? AND type_transaction = 'credit' AND source != 'inscription'";
             $stmt = $pdo->prepare($sql);
             $stmt->execute([$userId]);
             $creditsGagnés = $stmt->fetchColumn();
             
-            // Total des crédits dépensés (réservations)
+            // Je calcule le total des crédits dépensés
             $sql = "SELECT COALESCE(SUM(ABS(montant)), 0) FROM transactions_credits 
                     WHERE utilisateur_id = ? AND type_transaction = 'debit'";
             $stmt = $pdo->prepare($sql);
             $stmt->execute([$userId]);
             $creditsDépensés = $stmt->fetchColumn();
             
-            // Date d'inscription pour calculer l'ancienneté
+            // Je récupère la date d'inscription pour calculer l'ancienneté
             $sql = "SELECT created_at FROM utilisateurs WHERE id = ?";
             $stmt = $pdo->prepare($sql);
             $stmt->execute([$userId]);
             $dateInscription = $stmt->fetchColumn();
             
-            // Calcul de l'impact écologique personnel 
+            // Je calcule l'impact écologique personnel
             $impactEcologique = $this->calculerImpactEcologique($userId);
             
             return [
@@ -582,7 +530,7 @@ class UserController
         } catch (PDOException $e) {
             error_log("Erreur statistiques utilisateur EcoRide : " . $e->getMessage());
             
-            // Retour de statistiques par défaut en cas d'erreur
+            // Je retourne des statistiques par défaut en cas d'erreur
             return [
                 'trajets_proposés' => 0,
                 'reservations_effectuées' => 0,
@@ -598,15 +546,7 @@ class UserController
     }
     
     /**
-     * Calcule l'impact écologique personnel de l'utilisateur
-     * 
-     * Cette méthode calcule l'impact écologique :
-     * - CO₂ économisé grâce au covoiturage (120g/km)
-     * - Kilomètres partagés (trajets + réservations)
-     * - Carburant économisé (7L/100km)
-     * 
-     * @param int $userId ID de l'utilisateur
-     * @return array Impact écologique calculé
+     * Je calcule l'impact écologique personnel de l'utilisateur
      */
     private function calculerImpactEcologique($userId)
     {
@@ -614,7 +554,7 @@ class UserController
             require_once __DIR__ . '/../../config/database.php';
             global $pdo;
             
-            // Calcul des kilomètres partagés via les trajets proposés
+            // Je calcule les kilomètres partagés via les trajets proposés
             $sql = "SELECT COALESCE(SUM(t.distance_km * COALESCE(r.nb_places_total, 0)), 0) as km_trajets
                     FROM trajets t
                     LEFT JOIN (
@@ -629,7 +569,7 @@ class UserController
             $stmt->execute([$userId]);
             $kmTrajets = $stmt->fetchColumn();
             
-            // Calcul des kilomètres partagés via les réservations effectuées
+            // Je calcule les kilomètres partagés via les réservations effectuées
             $sql = "SELECT COALESCE(SUM(t.distance_km * r.nb_places), 0) as km_reservations
                     FROM reservations r
                     JOIN trajets t ON r.trajet_id = t.id
@@ -639,10 +579,10 @@ class UserController
             $stmt->execute([$userId]);
             $kmReservations = $stmt->fetchColumn();
             
-            // Total des kilomètres partagés
+            // Je calcule le total des kilomètres partagés
             $kmPartages = $kmTrajets + $kmReservations;
             
-            // Calculs écologiques selon l'énoncé EcoRide
+            // Je calcule l'impact écologique selon l'énoncé EcoRide
             $co2Economise = round($kmPartages * 0.12, 1); // 120g CO₂/km
             $carburantEconomise = round($kmPartages * 0.07, 1); // 7L/100km
             
@@ -664,19 +604,13 @@ class UserController
     }
     
     /**
-     * Valide les données de modification du profil
-     * 
-     * Cette méthode effectue une validation complète des données du profil.
-     * 
-     * @param array $data Données à valider
-     * @param int $userId ID de l'utilisateur actuel (pour exclure de l'unicité)
-     * @return array Erreurs de validation
+     * Je valide les données de modification du profil
      */
     private function validerDonneesProfil($data, $userId)
     {
         $erreurs = [];
         
-        // Validation du pseudo 
+        // Je valide le pseudo
         if (empty($data['pseudo'])) {
             $erreurs[] = 'Le pseudo est obligatoire.';
         } elseif (strlen($data['pseudo']) < 3) {
@@ -687,7 +621,7 @@ class UserController
             $erreurs[] = 'Le pseudo ne peut contenir que des lettres, chiffres, tirets et underscores.';
         }
         
-        // Validation de l'email
+        // Je valide l'email
         if (empty($data['email'])) {
             $erreurs[] = 'L\'adresse email est obligatoire.';
         } elseif (!filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
@@ -696,27 +630,27 @@ class UserController
             $erreurs[] = 'L\'adresse email est trop longue.';
         }
         
-        // Validation du téléphone (optionnel)
+        // Je valide le téléphone (optionnel)
         if (!empty($data['telephone']) && !preg_match('/^[0-9+\-\s\.]{10,15}$/', $data['telephone'])) {
             $erreurs[] = 'Le numéro de téléphone n\'est pas valide.';
         }
         
-        // Validation de la bio (optionnelle)
+        // Je valide la bio (optionnelle)
         if (!empty($data['bio']) && strlen($data['bio']) > 500) {
             $erreurs[] = 'La biographie ne peut pas dépasser 500 caractères.';
         }
         
-        // Validation du code postal (optionnel)
+        // Je valide le code postal (optionnel)
         if (!empty($data['code_postal']) && !preg_match('/^\d{5}$/', $data['code_postal'])) {
             $erreurs[] = 'Le code postal doit contenir exactement 5 chiffres.';
         }
         
-        // Vérification de l'unicité du pseudo et email (sauf pour l'utilisateur actuel)
+        // Je vérifie l'unicité du pseudo et email
         try {
             require_once __DIR__ . '/../../config/database.php';
             global $pdo;
             
-            // Vérification unicité du pseudo
+            // Je vérifie l'unicité du pseudo
             $sql = "SELECT COUNT(*) FROM utilisateurs WHERE pseudo = ? AND id != ?";
             $stmt = $pdo->prepare($sql);
             $stmt->execute([$data['pseudo'], $userId]);
@@ -724,7 +658,7 @@ class UserController
                 $erreurs[] = 'Ce pseudo est déjà utilisé par un autre utilisateur.';
             }
             
-            // Vérification unicité de l'email
+            // Je vérifie l'unicité de l'email
             $sql = "SELECT COUNT(*) FROM utilisateurs WHERE email = ? AND id != ?";
             $stmt = $pdo->prepare($sql);
             $stmt->execute([$data['email'], $userId]);
@@ -741,19 +675,13 @@ class UserController
     }
     
     /**
-     * Valide les données d'un véhicule
-     * 
-     * Cette méthode valide les données d'un véhicule 
-     * avec support spécial pour les véhicules électriques.
-     * 
-     * @param array $data Données à valider
-     * @return array Erreurs de validation
+     * Je valide les données d'un véhicule
      */
     private function validerDonneesVehicule($data)
     {
         $erreurs = [];
         
-        // Validation de la marque (obligatoire)
+        // Je valide la marque
         if (empty($data['marque'])) {
             $erreurs[] = 'La marque est obligatoire.';
         } elseif (strlen($data['marque']) < 2) {
@@ -762,7 +690,7 @@ class UserController
             $erreurs[] = 'La marque ne peut pas dépasser 50 caractères.';
         }
         
-        // Validation du modèle (obligatoire)
+        // Je valide le modèle
         if (empty($data['modele'])) {
             $erreurs[] = 'Le modèle est obligatoire.';
         } elseif (strlen($data['modele']) < 1) {
@@ -771,24 +699,24 @@ class UserController
             $erreurs[] = 'Le modèle ne peut pas dépasser 50 caractères.';
         }
         
-        // Validation de la plaque d'immatriculation (obligatoire)
+        // Je valide la plaque d'immatriculation
         if (empty($data['plaque_immatriculation'])) {
             $erreurs[] = 'La plaque d\'immatriculation est obligatoire.';
         } elseif (!preg_match('/^[A-Z]{2}-\d{3}-[A-Z]{2}$/', $data['plaque_immatriculation'])) {
             $erreurs[] = 'La plaque d\'immatriculation doit respecter le format français : AB-123-CD.';
         }
         
-        // Validation de la couleur (optionnelle)
+        // Je valide la couleur
         if (!empty($data['couleur']) && strlen($data['couleur']) > 30) {
             $erreurs[] = 'La couleur ne peut pas dépasser 30 caractères.';
         }
         
-        // Validation du nombre de places
+        // Je valide le nombre de places
         if (!isset($data['places_disponibles']) || $data['places_disponibles'] < 1 || $data['places_disponibles'] > 8) {
             $erreurs[] = 'Le nombre de places disponibles doit être entre 1 et 8.';
         }
         
-        // Validation du type électrique (booléen)
+        // Je valide le type électrique
         if (!isset($data['electrique']) || !in_array($data['electrique'], [0, 1])) {
             $data['electrique'] = 0; // Valeur par défaut
         }
@@ -797,13 +725,7 @@ class UserController
     }
     
     /**
-     * Calcule la durée d'inscription de l'utilisateur
-     * 
-     * Cette méthode calcule depuis quand l'utilisateur est membre d'EcoRide
-     * pour affichage dans le profil.
-     * 
-     * @param string $dateInscription Date d'inscription au format MySQL
-     * @return string Durée formatée pour l'affichage
+     * Je calcule la durée d'inscription de l'utilisateur
      */
     private function calculerDureeInscription($dateInscription)
     {
@@ -816,7 +738,7 @@ class UserController
             $maintenant = new DateTime();
             $duree = $inscription->diff($maintenant);
             
-            // Formatage selon la durée
+            // Je formate selon la durée
             if ($duree->y > 0) {
                 return $duree->y . ' an' . ($duree->y > 1 ? 's' : '');
             } elseif ($duree->m > 0) {

@@ -1,29 +1,29 @@
 <?php
 /**
- * Admin Model - Version complète avec gestion utilisateurs avancée
- * Toutes les fonctionnalités : dashboard, avis MongoDB, et nouvelles méthodes users
+ * Admin Model - Modèle complet avec gestion utilisateurs avancée
+ * Toutes les fonctionnalités : dashboard, avis MongoDB, et gestion utilisateurs
  * Version corrigée pour éviter les erreurs number_format()
  */
 
-// J'inclus le modèle MongoDB comme AvisController
+// J'inclus le modèle MongoDB comme dans AvisController
 require_once __DIR__ . '/avis-mongo.php';
 
 class Admin
 {
     private $pdo;
-    private $avisMongo; // ← Comme dans AvisController !
+    private $avisMongo;
     
     public function __construct()
     {
         global $pdo;
         $this->pdo = $pdo;
         
-        // J'UTILISE LA MÊME MÉTHODE QUE TON AvisController !
+        // J'utilise la même méthode que dans AvisController
         try {
-            $this->avisMongo = new AvisMongo(); // ← Exactly comme toi !
-            error_log("✅ Connexion AvisMongo Admin réussie");
+            $this->avisMongo = new AvisMongo();
+            error_log("Connexion AvisMongo Admin réussie");
         } catch (Exception $e) {
-            error_log("⚠️ AvisMongo non disponible pour Admin: " . $e->getMessage());
+            error_log("AvisMongo non disponible pour Admin: " . $e->getMessage());
             $this->avisMongo = null;
         }
     }
@@ -34,7 +34,7 @@ class Admin
     public function obtenirStatistiques()
     {
         try {
-            // Statistiques utilisateurs
+            // Je récupère les statistiques utilisateurs
             $stmt = $this->pdo->query("
                 SELECT 
                     COUNT(*) as total_utilisateurs,
@@ -44,7 +44,7 @@ class Admin
             ");
             $stats_users = $stmt->fetch(PDO::FETCH_ASSOC);
 
-            // Statistiques trajets
+            // Je récupère les statistiques trajets
             $stmt = $this->pdo->query("
                 SELECT 
                     COUNT(*) as total_trajets,
@@ -56,7 +56,7 @@ class Admin
             ");
             $stats_trajets = $stmt->fetch(PDO::FETCH_ASSOC);
 
-            // Statistiques réservations
+            // Je récupère les statistiques réservations
             $stmt = $this->pdo->query("
                 SELECT 
                     COUNT(*) as total_reservations,
@@ -67,13 +67,13 @@ class Admin
             ");
             $stats_reservations = $stmt->fetch(PDO::FETCH_ASSOC);
 
-            // Statistiques avis MongoDB (si disponible)
+            // Je récupère les statistiques avis MongoDB si disponible
             $stats_avis = ['total_avis' => 0, 'en_attente' => 0, 'valides' => 0, 'nouveaux_ce_mois' => 0];
             if ($this->avisMongo) {
                 try {
                     $stats_avis = $this->avisMongo->obtenirStatistiquesAvis();
                 } catch (Exception $e) {
-                    error_log("⚠️ Erreur stats avis MongoDB: " . $e->getMessage());
+                    error_log("Erreur stats avis MongoDB: " . $e->getMessage());
                 }
             }
 
@@ -124,7 +124,7 @@ class Admin
     }
 
     /**
-     * ✅ NOUVEAU : Je récupère un utilisateur par son ID avec ses statistiques
+     * Je récupère un utilisateur par son ID avec ses statistiques
      */
     public function obtenirUtilisateurParId($userId)
     {
@@ -154,7 +154,7 @@ class Admin
     }
 
     /**
-     * ✅ NOUVEAU : Je modifie un utilisateur
+     * Je modifie un utilisateur
      */
     public function modifierUtilisateur($userId, $donnees)
     {
@@ -189,7 +189,7 @@ class Admin
     }
 
     /**
-     * ✅ NOUVEAU : Je modifie les crédits d'un utilisateur
+     * Je modifie les crédits d'un utilisateur
      */
     public function modifierCreditsUtilisateur($userId, $nouveauxCredits)
     {
@@ -216,20 +216,20 @@ class Admin
             $result = $stmt->execute([(int)$nouveauxCredits, (int)$userId]);
             
             if ($result && $stmt->rowCount() > 0) {
-                error_log("✅ Crédits mis à jour pour utilisateur ID: $userId -> $nouveauxCredits");
+                error_log("Crédits mis à jour pour utilisateur ID: $userId -> $nouveauxCredits");
                 return true;
             }
             
             return false;
             
         } catch (Exception $e) {
-            error_log("❌ Erreur modification crédits: " . $e->getMessage());
+            error_log("Erreur modification crédits: " . $e->getMessage());
             return false;
         }
     }
 
     /**
-     * ✅ NOUVEAU : Je change le statut d'un utilisateur
+     * Je change le statut d'un utilisateur
      */
     public function changerStatutUtilisateur($userId, $nouveauStatut)
     {
@@ -250,25 +250,25 @@ class Admin
             $result = $stmt->execute([(int)$userId]);
             
             if ($result && $stmt->rowCount() > 0) {
-                error_log("✅ Statut mis à jour pour utilisateur ID: $userId -> $nouveauStatut");
+                error_log("Statut mis à jour pour utilisateur ID: $userId -> $nouveauStatut");
                 return true;
             } else {
                 throw new Exception('Utilisateur non trouvé ou pas de modification');
             }
             
         } catch (Exception $e) {
-            error_log("❌ Erreur changement statut: " . $e->getMessage());
+            error_log("Erreur changement statut: " . $e->getMessage());
             return false;
         }
     }
 
     /**
-     * ✅ CORRIGÉ : Je calcule toutes les statistiques d'un utilisateur
+     * Je calcule toutes les statistiques d'un utilisateur
      */
     public function calculerStatistiquesUtilisateur($userId)
     {
         try {
-            // === STATISTIQUES DE BASE ===
+            // Je récupère les statistiques de base
             $stmt = $this->pdo->prepare("
                 SELECT 
                     u.*,
@@ -293,11 +293,11 @@ class Admin
             $stats_base = $stmt->fetch(PDO::FETCH_ASSOC);
             
             if (!$stats_base) {
-                error_log("❌ Utilisateur ID $userId non trouvé");
+                error_log("Utilisateur ID $userId non trouvé");
                 return $this->getStatsUtilisateurDefaut();
             }
             
-            // === ÉVOLUTION MENSUELLE ===
+            // Je récupère l'évolution mensuelle
             $stmt = $this->pdo->prepare("
                 SELECT 
                     DATE_FORMAT(date_depart, '%Y-%m') as mois,
@@ -324,9 +324,9 @@ class Admin
             $stmt->execute([$userId]);
             $evolution_reservations = $stmt->fetchAll(PDO::FETCH_ASSOC);
             
-            // === JE RETOURNE DES DONNÉES SÉCURISÉES POUR number_format() ===
+            // Je retourne des données sécurisées pour number_format()
             return [
-                // Statistiques de base (TOUJOURS en int/float, jamais null)
+                // Statistiques de base (toujours en int/float, jamais null)
                 'nb_trajets_proposes' => (int)($stats_base['nb_trajets_proposes'] ?? 0),
                 'nb_trajets_termines' => (int)($stats_base['trajets_termines'] ?? 0),
                 'nb_reservations' => (int)($stats_base['nb_reservations'] ?? 0),
@@ -334,7 +334,7 @@ class Admin
                 'places_totales' => (int)($stats_base['places_totales'] ?? 0),
                 'nb_vehicules' => (int)($stats_base['nb_vehicules'] ?? 0),
                 
-                // Valeurs financières (TOUJOURS en float pour number_format())
+                // Valeurs financières (toujours en float pour number_format())
                 'distance_totale' => (float)($stats_base['distance_totale'] ?? 0.0),
                 'revenus_totaux' => (float)($stats_base['revenus_totaux'] ?? 0.0),
                 'credits_depenses' => (int)($stats_base['credits_depenses'] ?? 0),
@@ -346,7 +346,7 @@ class Admin
                 'taux_completion' => $stats_base['nb_trajets_proposes'] > 0 ? 
                     round(($stats_base['trajets_termines'] / $stats_base['nb_trajets_proposes']) * 100, 1) : 0.0,
                 
-                // Évolution (pour le graphique)
+                // Evolution pour le graphique
                 'evolution' => [
                     'trajets' => $evolution_trajets,
                     'reservations' => $evolution_reservations
@@ -358,13 +358,13 @@ class Admin
             ];
             
         } catch (Exception $e) {
-            error_log("❌ Erreur calcul stats utilisateur: " . $e->getMessage());
+            error_log("Erreur calcul stats utilisateur: " . $e->getMessage());
             return $this->getStatsUtilisateurDefaut();
         }
     }
 
     /**
-     * ✅ Statistiques par défaut sécurisées pour number_format()
+     * Je retourne des statistiques par défaut sécurisées pour number_format()
      */
     private function getStatsUtilisateurDefaut()
     {
@@ -415,22 +415,23 @@ class Admin
     }
 
     /**
-     * Je récupère tous les avis MongoDB (si disponible)
-     */
-    public function obtenirAvis()
-    {
-        if (!$this->avisMongo) {
-            error_log("⚠️ AvisMongo non disponible dans Admin");
-            return [];
-        }
-
-        try {
-            return $this->avisMongo->obtenirTousLesAvis();
-        } catch (Exception $e) {
-            error_log("Erreur obtenirAvis MongoDB: " . $e->getMessage());
-            return [];
-        }
+ * Je récupère tous les avis MongoDB avec filtres
+ */
+public function obtenirAvis($filtres = [])
+{
+    if (!$this->avisMongo) {
+        error_log("AvisMongo non disponible dans Admin");
+        return [];
     }
+
+    try {
+        return $this->avisMongo->obtenirTousLesAvis($filtres);
+    } catch (Exception $e) {
+        error_log("Erreur obtenirAvis MongoDB: " . $e->getMessage());
+        return [];
+    }
+}
+
 
     /**
      * Je modère un trajet (valider/refuser)
@@ -502,12 +503,37 @@ class Admin
     }
 
     /**
+     * Je supprime un avis MongoDB
+     */
+    public function supprimerAvis($avisId)
+    {
+        try {
+            if (!$avisId) {
+                throw new Exception('ID avis manquant');
+            }
+
+            // J'utilise l'AvisMongo existant
+            $success = $this->avisMongo->supprimerAvis($avisId);
+            
+            if ($success) {
+                echo json_encode(['success' => true, 'message' => 'Avis supprimé avec succès']);
+            } else {
+                throw new Exception('Avis non trouvé ou erreur suppression');
+            }
+            
+        } catch (Exception $e) {
+            error_log("Erreur supprimerAvis Admin: " . $e->getMessage());
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        }
+    }
+
+    /**
      * Je récupère les statistiques de modération
      */
     public function getStatsModeration()
     {
         try {
-            // Stats trajets
+            // Je récupère les stats trajets
             $stmt = $this->pdo->query("
                 SELECT 
                     COUNT(CASE WHEN statut = 'en_attente' THEN 1 END) as trajets_en_attente,
@@ -517,7 +543,7 @@ class Admin
             ");
             $stats_trajets = $stmt->fetch(PDO::FETCH_ASSOC);
 
-            // Stats avis MongoDB
+            // Je récupère les stats avis MongoDB
             $stats_avis = ['avis_en_attente' => 0, 'avis_refuses' => 0, 'avis_valides' => 0];
             if ($this->avisMongo) {
                 try {

@@ -6,7 +6,7 @@
 document.addEventListener('DOMContentLoaded', function() {
     console.log('Admin trajets JS chargé');
     
-    // ✅ GÉRER LES CLICS SUR LES BOUTONS VALIDER
+    // Je gère les clics sur les boutons de modération
     document.addEventListener('click', function(e) {
         // Bouton Valider (vert)
         if (e.target.closest('.btn-valider')) {
@@ -31,17 +31,15 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
       
-        // ✅ GESTION DU BOUTON DÉTAILS (OEIL) - REDIRECTION SIMPLE
-if (e.target.closest('.btn-details')) {
-    e.preventDefault();
-    const button = e.target.closest('.btn-details');
-    const trajetId = button.getAttribute('data-trajet-id');
-    
-    // ✅ REDIRECTION VERS LA PAGE DÉDIÉE
-    window.location.href = `/admin/trajets/${trajetId}`;
-}
-
-        
+        // Je gère le bouton détails (oeil) - redirection simple
+        if (e.target.closest('.btn-details')) {
+            e.preventDefault();
+            const button = e.target.closest('.btn-details');
+            const trajetId = button.getAttribute('data-trajet-id');
+            
+            // Je redirige vers la page dédiée
+            window.location.href = `/admin/trajets/${trajetId}`;
+        }
         
         // Bouton Actualiser
         if (e.target.closest('#refreshStats')) {
@@ -56,14 +54,14 @@ if (e.target.closest('.btn-details')) {
     function modererTrajet(trajetId, decision, motif = '') {
         console.log('Modération trajet:', { trajetId, decision, motif });
         
-        // Désactiver temporairement les boutons de cette ligne
+        // Je désactive temporairement les boutons de cette ligne
         const ligne = document.querySelector(`tr[data-trajet-id="${trajetId}"]`);
         if (ligne) {
             const boutons = ligne.querySelectorAll('.btn');
             boutons.forEach(btn => btn.disabled = true);
         }
         
-        // Préparer les données à envoyer
+        // Je prépare les données à envoyer
         const formData = new FormData();
         formData.append('trajet_id', trajetId);
         formData.append('decision', decision);
@@ -71,7 +69,7 @@ if (e.target.closest('.btn-details')) {
             formData.append('motif', motif);
         }
         
-        // ✅ APPEL AJAX À LA BONNE ROUTE
+        // Je fais l'appel AJAX à la bonne route
         fetch('/admin/api/moderer-trajet', {
             method: 'POST',
             body: formData
@@ -84,19 +82,19 @@ if (e.target.closest('.btn-details')) {
             console.log('Réponse data:', data);
             
             if (data.success || data.succes) {
-                // ✅ SUCCÈS : Mettre à jour l'interface
+                // Succès : je mets à jour l'interface
                 updateInterface(trajetId, decision);
                 showAlert('success', data.message || 'Trajet modéré avec succès !');
                 
-                // Actualiser les stats
+                // J'actualise les stats
                 setTimeout(() => {
                     updateStats(decision);
                 }, 500);
             } else {
-                // ❌ ERREUR : Afficher le message
+                // Erreur : j'affiche le message
                 showAlert('danger', data.message || data.erreur || 'Erreur lors de la modération');
                 
-                // Réactiver les boutons
+                // Je réactive les boutons
                 if (ligne) {
                     const boutons = ligne.querySelectorAll('.btn');
                     boutons.forEach(btn => btn.disabled = false);
@@ -107,7 +105,7 @@ if (e.target.closest('.btn-details')) {
             console.error('Erreur AJAX:', error);
             showAlert('danger', 'Erreur technique lors de la modération');
             
-            // Réactiver les boutons en cas d'erreur
+            // Je réactive les boutons en cas d'erreur
             if (ligne) {
                 const boutons = ligne.querySelectorAll('.btn');
                 boutons.forEach(btn => btn.disabled = false);
@@ -116,13 +114,13 @@ if (e.target.closest('.btn-details')) {
     }
     
     /**
-     * Met à jour l'interface après modération
+     * Je mets à jour l'interface après modération
      */
     function updateInterface(trajetId, decision) {
         const ligne = document.querySelector(`tr[data-trajet-id="${trajetId}"]`);
         if (!ligne) return;
         
-        // Mettre à jour le badge statut
+        // Je mets à jour le badge statut
         const badge = ligne.querySelector('.badge');
         if (badge) {
             if (decision === 'valide') {
@@ -134,7 +132,7 @@ if (e.target.closest('.btn-details')) {
             }
         }
         
-        // Mettre à jour les boutons
+        // Je mets à jour les boutons
         const actionDiv = ligne.querySelector('.btn-group');
         if (actionDiv) {
             if (decision === 'valide') {
@@ -156,7 +154,7 @@ if (e.target.closest('.btn-details')) {
     }
     
     /**
-     * Met à jour les statistiques en haut
+     * Je mets à jour les statistiques en haut
      */
     function updateStats(decision) {
         const enAttenteElement = document.querySelector('.stat-warning .stat-value');
@@ -164,7 +162,7 @@ if (e.target.closest('.btn-details')) {
         const refusesElement = document.querySelector('.stat-danger .stat-value');
         
         if (decision === 'valide') {
-            // Diminuer "En attente", augmenter "Validés"
+            // Je diminue "En attente", j'augmente "Validés"
             if (enAttenteElement) {
                 const current = parseInt(enAttenteElement.textContent) || 0;
                 enAttenteElement.textContent = Math.max(0, current - 1);
@@ -174,7 +172,7 @@ if (e.target.closest('.btn-details')) {
                 validesElement.textContent = current + 1;
             }
         } else if (decision === 'refuse') {
-            // Diminuer "En attente", augmenter "Refusés"
+            // Je diminue "En attente", j'augmente "Refusés"
             if (enAttenteElement) {
                 const current = parseInt(enAttenteElement.textContent) || 0;
                 enAttenteElement.textContent = Math.max(0, current - 1);
@@ -187,7 +185,7 @@ if (e.target.closest('.btn-details')) {
     }
     
     /**
-     * Affiche une notification temporaire
+     * J'affiche une notification temporaire
      */
     function showAlert(type, message) {
         const alertContainer = document.getElementById('alertContainer') || createAlertContainer();
@@ -204,7 +202,7 @@ if (e.target.closest('.btn-details')) {
         
         alertContainer.appendChild(alert);
         
-        // Supprimer automatiquement après 5 secondes
+        // Je supprime automatiquement après 5 secondes
         setTimeout(() => {
             const alertElement = document.getElementById(alertId);
             if (alertElement) {
@@ -214,7 +212,7 @@ if (e.target.closest('.btn-details')) {
     }
     
     /**
-     * Crée le conteneur des alertes s'il n'existe pas
+     * Je crée le conteneur des alertes s'il n'existe pas
      */
     function createAlertContainer() {
         let container = document.getElementById('alertContainer');
