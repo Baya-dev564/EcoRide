@@ -6,8 +6,8 @@ RUN apt-get update && apt-get install -y \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# Extensions PHP pour PostgreSQL
-RUN docker-php-ext-install pdo pdo_pgsql
+# Extensions PHP pour sql
+RUN docker-php-ext-install pdo pdo_mysql
 RUN pecl install mongodb && docker-php-ext-enable mongodb
 
 # Copier code
