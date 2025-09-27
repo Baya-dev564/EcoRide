@@ -1,4 +1,4 @@
-FROM php:8.1-apache
+FROM php:8.1.10
 
 # Installation des dépendances PostgreSQL
 RUN apt-get update && apt-get install -y \
@@ -10,12 +10,6 @@ RUN apt-get update && apt-get install -y \
 RUN docker-php-ext-install pdo pdo_pgsql
 RUN pecl install mongodb && docker-php-ext-enable mongodb
 
-# Modules Apache
-RUN a2enmod rewrite headers
-
-# Configuration Apache pour /public
-RUN sed -i 's|/var/www/html|/var/www/html/public|g' /etc/apache2/sites-available/000-default.conf
-
 # Copier code
 COPY . /var/www/html/
 
@@ -26,5 +20,5 @@ RUN chown -R www-data:www-data /var/www/html/ && \
 # Port
 EXPOSE 80
 
-# Commande de démarrage
-CMD ["apache2-foreground"]
+CMD ["sh","-c","php -S 0.0.0.0:${PORT:-8000} -t /var/www/html/public"]
+
