@@ -20,5 +20,5 @@ RUN chown -R www-data:www-data /var/www/html/ && \
 # Port
 EXPOSE 10000
 
-CMD ["sh","-c","php -S 0.0.0.0:${PORT} -t /var/www/html/public"]
+CMD ["sh","-c","php -S 0.0.0.0:${PORT} -t /var/www/html/public /var/www/html/public/router.php"]
 

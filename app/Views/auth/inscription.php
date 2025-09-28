@@ -34,7 +34,7 @@ ob_start();
 
                 <!-- Formulaire d'inscription  -->
                
-                    <form id="formInscription" action="/inscription" method="POST" novalidate role="form" aria-labelledby="inscription-titre">
+                    <form id="formInscription" action="/api/inscription" method="POST" novalidate role="form" aria-labelledby="inscription-titre">
 
                     <h2 id="inscription-titre" class="sr-only">Formulaire d'inscription EcoRide</h2>
                     
