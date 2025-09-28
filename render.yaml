@@ -88,10 +88,14 @@ services:
   - type: pserv
     name: ecoride-mysql
     env: docker
-    plan: free
+    plan: starter
     repo: https://github.com/render-examples/mysql
     branch: master
     autoDeploy: false
+    disk:
+      name: mongo-data
+      mountPath: /data/db
+      sizeGB: 10
     envVars:
       - key: MYSQL_DATABASE
         value: Ecoride
@@ -108,10 +112,14 @@ services:
   - type: pserv
     name: ecoride-mongo
     env: docker
-    plan: free
+    plan: starter
     repo: https://github.com/render-examples/mongodb
     branch: master
     autoDeploy: false
+    disk:
+      name: mongo-data
+      mountPath: /data/db
+      sizeGB: 10
     envVars:
       - key: MONGO_INITDB_ROOT_USERNAME
         value: ecoride
