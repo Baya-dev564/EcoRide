@@ -92,10 +92,6 @@ services:
     repo: https://github.com/render-examples/mysql
     branch: master
     autoDeploy: false
-    disk:
-      name: mysql-data
-      mountPath: /var/lib/mysql
-      sizeGB: 10
     envVars:
       - key: MYSQL_DATABASE
         value: Ecoride
@@ -116,10 +112,6 @@ services:
     repo: https://github.com/render-examples/mongodb
     branch: master
     autoDeploy: false
-    disk:
-      name: mongo-data
-      mountPath: /data/db
-      sizeGB: 10
     envVars:
       - key: MONGO_INITDB_ROOT_USERNAME
         value: ecoride
