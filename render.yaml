@@ -40,7 +40,7 @@ services:
     - key: MYSQL_USER
       value: ecoride
     - key: MYSQL_PASSWORD
-      sync: false
+      value: ecoridepass
     # MongoDB connection parameters.  These values will be used by your
     # application code to construct the MongoDB URI.  Render does not
     # support variable interpolation in YAML, so combine these at
@@ -55,10 +55,10 @@ services:
         name: ecoride-mongo
         type: pserv
         property: port
-    - key: MONGODB_USERNAME
+    - key: MONGO_INITDB_ROOT_USERNAME
       value: ecoride
-    - key: MONGODB_PASSWORD
-      sync: false
+    - key: MONGO_INITDB_ROOT_PASSWORD
+      value: ecoride123
       # If your application expects a single `MONGODB_URI` variable, you
       # can hardcode it using the service name as the host.  Replace
       # `<yourMongoPassword>` with the same value you set for
@@ -90,13 +90,13 @@ services:
       sizeGB: 10
     envVars:
       - key: MYSQL_DATABASE
-        value: Ecoride
+        value: EcoRide
       - key: MYSQL_USER
         value: ecoride
       - key: MYSQL_PASSWORD
-        sync: false
+        value: ecoridepass
       - key: MYSQL_ROOT_PASSWORD
-        sync: false
+        value: rootpass
 
   # MongoDB private service.  This service uses the official MongoDB
   # Docker image via Render’s example repository.  It runs inside the
@@ -116,4 +116,4 @@ services:
       - key: MONGO_INITDB_ROOT_USERNAME
         value: ecoride
       - key: MONGO_INITDB_ROOT_PASSWORD
-        sync: false
+        value: ecoride123
