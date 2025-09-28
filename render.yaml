@@ -28,31 +28,31 @@ services:
     autoDeploy: false
     
     envVars:
-      - key: MYSQL_HOST
-        fromService:
-          name: ecoride-mysql
-          type: pserv
-          property: host
-      - key: MYSQL_PORT
-        value: "3306"            # ← use the actual MySQL port
-      - key: MYSQL_DATABASE
-        value: Ecoride
-      - key: MYSQL_USER
-        value: ecoride
-      - key: MYSQL_PASSWORD
-        sync: false
+    - key: MYSQL_HOST
+      fromService:
+        name: ecoride-mysql
+        type: pserv
+        property: host
+    - key: MYSQL_PORT
+      value: "3306"            # ← use the actual MySQL port
+    - key: MYSQL_DATABASE
+      value: EcoRide
+    - key: MYSQL_USER
+      value: ecoride
+    - key: MYSQL_PASSWORD
+      sync: false
 
-      - key: MONGODB_HOST
-        fromService:
-          name: ecoride-mongo
-          type: pserv
-          property: host
-      - key: MONGODB_PORT
-        value: "27017"           # ← Mongo’s port
-      - key: MONGODB_USERNAME
-        value: ecoride
-      - key: MONGODB_PASSWORD
-        sync: false
+    - key: MONGODB_HOST
+      fromService:
+        name: ecoride-mongo
+        type: pserv
+        property: host
+    - key: MONGODB_PORT
+      value: "27017"           # ← Mongo’s port
+    - key: MONGODB_USERNAME
+      value: ecoride
+    - key: MONGODB_PASSWORD
+      sync: false
 
       # MongoDB connection parameters.  These values will be used by your
       # application code to construct the MongoDB URI.  Render does not
@@ -76,8 +76,8 @@ services:
       # can hardcode it using the service name as the host.  Replace
       # `<yourMongoPassword>` with the same value you set for
       # `MONGODB_PASSWORD` when prompted in the dashboard.
-      - key: MONGODB_URI
-        sync: false
+      # - key: MONGODB_URI
+      #   value: mongodb://ecoride:<yourMongoPassword>@ecoride-mongo:27017/admin
 
     # Optional persistent disk for file‑based PHP sessions.  If your
     # application writes session files to `/tmp/sessions` you can

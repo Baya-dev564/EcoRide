@@ -10,7 +10,7 @@ services:
       - ./config/php.ini:/usr/local/etc/php/conf.d/custom.ini
     environment:
       MYSQL_HOST: mysql
-      MYSQL_DATABASE: Ecoride
+      MYSQL_DATABASE: EcoRide
       MYSQL_USER: ecoride
       MYSQL_PASSWORD: ecoridepass
       MONGODB_URI: mongodb://ecoride:ecoride123@mongo:27017/admin
