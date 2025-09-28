@@ -41,7 +41,7 @@ services:
       - "3306:3306"
     environment:
       MYSQL_ROOT_PASSWORD: rootpass
-      MYSQL_DATABASE: Ecoride
+      MYSQL_DATABASE: EcoRide
       MYSQL_USER: ecoride
       MYSQL_PASSWORD: ecoridepass
     volumes:
