@@ -102,7 +102,8 @@ class User
             $stmt = $this->pdo->prepare($sql);
             $stmt->execute([$email]);
             $user = $stmt->fetch(PDO::FETCH_ASSOC);
-            
+
+            // Je vérifie le mot de passe avec password_verify()
             if (!$user || !password_verify($motDePasse, $user['mot_de_passe'])) {
                 return ['succes' => false, 'erreur' => 'Email ou mot de passe incorrect.'];
             }

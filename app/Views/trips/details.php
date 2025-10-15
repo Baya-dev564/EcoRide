@@ -1,7 +1,7 @@
 <?php
 /**
  * Vue détail d'un trajet EcoRide avec système de notation
- * ✅ NOUVEAU : Bouton "Noter ce trajet" pour trajets terminés
+ * NOUVEAU : Bouton "Noter ce trajet" pour trajets terminés
  */
 
 ob_start();

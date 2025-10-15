@@ -20,9 +20,8 @@ final class DatabaseConfig
     public function getConnection(): \PDO
     {
         if ($this->pdo instanceof \PDO) {
-            return $this->pdo; // reuse the same handle
+            return $this->pdo; // je reutilise ma connexion
         }
-
         $dsn = sprintf(
             'mysql:host=%s;port=%d;dbname=%s;charset=utf8mb4',
             $this->host, $this->port, $this->database
@@ -35,6 +34,7 @@ final class DatabaseConfig
                 \PDO::ATTR_EMULATE_PREPARES   => false,
                 \PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci',
             ]);
+
             return $this->pdo;
         } catch (\PDOException $e) {
             error_log('[DB] Connection failed: ' . $e->getMessage());
