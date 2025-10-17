@@ -2,6 +2,7 @@
 # GITIGNORE ECORIDE - VERSION PRODUCTION
 # =================================
 
+
 # ===== FICHIERS DEBUG & TEST =====
 debug-*.php
 test-*.php
@@ -10,6 +11,7 @@ index2.php
 *-test.php
 temp*.php
 
+
 # ===== SESSIONS & CACHE =====
 sessions/sess_*
 sessions/*.tmp
@@ -17,11 +19,13 @@ cache/
 tmp/
 *.cache
 
+
 # ===== LOGS & ERREURS =====
 *.log
 logs/
 error.log
 access.log
+
 
 # ===== FICHIERS TEMPORAIRES =====
 *.tmp
@@ -32,6 +36,7 @@ access.log
 .DS_Store
 Thumbs.db
 
+
 # ===== CONFIG SENSIBLE =====
 .env
 .env.local
@@ -39,10 +44,12 @@ Thumbs.db
 config/secret.php
 config/database_prod.php
 
+
 # ===== VENDOR & DEPENDENCIES =====
 vendor/
 node_modules/
 composer.lock
+
 
 # ===== UPLOADS & MEDIA =====
 uploads/*.jpg
@@ -51,18 +58,22 @@ uploads/*.gif
 uploads/temp/
 !uploads/.gitkeep
 
+
 # ===== DOCKER & DÉVELOPPEMENT =====
 .vscode/
 .idea/
 *.sublime-*
 docker-compose.override.yml
 
+
 # ===== FICHIERS SYSTÈME =====
 php.ini
 .htaccess.bak
 *.orig
 
+
 # ===== SAUVEGARDES BASE DE DONNÉES =====
-*.sql
 *.dump
 backup/
+*.sql
+!sql/*.sql

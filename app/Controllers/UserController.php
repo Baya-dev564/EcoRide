@@ -132,37 +132,53 @@ class UserController
     /**
      * J'affiche l'historique complet des activités de l'utilisateur
      */
-    public function historique()
-    {
-        // Je vérifie que l'utilisateur est connecté
-        if (!isset($_SESSION['user'])) {
-            $_SESSION['message'] = 'Vous devez être connecté pour voir votre historique.';
-            header('Location: /connexion');
-            exit;
-        }
-        
-        require_once __DIR__ . '/../../config/database.php';
-        require_once __DIR__ . '/../Models/Trip.php';
-        require_once __DIR__ . '/../Models/Reservation.php';
-        
-        global $pdo;
-        $tripModel = new Trip($pdo);
-        $reservationModel = new Reservation($pdo);
-        
-        // Je récupère l'historique complet
-        $trajetsProposés = $tripModel->getTrajetsUtilisateur($_SESSION['user']['id']);
-        $reservations = $reservationModel->getReservationsUtilisateur($_SESSION['user']['id']);
-        
-        // Je prépare les variables pour la vue Bootstrap 5
-        $title = "Mon historique | EcoRide - Votre impact écologique";
-        $user = $_SESSION['user'];
-        $message = $_SESSION['message'] ?? '';
-        unset($_SESSION['message']);
-        
-        // J'affiche la vue historique avec Bootstrap 5
-        require __DIR__ . '/../Views/user/historique.php';
+   /**
+ * J'affiche l'historique complet des activités de l'utilisateur
+ */
+public function historique()
+{
+    // Je vérifie que l'utilisateur est connecté
+    if (!isset($_SESSION['user'])) {
+        $_SESSION['message'] = 'Vous devez être connecté pour voir votre historique.';
+        header('Location: /EcoRide/public/connexion');
+        exit;
     }
     
+    require_once __DIR__ . '/../../config/database.php';
+    require_once __DIR__ . '/../Models/Trip.php';
+    
+    global $pdo;
+    $tripModel = new Trip($pdo);
+    
+    // Je récupère l'historique complet avec les nouvelles méthodes
+    $trajetsProposesTermines = $tripModel->getHistoriqueTrajetsProposesUtilisateur($_SESSION['user']['id']);
+    $reservationsTerminees = $tripModel->getHistoriqueReservationsUtilisateur($_SESSION['user']['id']);
+    
+    // Je calcule les statistiques d'historique
+    $stats = [
+        'total_trajets_proposes' => count($trajetsProposesTermines),
+        'total_reservations' => count($reservationsTerminees),
+        'total_km_conduits' => array_sum(array_column($trajetsProposesTermines, 'distance_km')),
+        'total_km_voyages' => array_sum(array_column($reservationsTerminees, 'distance_km')),
+        'credits_gagnes' => array_sum(array_column($trajetsProposesTermines, 'credits_gagnes')),
+        'credits_depenses' => array_sum(array_column($reservationsTerminees, 'credits_depenses'))
+    ];
+    
+    // Je calcule l'impact écologique total
+    $totalKm = $stats['total_km_conduits'] + $stats['total_km_voyages'];
+    $stats['co2_economise'] = round($totalKm * 0.12, 1);
+    $stats['carburant_economise'] = round($totalKm * 0.07, 1);
+    
+    // Je prépare les variables pour la vue Bootstrap 5
+    $title = "Mon historique | EcoRide - Votre impact écologique";
+    $user = $_SESSION['user'];
+    $message = $_SESSION['message'] ?? '';
+    unset($_SESSION['message']);
+    
+    // J'affiche la vue historique avec Bootstrap 5
+    require __DIR__ . '/../Views/user/historique.php';
+}
+
     /**
      * J'ajoute un véhicule pour l'utilisateur connecté via AJAX
      */

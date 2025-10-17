@@ -309,6 +309,11 @@ switch ($path) {
         $controller = new UserController();
         $controller->profil();
         break;
+        case '/historique':
+    // Je gère l'historique de l'utilisateur
+    $controller = new UserController();
+    $controller->historique();
+    break;
 
     case '/api/modifier-profil':
         // API : Modifier les infos du profil
