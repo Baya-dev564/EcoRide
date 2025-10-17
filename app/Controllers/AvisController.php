@@ -6,7 +6,7 @@
  */
 
 // J'inclus le modèle MongoDB pour les avis
-require_once '../app/Models/avis-mongo.php';
+require_once __DIR__ . '/../Models/avis-mongo.php';
 
 class AvisController 
 {
@@ -64,7 +64,7 @@ class AvisController
                     ];
                     
                     // Je crée un objet Avis pour la vue
-                    require_once '../app/Models/avis-mongo.php';
+                    require_once __DIR__ . '/../Models/avis-mongo.php';
                     $avis[] = new Avis($avisFormatted);
                 }
                 
@@ -84,7 +84,7 @@ class AvisController
         $pageTitle = "Avis des utilisateurs - EcoRide";
         
         // Je charge la vue avec les avis MongoDB
-        include '../app/Views/avis/index.php';
+        include __DIR__ . '/../Views/avis/index.php';
     }
 
     /**
@@ -109,7 +109,7 @@ class AvisController
         $title = "Donner un avis | EcoRide";
         
         // Je charge la vue avec les variables définies
-        include '../app/Views/avis/create.php';
+        include __DIR__ . '/../Views/avis/create.php';
     }
     
     /**
@@ -138,7 +138,7 @@ class AvisController
             $title = "Détail de l'avis | EcoRide";
             
             // Je charge la vue détail d'un avis
-            include '../app/Views/avis/show.php';
+            include __DIR__ . '/../Views/avis/show.php';
             
         } catch (Exception $e) {
             // En cas d'erreur MongoDB, je redirige

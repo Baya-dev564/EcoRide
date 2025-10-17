@@ -85,7 +85,7 @@ if (strpos($path, '/admin') === 0) {
             header('Location: /admin/utilisateurs');
         }
     }
-    // NOUVELLES APIs AJAX POUR LA GESTION UTILISATEURS (CONTRÔLEUR SÉPARÉ)
+    // NOUVELLES APIs AJAX POUR LA GESTION UTI207LISATEURS (CONTRÔLEUR SÉPARÉ)
     elseif ($path === '/admin/modifier-credits' && $method === 'POST') {
         // API : Modifier les crédits d'un utilisateur
         header('Content-Type: application/json');
@@ -204,7 +204,7 @@ switch ($path) {
         $controller = new AuthController();
         $controller->deconnexion();
         break;
-
+    
     // NOUVELLES ROUTES POUR LA VÉRIFICATION EMAIL
     case '/inscription-confirmation':
         // Page de confirmation après inscription
@@ -309,6 +309,11 @@ switch ($path) {
         $controller = new UserController();
         $controller->profil();
         break;
+        case '/historique':
+    // Je gère l'historique de l'utilisateur
+    $controller = new UserController();
+    $controller->historique();
+    break;
 
     case '/api/modifier-profil':
         // API : Modifier les infos du profil

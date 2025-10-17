@@ -906,5 +906,89 @@ class Trip
             return [];
         }
     }
+    /**
+ * Je récupère l'historique des trajets terminés proposés par l'utilisateur (conducteur)
+ */
+public function getHistoriqueTrajetsProposesUtilisateur($userId)
+{
+    try {
+        $sql = "SELECT t.*, 
+                       v.marque as vehicule_marque, 
+                       v.modele as vehicule_modele,
+                       COUNT(DISTINCT r.id) as nb_passagers,
+                       SUM(r.nb_places) as total_places_reservees,
+                       (t.prix * COALESCE(SUM(r.nb_places), 0)) as credits_gagnes
+                FROM trajets t
+                LEFT JOIN vehicules v ON t.vehicule_id = v.id
+                LEFT JOIN reservations r ON t.id = r.trajet_id AND r.statut = 'termine'
+                WHERE t.conducteur_id = ? 
+                AND t.statut = 'termine'
+                GROUP BY t.id
+                ORDER BY t.date_depart DESC, t.heure_depart DESC";
+        
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute([$userId]);
+        $trajets = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        // J'enrichis les données de chaque trajet
+        foreach ($trajets as &$trajet) {
+            $trajet = $this->enrichirDonneesTrajet($trajet);
+            $trajet['nb_passagers'] = (int)($trajet['nb_passagers'] ?? 0);
+            $trajet['total_places_reservees'] = (int)($trajet['total_places_reservees'] ?? 0);
+            $trajet['credits_gagnes'] = (int)($trajet['credits_gagnes'] ?? 0);
+        }
+        
+        return $trajets;
+        
+    } catch (PDOException $e) {
+        error_log("Erreur getHistoriqueTrajetsProposesUtilisateur : " . $e->getMessage());
+        return [];
+    }
+}
+
+/**
+ * Je récupère l'historique des réservations terminées de l'utilisateur (passager)
+ */
+public function getHistoriqueReservationsUtilisateur($userId)
+{
+    try {
+        $sql = "SELECT r.*,
+                       t.lieu_depart, t.lieu_arrivee,
+                       t.date_depart, t.heure_depart,
+                       t.distance_km, t.prix, t.vehicule_electrique,
+                       (t.prix * r.nb_places) as credits_depenses,
+                       u.pseudo as conducteur_pseudo,
+                       u.nom as conducteur_nom,
+                       u.prenom as conducteur_prenom,
+                       u.photo_profil as conducteur_photo,
+                       v.marque as vehicule_marque,
+                       v.modele as vehicule_modele
+                FROM reservations r
+                JOIN trajets t ON r.trajet_id = t.id
+                JOIN utilisateurs u ON t.conducteur_id = u.id
+                LEFT JOIN vehicules v ON t.vehicule_id = v.id
+                WHERE r.passager_id = ? 
+                AND r.statut = 'termine'
+                ORDER BY t.date_depart DESC, t.heure_depart DESC";
+        
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute([$userId]);
+        $reservations = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        // J'enrichis les données de chaque réservation
+        foreach ($reservations as &$reservation) {
+            // Je réutilise enrichirDonneesTrajet pour formatter les dates
+            $reservation = $this->enrichirDonneesTrajet($reservation);
+            $reservation['credits_depenses'] = (int)($reservation['credits_depenses'] ?? 0);
+        }
+        
+        return $reservations;
+        
+    } catch (PDOException $e) {
+        error_log("Erreur getHistoriqueReservationsUtilisateur : " . $e->getMessage());
+        return [];
+    }
+}
+
 }
 ?>

@@ -1,4 +1,3 @@
-
 services:
   php:
     build: .
@@ -9,8 +8,18 @@ services:
       - ./config:/var/www/config
       - ./sessions:/tmp/sessions
       - ./config/php.ini:/usr/local/etc/php/conf.d/custom.ini
-    networks:
-      - ecoride-network
+    environment:
+      MYSQL_HOST: mysql
+      MYSQL_DATABASE: EcoRide
+      MYSQL_USER: ecoride
+      MYSQL_PASSWORD: ecoridepass
+      MONGODB_URI: mongodb://ecoride:ecoride123@mongo:27017/admin
+    depends_on:
+      mysql:
+        condition: service_healthy
+      mongo:
+        condition: service_healthy
+    networks: [ ecoride-network ]
 
   nginx:
     image: nginx:latest
@@ -21,9 +30,9 @@ services:
       - ./public:/var/www/public
       - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
     depends_on:
-      - php
-    networks:
-      - ecoride-network
+      php:
+        condition: service_started   
+    networks: [ ecoride-network ]
 
   mysql:
     image: mysql:8.0
@@ -32,13 +41,18 @@ services:
       - "3306:3306"
     environment:
       MYSQL_ROOT_PASSWORD: rootpass
-      MYSQL_DATABASE: Ecoride
+      MYSQL_DATABASE: EcoRide
       MYSQL_USER: ecoride
       MYSQL_PASSWORD: ecoridepass
     volumes:
       - mysql-data:/var/lib/mysql
-    networks:
-      - ecoride-network
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p$${MYSQL_ROOT_PASSWORD} --silent"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 30s
+    networks: [ ecoride-network ]
 
   mongo:
     image: mongo:4.4
@@ -51,8 +65,17 @@ services:
       - "27017:27017"
     volumes:
       - mongo-data:/data/db
-    networks:
-      - ecoride-network
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "mongo --username $${MONGO_INITDB_ROOT_USERNAME} --password $${MONGO_INITDB_ROOT_PASSWORD} --authenticationDatabase admin --eval 'db.adminCommand({ping:1})' >/dev/null 2>&1"
+        ]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 15s
+    networks: [ ecoride-network ]
 
 volumes:
   mysql-data:
