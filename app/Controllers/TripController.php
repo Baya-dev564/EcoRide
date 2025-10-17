@@ -425,25 +425,28 @@ class TripController
      * J'affiche les trajets avec les statuts des réservations
      */
     public function mesTrajets()
-    {
-        // Je vérifie l'authentification
-        if (!isset($_SESSION['user'])) {
-            $_SESSION['message'] = 'Vous devez être connecté pour voir vos trajets.';
-            header('Location: /EcoRide/public/connexion');
-            exit;
-        }
-        
-        // J'appelle la méthode du modèle Trip.php
-        $trajets = $this->tripModel->getTrajetsUtilisateurAvecStatuts($_SESSION['user']['id']);
-        
-        // Je prépare les variables pour la vue
-        $title = "Mes trajets | EcoRide - Gestion de vos trajets proposés";
-        $user = $_SESSION['user'];
-        $message = $_SESSION['message'] ?? '';
-        unset($_SESSION['message']);
-        
-        require __DIR__ . '/../Views/trips/mes-trajets.php';
+{
+    // Je vérifie l'authentification
+    if (!isset($_SESSION['user'])) {
+        $_SESSION['message'] = "Vous devez être connecté pour voir vos trajets.";
+        header("Location: EcoRide/public/connexion");
+        exit;
     }
+    
+    // J'appelle la méthode du modèle Trip.php
+    $trajets = $this->tripModel->getTrajetsUtilisateurAvecStatuts($_SESSION['user']['id']);
+    
+    // Je prépare les variables pour la vue
+    $title = "Mes trajets EcoRide - Gestion de vos trajets proposés";
+    $user = $_SESSION['user'];
+    
+    // Je récupère le message de session s'il existe
+    $message = $_SESSION['message'] ?? null;
+    unset($_SESSION['message']);
+    
+    require __DIR__ . '/../Views/trips/mes-trajets.php';
+}
+
 
     /**
      * J'affiche le formulaire de création avec gestion des véhicules
@@ -626,7 +629,7 @@ class TripController
         $resultat = $this->tripModel->creerTrajet($data);
         
         if ($resultat['succes']) {
-            $_SESSION['message'] = $resultat['message'] . " Prix calculé : {$resultat['prix_calcule']} crédits.";
+            $_SESSION['message'] = "Votre trajet est en cours de modération par l'administrateur. Prix calculé : {$resultat['prix_calcule']} crédits.";
             header('Location: /EcoRide/public/mes-trajets');
             exit;
         } else {
