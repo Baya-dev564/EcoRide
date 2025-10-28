@@ -11,7 +11,7 @@ Ce projet constitue mon **premier projet de développement web** réalisé dans 
 ## Technologies Utilisées
 
 ### Stack Technique Complète
-- **PHP 8.2+** avec architecture MVC
+- **PHP 8.1.10** avec architecture MVC
 - **MySQL 8.0** pour la base de données relationnelle
 - **MongoDB 4.4** pour la messagerie et les avis (NoSQL)
 - **Docker & Docker Compose** pour l'environnement de développement
@@ -20,26 +20,116 @@ Ce projet constitue mon **premier projet de développement web** réalisé dans 
 - **JavaScript natif** (18 fichiers optimisés) pour l'interactivité
 - **PDO** et **MongoDB Driver** pour les interactions base de données
 
-## Installation avec Docker
+## Installation Complète
 
 ### Prérequis
-- Docker et Docker Compose
+- Docker et Docker Compose installés
 - Git
 
-### Démarrage Rapide
+### Étape 1 : Cloner le Projet
 git clone https://github.com/Baya-dev564/EcoRide.git
 cd EcoRide
+
+### Étape 2 : Démarrer les Conteneurs Docker
 docker-compose up -d
 
+**Vérifier que les conteneurs sont actifs :**
+docker ps
 
-**Accès :** http://localhost:8080
+Vous devriez voir 4 conteneurs : `ecoride-php`, `ecoride-nginx`, `ecoride-mysql`, `ecoride-mongodb`
+
+### Étape 3 : Initialiser la Base de Données MySQL
+
+**Option A : Base vide (pour démarrer from scratch)**
+docker exec -i ecoride-mysql mysql -uroot -proot_password < sql/ecoride_creation.sql
+
+**Option B : Base avec données de démo (recommandé pour tester)**
+
+docker exec -i ecoride-mysql mysql -uroot -proot_password < sql/ecoride_dump_complet.sql
+
+
+### Étape 4 : Initialiser MongoDB
+
+**MongoDB crée automatiquement les collections au premier usage. Aucune action requise !**
+
+Les collections suivantes seront créées automatiquement :
+- `avis` : Système d'évaluation des conducteurs
+- `messagerie` : Conversations temps réel entre utilisateurs
+
+### Étape 5 : Accéder à l'Application
+
+**Interface Utilisateur :**
+http://localhost:8080
+
+**Interface Administrateur :**
+http://localhost:8080/admin
+
+
+**Compte administrateur (avec dump complet) :**
+- Email : `admin@ecoride.fr`
+- Mot de passe : `password`
+
+**Créer un nouveau compte :**
+- Chaque nouvel utilisateur reçoit **20 crédits** automatiquement
 
 ### Configuration Docker
+
 Le projet utilise 4 conteneurs :
 - **PHP 8.1.10-fpm** : Application principale
 - **Nginx** : Serveur web
 - **MySQL 8.0.43** : Base de données relationnelle
 - **MongoDB 4.4.29** : Base NoSQL pour messagerie/avis
+
+##  Configuration
+
+### Variables d'Environnement par Défaut
+
+**MySQL :**
+- Host : `ecoride-mysql`
+- Database : `EcoRide`
+- User : `root`
+- Password : `root_password`
+- Port : `3306`
+
+**MongoDB :**
+- Host : `ecoride-mongodb`
+- Database : `ecoride_messages`
+- Port : `27017`
+
+### Fichiers de Configuration Importants
+config/
+├── database.php # Configuration MySQL
+└── php.ini # Configuration PHP personnalisée
+
+nginx/
+└── nginx.conf
+
+
+##  Structure de la Base de Données
+
+### MySQL (Données relationnelles)
+- `utilisateurs` : Comptes utilisateurs (rôle: user/admin)
+- `vehicules` : Véhicules des conducteurs
+- `trajets` : Propositions de covoiturage
+- `reservations` : Réservations de places
+- `credits` : Historique des transactions
+- `statistiques_ecologiques` : Impact CO2 économisé
+
+### MongoDB (Données NoSQL)
+- `avis` : Évaluations détaillées (note, commentaires, tags)
+- `messagerie` : Conversations temps réel
+
+##  Comptes de Test (Dump Complet)
+
+Si vous avez importé `ecoride_dump_complet.sql`, vous disposez de :
+
+| Email | Mot de passe | Rôle | Crédits |
+|-------|-------------|------|---------|
+| admin@ecoride.fr | admin123 | Admin | 100 |
+| amellbaya@gmail.com | (voir dump) | User | 51 |
+| guillaumepayan8@gmail.com | (voir dump) | User | 28 |
+
+** Note :** Pour des raisons de sécurité, changez ces mots de passe en production !
 
 ## Fonctionnalités Principales
 
@@ -89,35 +179,6 @@ Le projet utilise 4 conteneurs :
 - **Historique complet** des activités
 - Statistiques personnalisées
 
-## Structure du Projet
-EcoRide/
-├── app/
-│ ├── Controllers/ # Contrôleurs MVC (12 contrôleurs)
-│ │ ├── AuthController.php
-│ │ ├── AdminController.php
-│ │ ├── AdminUserController.php
-│ │ ├── MessagerieController.php
-│ │ ├── AvisController.php
-│ │ └── ...
-│ ├── Models/ # Modèles de données
-│ └── Views/ # Vues et templates
-│ ├── layouts/ # Layouts principaux
-│ ├── admin/ # Interface admin
-│ ├── auth/ # Authentification
-│ └── messages/ # Messagerie
-├── public/ # Point d'entrée public
-│ ├── index.php # Router principal unifié
-│ ├── css/ # Styles personnalisés
-│ ├── js/ # 18 fichiers JavaScript optimisés
-│ └── assets/ # Images et ressources
-├── config/ # Configuration
-│ ├── database.php # Config MySQL
-│ └── php.ini # Config PHP personnalisée
-├── docker/ # Configuration Docker
-│ └── nginx/ # Config Nginx
-├── docker-compose.yml # Orchestration Docker
-└── sql/ # Scripts de base de données
-
 
 ## Fonctionnalités Écologiques
 
@@ -163,11 +224,45 @@ EcoRide/
 7. **Évaluer les conducteurs** après chaque trajet
 
 ### Interface Administrateur
-Accès : http://localhost:8080/admin
 - **Tableau de bord** avec métriques temps réel
 - **Gestion des utilisateurs** et modération
 - **Statistiques avancées** avec graphiques
 - **Outils de modération** complets
+
+##  Commandes Utiles
+
+### Arrêter l'Application
+
+docker-compose down
+
+### Supprimer TOUT et Recommencer
+docker-compose down -v
+docker-compose up -d
+Puis réimporter la base de données (Étape 3)
+
+### Accéder à un Conteneur
+PHP
+docker exec -it ecoride-php bash
+
+MySQL
+docker exec -it ecoride-mysql mysql -uroot -proot_password EcoRide
+
+MongoDB
+docker exec -it ecoride-mongodb mongosh ecoride_messages
+
+
+### Vérifier les Logs (Troubleshooting)
+Logs PHP
+docker logs ecoride-php
+
+Logs MySQL
+docker logs ecoride-mysql
+
+Logs MongoDB
+docker logs ecoride-mongodb
+
+Logs Nginx
+docker logs ecoride-nginx
 
 ## Problèmes Courants et Solutions
 
@@ -176,15 +271,13 @@ docker-compose down
 docker-compose up -d
 
 ### Problème de Base de Données
-Vérifier les logs
+Vérifier les logs :
 docker logs ecoride-mysql
 docker logs ecoride-php
-
 
 ### Page Blanche
 Vérifier les logs PHP dans le conteneur :
 docker exec -it ecoride-php tail -f /var/log/php_errors.log
-
 
 ## Tests et Validation
 
@@ -204,7 +297,7 @@ docker exec -it ecoride-php tail -f /var/log/php_errors.log
 
 ## Évolutions Futures
 
-### Version 2.0 Planifiée
+### Version 4.0 Planifiée
 - **Application mobile native** (React Native)
 - **Notifications push** en temps réel
 - **Intégration paiement** (Stripe/PayPal)
@@ -226,22 +319,6 @@ docker exec -it ecoride-php tail -f /var/log/php_errors.log
 4. Pousser vers la branche (`git push origin feature/nouvelle-fonctionnalite`)
 5. Ouvrir une Pull Request
 
-## Configuration pour Production
-
-### Variables d'Environnement
-Base de données
-DB_HOST=localhost
-DB_NAME=ecoride
-DB_USER=ecoride_user
-DB_PASS=mot_de_passe_securise
-
-MongoDB
-MONGO_HOST=localhost
-MONGO_DB=ecoride_messages
-MONGO_USER=ecoride_mongo
-MONGO_PASS=mot_de_passe_mongo
-
-
 ## Monitoring et Logs
 
 ### Logs Disponibles
@@ -252,10 +329,9 @@ MONGO_PASS=mot_de_passe_mongo
 
 ## Contact et Support
 
-**Développeur** : Baya AMELLAL PAYAN 
+**Développeur** : Baya AMELLAL PAYAN  
 **Email** : [amellbaya@gmail.com](mailto:amellbaya@gmail.com)  
 **GitHub** : [@Baya-dev564](https://github.com/Baya-dev564)  
-**LinkedIn** : [Profil LinkedIn](https://linkedin.com/in/baya-amellal)
 
 ## Licence
 
@@ -265,8 +341,15 @@ Ce projet est sous licence **MIT**. Voir le fichier `LICENSE` pour plus de déta
 
 **EcoRide** - De projet étudiant à plateforme professionnelle. Développé avec passion dans le cadre de ma formation en développement web chez Studi.
 
-**Version actuelle :** 2.0  
-**Dernière mise à jour :** Septembre 2025  
-**Statut :** Production Ready
+**Version actuelle :** 3.0  
+**Dernière mise à jour :** Octobre 2025  
+**Statut :** Production Ready  
+**Démo en ligne :** [http://ecoride-baya.com](http://ecoride-baya.com)
+
+
+
+
+
+
 
 
