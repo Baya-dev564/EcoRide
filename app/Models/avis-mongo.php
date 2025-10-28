@@ -5,7 +5,7 @@
  */
 
 // Je charge les variables d'environnement
-require_once __DIR__ . '/../../config/env.php';
+
 
 class AvisMongo
 {

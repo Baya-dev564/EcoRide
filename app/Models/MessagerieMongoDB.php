@@ -1,35 +1,30 @@
 <?php
 /**
- * Gestion de la messagerie MongoDB - Version .env
- *  Compatible Docker local ET production Hostinger via .env
+ * Gestion de la messagerie MongoDB - Version Docker
+ * Compatible avec les variables d'environnement Docker
  */
-
-// Je charge les variables d'environnement
-require_once __DIR__ . '/../../config/env.php';
 
 class MessagerieMongoDB
 {
     private $manager;
     private $database;
-    private $collection_conversations;
-    private $collection_messages;
+    private $conversations;
+    private $messages;
     
     public function __construct()
     {
         try {
-            // Je récupère l'URI MongoDB depuis les variables d'environnement
+            // Je récupère l'URI MongoDB depuis les variables d'environnement Docker
             $mongoUri = getenv('MONGODB_URI');
             
             if (!$mongoUri) {
-                throw new Exception('MONGODB_URI non définie dans le fichier .env');
+                throw new Exception('MONGODB_URI non définie');
             }
             
             $this->manager = new MongoDB\Driver\Manager($mongoUri);
-            
-            // Je définis la base et les collections
             $this->database = 'EcoRide';
-            $this->collection_conversations = 'conversations';
-            $this->collection_messages = 'messages';
+            $this->conversations = $this->database . '.conversations';
+            $this->messages = $this->database . '.messages';
             
             error_log("DEBUG: Connexion MongoDB messagerie établie sur base EcoRide");
             
@@ -40,398 +35,220 @@ class MessagerieMongoDB
     }
     
     /**
-     * Je crée une nouvelle conversation 100% NoSQL
-     * Je stocke directement les pseudos dans MongoDB (pas de jointure MySQL)
+     * Je crée une nouvelle conversation
      */
     public function creerConversation($user1Id, $user2Id, $pseudo1, $pseudo2, $trajetId = null)
     {
         try {
             $conversation = [
-                'type' => 'user_user',
                 'participants' => [
-                    [
-                        'user_id' => (int)$user1Id,
-                        'pseudo' => $pseudo1
-                    ],
-                    [
-                        'user_id' => (int)$user2Id,
-                        'pseudo' => $pseudo2
-                    ]
+                    ['user_id' => (int)$user1Id, 'pseudo' => $pseudo1],
+                    ['user_id' => (int)$user2Id, 'pseudo' => $pseudo2]
                 ],
                 'trajet_id' => $trajetId ? (int)$trajetId : null,
-                'date_creation' => new MongoDB\BSON\UTCDateTime(),
-                'dernier_message' => null,
-                'date_dernier_message' => null,
+                'derniere_activite' => new MongoDB\BSON\UTCDateTime(),
                 'messages_non_lus' => [
-                    (int)$user1Id => 0,
-                    (int)$user2Id => 0
+                    (string)$user1Id => 0,
+                    (string)$user2Id => 0
                 ]
             ];
             
             $bulk = new MongoDB\Driver\BulkWrite;
             $conversationId = $bulk->insert($conversation);
             
-            $this->manager->executeBulkWrite(
-                $this->database . '.' . $this->collection_conversations,
-                $bulk
-            );
+            $this->manager->executeBulkWrite($this->conversations, $bulk);
             
             error_log("DEBUG: Conversation créée - ID: " . (string)$conversationId);
-            
-            return [
-                'success' => true,
-                'conversation_id' => (string)$conversationId,
-                'message' => 'Conversation créée avec succès'
-            ];
+            return $conversationId;
             
         } catch (Exception $e) {
-            error_log("ERREUR creerConversation MongoDB: " . $e->getMessage());
-            return [
-                'success' => false,
-                'error' => 'Erreur lors de la création de la conversation'
-            ];
+            error_log("ERREUR creerConversation: " . $e->getMessage());
+            throw $e;
         }
     }
     
     /**
-     * Je récupère toutes les conversations d'un utilisateur
+     * Je récupère les conversations d'un utilisateur
      */
     public function getConversationsUtilisateur($userId)
     {
         try {
-            $filter = [
-                'participants.user_id' => (int)$userId
-            ];
-            
-            $options = [
-                'sort' => ['date_dernier_message' => -1]
-            ];
+            $filter = ['participants.user_id' => (int)$userId];
+            $options = ['sort' => ['derniere_activite' => -1]];
             
             $query = new MongoDB\Driver\Query($filter, $options);
-            $cursor = $this->manager->executeQuery(
-                $this->database . '.' . $this->collection_conversations,
-                $query
-            );
+            $cursor = $this->manager->executeQuery($this->conversations, $query);
             
-            $conversations = [];
-            foreach ($cursor as $conv) {
-                $conversations[] = [
-                    'id' => (string)$conv->_id,
-                    'participants' => $conv->participants,
-                    'trajet_id' => $conv->trajet_id ?? null,
-                    'dernier_message' => $conv->dernier_message ?? '',
-                    'date_dernier_message' => isset($conv->date_dernier_message) 
-                        ? $conv->date_dernier_message->toDateTime()->format('Y-m-d H:i:s')
-                        : null,
-                    'messages_non_lus' => $conv->messages_non_lus->{(string)$userId} ?? 0
-                ];
-            }
-            
-            error_log("DEBUG: " . count($conversations) . " conversations pour user $userId");
-            
-            return [
-                'success' => true,
-                'conversations' => $conversations,
-                'total' => count($conversations)
-            ];
+            return iterator_to_array($cursor);
             
         } catch (Exception $e) {
             error_log("ERREUR getConversationsUtilisateur: " . $e->getMessage());
-            return [
-                'success' => false,
-                'conversations' => [],
-                'error' => 'Erreur lors de la récupération des conversations'
-            ];
+            return [];
         }
     }
     
     /**
-     * Je récupère une conversation par son ID
+     * Je récupère une conversation par ID
      */
-    public function getConversationParId($conversationId)
+    public function getConversation($conversationId)
     {
         try {
             $filter = ['_id' => new MongoDB\BSON\ObjectId($conversationId)];
             $query = new MongoDB\Driver\Query($filter);
             
-            $cursor = $this->manager->executeQuery(
-                $this->database . '.' . $this->collection_conversations,
-                $query
-            );
+            $cursor = $this->manager->executeQuery($this->conversations, $query);
+            $result = iterator_to_array($cursor);
             
-            $convArray = iterator_to_array($cursor);
-            
-            if (!empty($convArray)) {
-                $conv = $convArray[0];
-                return [
-                    'success' => true,
-                    'conversation' => [
-                        'id' => (string)$conv->_id,
-                        'participants' => $conv->participants,
-                        'trajet_id' => $conv->trajet_id ?? null,
-                        'dernier_message' => $conv->dernier_message ?? '',
-                        'date_dernier_message' => isset($conv->date_dernier_message)
-                            ? $conv->date_dernier_message->toDateTime()->format('Y-m-d H:i:s')
-                            : null
-                    ]
-                ];
-            }
-            
-            return [
-                'success' => false,
-                'error' => 'Conversation non trouvée'
-            ];
+            return !empty($result) ? $result[0] : null;
             
         } catch (Exception $e) {
-            error_log("ERREUR getConversationParId: " . $e->getMessage());
-            return [
-                'success' => false,
-                'error' => 'Erreur lors de la récupération de la conversation'
-            ];
+            error_log("ERREUR getConversation: " . $e->getMessage());
+            return null;
         }
     }
     
     /**
-     * J'envoie un message dans une conversation
+     * J'envoie un message
      */
-    public function envoyerMessage($conversationId, $senderId, $contenu)
+    public function envoyerMessage($conversationId, $userId, $pseudo, $contenu)
     {
         try {
             $message = [
                 'conversation_id' => new MongoDB\BSON\ObjectId($conversationId),
-                'sender_id' => (int)$senderId,
+                'expediteur' => ['user_id' => (int)$userId, 'pseudo' => $pseudo],
                 'contenu' => $contenu,
-                'date_envoi' => new MongoDB\BSON\UTCDateTime(),
+                'created_at' => new MongoDB\BSON\UTCDateTime(),
                 'lu' => false
             ];
             
             $bulk = new MongoDB\Driver\BulkWrite;
             $messageId = $bulk->insert($message);
             
-            $this->manager->executeBulkWrite(
-                $this->database . '.' . $this->collection_messages,
-                $bulk
-            );
+            $this->manager->executeBulkWrite($this->messages, $bulk);
             
-            // Je mets à jour la conversation avec le dernier message
-            $this->mettreAJourDernierMessage($conversationId, $contenu, $senderId);
+            // Je mets à jour la dernière activité de la conversation
+            $this->mettreAJourDerniereActivite($conversationId);
             
-            error_log("DEBUG: Message envoyé - ID: " . (string)$messageId);
-            
-            return [
-                'success' => true,
-                'message_id' => (string)$messageId,
-                'message' => 'Message envoyé avec succès'
-            ];
+            return $messageId;
             
         } catch (Exception $e) {
             error_log("ERREUR envoyerMessage: " . $e->getMessage());
-            return [
-                'success' => false,
-                'error' => 'Erreur lors de l\'envoi du message'
-            ];
+            throw $e;
         }
     }
     
     /**
-     * Je récupère tous les messages d'une conversation
+     * Je récupère les messages d'une conversation
      */
-    public function getMessagesConversation($conversationId, $limit = 100)
+    public function getMessages($conversationId)
     {
         try {
-            $filter = [
-                'conversation_id' => new MongoDB\BSON\ObjectId($conversationId)
-            ];
-            
-            $options = [
-                'sort' => ['date_envoi' => 1],
-                'limit' => $limit
-            ];
+            $filter = ['conversation_id' => new MongoDB\BSON\ObjectId($conversationId)];
+            $options = ['sort' => ['created_at' => 1]];
             
             $query = new MongoDB\Driver\Query($filter, $options);
-            $cursor = $this->manager->executeQuery(
-                $this->database . '.' . $this->collection_messages,
-                $query
-            );
+            $cursor = $this->manager->executeQuery($this->messages, $query);
             
-            $messages = [];
-            foreach ($cursor as $msg) {
-                $messages[] = [
-                    'id' => (string)$msg->_id,
-                    'sender_id' => $msg->sender_id,
-                    'contenu' => $msg->contenu,
-                    'date_envoi' => $msg->date_envoi->toDateTime()->format('Y-m-d H:i:s'),
-                    'lu' => $msg->lu ?? false
-                ];
-            }
-            
-            return [
-                'success' => true,
-                'messages' => $messages,
-                'total' => count($messages)
-            ];
+            return iterator_to_array($cursor);
             
         } catch (Exception $e) {
-            error_log("ERREUR getMessagesConversation: " . $e->getMessage());
-            return [
-                'success' => false,
-                'messages' => [],
-                'error' => 'Erreur lors de la récupération des messages'
-            ];
+            error_log("ERREUR getMessages: " . $e->getMessage());
+            return [];
         }
     }
     
     /**
      * Je marque les messages comme lus
      */
-    public function marquerMessagesCommelus($conversationId, $userId)
+    public function marquerMessagesCommuLus($conversationId, $userId)
     {
         try {
             $filter = [
                 'conversation_id' => new MongoDB\BSON\ObjectId($conversationId),
-                'sender_id' => ['$ne' => (int)$userId],
+                'expediteur.user_id' => ['$ne' => (int)$userId],
                 'lu' => false
             ];
             
-            $update = [
-                '$set' => ['lu' => true]
-            ];
+            $update = ['$set' => ['lu' => true]];
             
             $bulk = new MongoDB\Driver\BulkWrite;
             $bulk->update($filter, $update, ['multi' => true]);
             
-            $result = $this->manager->executeBulkWrite(
-                $this->database . '.' . $this->collection_messages,
-                $bulk
-            );
+            $this->manager->executeBulkWrite($this->messages, $bulk);
             
-            // Je réinitialise le compteur de messages non lus dans la conversation
-            $this->resetCompteurNonLus($conversationId, $userId);
-            
-            return [
-                'success' => true,
-                'messages_marques' => $result->getModifiedCount()
-            ];
-            
-        } catch (Exception $e) {
-            error_log("ERREUR marquerMessagesCommelus: " . $e->getMessage());
-            return [
-                'success' => false,
-                'error' => 'Erreur lors du marquage des messages'
-            ];
-        }
-    }
-    
-    /**
-     * Je compte les messages non lus pour un utilisateur
-     */
-    public function compterMessagesNonLus($userId)
-    {
-        try {
-            $filter = [
-                'participants.user_id' => (int)$userId
-            ];
-            
-            $query = new MongoDB\Driver\Query($filter);
-            $cursor = $this->manager->executeQuery(
-                $this->database . '.' . $this->collection_conversations,
-                $query
-            );
-            
-            $totalNonLus = 0;
-            foreach ($cursor as $conv) {
-                $totalNonLus += $conv->messages_non_lus->{(string)$userId} ?? 0;
-            }
-            
-            return [
-                'success' => true,
-                'total_non_lus' => $totalNonLus
-            ];
-            
-        } catch (Exception $e) {
-            error_log("ERREUR compterMessagesNonLus: " . $e->getMessage());
-            return [
-                'success' => false,
-                'total_non_lus' => 0
-            ];
-        }
-    }
-    
-    /**
-     * Méthode privée : Je mets à jour le dernier message dans la conversation
-     */
-    private function mettreAJourDernierMessage($conversationId, $contenu, $senderId)
-    {
-        try {
-            // Je récupère les participants pour incrémenter le bon compteur
-            $convResult = $this->getConversationParId($conversationId);
-            
-            if (!$convResult['success']) {
-                return false;
-            }
-            
-            $participants = $convResult['conversation']['participants'];
-            $receiverId = null;
-            
-            foreach ($participants as $p) {
-                if ($p->user_id != $senderId) {
-                    $receiverId = $p->user_id;
-                    break;
-                }
-            }
-            
-            $filter = ['_id' => new MongoDB\BSON\ObjectId($conversationId)];
-            $update = [
-                '$set' => [
-                    'dernier_message' => $contenu,
-                    'date_dernier_message' => new MongoDB\BSON\UTCDateTime()
-                ],
-                '$inc' => [
-                    "messages_non_lus.$receiverId" => 1
-                ]
-            ];
-            
-            $bulk = new MongoDB\Driver\BulkWrite;
-            $bulk->update($filter, $update);
-            
-            $this->manager->executeBulkWrite(
-                $this->database . '.' . $this->collection_conversations,
-                $bulk
-            );
+            // Je réinitialise le compteur
+            $this->resetMessagesNonLus($conversationId, $userId);
             
             return true;
             
         } catch (Exception $e) {
-            error_log("ERREUR mettreAJourDernierMessage: " . $e->getMessage());
+            error_log("ERREUR marquerMessagesCommuLus: " . $e->getMessage());
             return false;
         }
     }
     
     /**
-     * Méthode privée : Je réinitialise le compteur de messages non lus
+     * J'incrémente le compteur de messages non lus
      */
-    private function resetCompteurNonLus($conversationId, $userId)
+    public function incrementerMessagesNonLus($conversationId, $userId)
     {
         try {
             $filter = ['_id' => new MongoDB\BSON\ObjectId($conversationId)];
-            $update = [
-                '$set' => [
-                    "messages_non_lus.$userId" => 0
-                ]
-            ];
+            $update = ['$inc' => ['messages_non_lus.' . (string)$userId => 1]];
             
             $bulk = new MongoDB\Driver\BulkWrite;
             $bulk->update($filter, $update);
             
-            $this->manager->executeBulkWrite(
-                $this->database . '.' . $this->collection_conversations,
-                $bulk
-            );
+            $this->manager->executeBulkWrite($this->conversations, $bulk);
             
             return true;
             
         } catch (Exception $e) {
-            error_log("ERREUR resetCompteurNonLus: " . $e->getMessage());
+            error_log("ERREUR incrementerMessagesNonLus: " . $e->getMessage());
+            return false;
+        }
+    }
+    
+    /**
+     * Je réinitialise le compteur de messages non lus
+     */
+    private function resetMessagesNonLus($conversationId, $userId)
+    {
+        try {
+            $filter = ['_id' => new MongoDB\BSON\ObjectId($conversationId)];
+            $update = ['$set' => ['messages_non_lus.' . (string)$userId => 0]];
+            
+            $bulk = new MongoDB\Driver\BulkWrite;
+            $bulk->update($filter, $update);
+            
+            $this->manager->executeBulkWrite($this->conversations, $bulk);
+            
+            return true;
+            
+        } catch (Exception $e) {
+            error_log("ERREUR resetMessagesNonLus: " . $e->getMessage());
+            return false;
+        }
+    }
+    
+    /**
+     * Je mets à jour la dernière activité
+     */
+    private function mettreAJourDerniereActivite($conversationId)
+    {
+        try {
+            $filter = ['_id' => new MongoDB\BSON\ObjectId($conversationId)];
+            $update = ['$set' => ['derniere_activite' => new MongoDB\BSON\UTCDateTime()]];
+            
+            $bulk = new MongoDB\Driver\BulkWrite;
+            $bulk->update($filter, $update);
+            
+            $this->manager->executeBulkWrite($this->conversations, $bulk);
+            
+            return true;
+            
+        } catch (Exception $e) {
+            error_log("ERREUR mettreAJourDerniereActivite: " . $e->getMessage());
             return false;
         }
     }

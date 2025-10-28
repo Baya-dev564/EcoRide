@@ -4,6 +4,7 @@
  * Gère l'inscription, la connexion et la déconnexion des utilisateurs
  */
 
+
 class AuthController
 {
     /**
@@ -19,6 +20,7 @@ class AuthController
         // Je vérifie si l'utilisateur est déjà connecté
         if (isset($_SESSION['user'])) {
             $_SESSION['message'] = 'Vous êtes déjà connecté à EcoRide !';
+            session_write_close(); // Je force l'écriture AVANT la redirection
             header('Location: /');
             exit;
         }
@@ -47,6 +49,7 @@ class AuthController
         // Je vérifie si l'utilisateur est déjà connecté
         if (isset($_SESSION['user'])) {
             $_SESSION['message'] = 'Vous êtes déjà connecté à EcoRide !';
+            session_write_close(); // Je force l'écriture AVANT la redirection
             header('Location: /');
             exit;
         }
@@ -90,6 +93,9 @@ class AuthController
         // Je redémarre une nouvelle session pour le message de déconnexion
         session_start();
         $_SESSION['message'] = 'Vous avez été déconnecté avec succès. À bientôt sur EcoRide !';
+        
+        // Je force l'écriture de la session AVANT la redirection
+        session_write_close();
         
         // Je redirige vers la page d'accueil
         header('Location: /');
@@ -208,24 +214,27 @@ class AuthController
         // Je tente l'authentification
         $resultat = $userModel->authentifier($email, $motDePasse);
         
-        if ($resultat['succes']) {
-            // Connexion réussie - je crée la session utilisateur complète
-            $_SESSION['user'] = $resultat['user']; // Toutes les données utilisateur
-            $_SESSION['user_id'] = $resultat['user']['id']; // ID pour l'application
-            $_SESSION['pseudo'] = $resultat['user']['pseudo']; // Pseudo pour affichage
-            
-            // Je retourne une réponse JSON de succès avec données utilisateur
-            echo json_encode([
-                'succes' => true,
-                'message' => $resultat['message'],
-                'redirect' => '/',
-                'user' => [
-                    'id' => $resultat['user']['id'],
-                    'pseudo' => $resultat['user']['pseudo'],
-                    'credit' => $resultat['user']['credit'],
-                    'permis_conduire' => $resultat['user']['permis_conduire'] ?? false
-                ]
-            ]);
+      if ($resultat['succes']) {
+    $_SESSION['user'] = $resultat['user'];
+    $_SESSION['user_id'] = $resultat['user']['id'];
+    $_SESSION['pseudo'] = $resultat['user']['pseudo'];
+    
+    // Je retourne une réponse JSON de succès avec données utilisateur
+    echo json_encode([
+        'succes' => true,
+        'message' => $resultat['message'],
+        'redirect' => '/',
+        'user' => [
+            'id' => $resultat['user']['id'],
+            'pseudo' => $resultat['user']['pseudo'],
+            'credit' => $resultat['user']['credit'],
+            'permis_conduire' => $resultat['user']['permis_conduire'] ?? false
+        ]
+    ]);
+    
+    // Je ferme la session APRÈS l'envoi de la réponse
+    session_write_close();
+
         } else {
             // Erreur de connexion - identifiants incorrects
             echo json_encode([

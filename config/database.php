@@ -1,6 +1,4 @@
 <?php
-// Je charge les variables d'environnement depuis le fichier .env
-require_once __DIR__ . '/env.php';
 
 final class DatabaseConfig
 {
@@ -19,6 +17,7 @@ final class DatabaseConfig
         $this->username = (string)getenv('MYSQL_USER');
         $this->password = (string)getenv('MYSQL_PASSWORD');
         $this->database = getenv('MYSQL_DATABASE') ?: 'EcoRide';
+        error_log("[DB DEBUG] Host: {$this->host}, User: {$this->username}, Pass: {$this->password}, DB: {$this->database}");
     }
 
     public function getConnection(): \PDO
