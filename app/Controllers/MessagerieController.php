@@ -39,14 +39,18 @@ class MessagerieController
             // Je transforme les objets MongoDB pour l'affichage
             $conversationsFormatees = [];
             foreach ($conversations as $conversation) {
-                // J'utilise -> pour les objets MongoDB
-                $conversationsFormatees[] = [
-                    'id' => (string)$conversation->_id,
-                    'participants' => $conversation->participants, // Déjà un array d'objets
-                    'derniere_activite' => $conversation->derniere_activite->toDateTime(),
-                    'messages_non_lus' => isset($conversation->messages_non_lus) ? 
-                                         (array)$conversation->messages_non_lus : []
-                ];
+                // Je vérifie que la conversation existe et contient les données nécessaires
+                if ($conversation && isset($conversation->_id) && isset($conversation->participants)) {
+                    // J'utilise -> pour les objets MongoDB
+                    $conversationsFormatees[] = [
+                        'id' => (string)$conversation->_id,
+                        'participants' => $conversation->participants, // Déjà un array d'objets
+                        'derniere_activite' => isset($conversation->derniere_activite) ? 
+                                              $conversation->derniere_activite->toDateTime() : new DateTime(),
+                        'messages_non_lus' => isset($conversation->messages_non_lus) ? 
+                                             (array)$conversation->messages_non_lus : []
+                    ];
+                }
             }
             
             error_log("DEBUG contrôleur - conversations formatées: " . count($conversationsFormatees));
@@ -226,15 +230,18 @@ class MessagerieController
             // Je crée la conversation
             $conversationId = $this->messagerieMongoDB->creerConversation($user1Id, $user2Id, $pseudo1, $destinatairePseudo, $trajetId);
             
+            // Je convertis l'ObjectId en string pour l'utilisation
+            $conversationIdString = (string)$conversationId;
+            
             // J'envoie le message initial
-            $this->messagerieMongoDB->envoyerMessage((string)$conversationId, $user1Id, $pseudo1, $messageInitial);
+            $this->messagerieMongoDB->envoyerMessage($conversationIdString, $user1Id, $pseudo1, $messageInitial);
             
             // J'incrémente le compteur pour le destinataire
-            $this->messagerieMongoDB->incrementerMessagesNonLus((string)$conversationId, $user2Id);
+            $this->messagerieMongoDB->incrementerMessagesNonLus($conversationIdString, $user2Id);
             
             echo json_encode([
                 'success' => true,
-                'conversation_id' => (string)$conversationId,
+                'conversation_id' => $conversationIdString,
                 'message' => 'Conversation créée et message envoyé'
             ]);
             

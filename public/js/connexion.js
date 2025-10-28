@@ -150,16 +150,18 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(data => {
             hideLoader();
             
-            if (data.succes) {
-                // Connexion réussie - j'anime le succès
-                showSuccessMessage(data.message);
-                animateFormSuccess();
-                
-                // Je redirige vers l'accueil après 1.5 secondes
-                setTimeout(() => {
-                    window.location.href = data.redirect || '/';
-                }, 1500);
-                
+           if (data.succes) {
+    // Connexion réussie - j'anime le succès
+    showSuccessMessage(data.message);
+    animateFormSuccess();
+    
+    // J'attends 2 secondes pour l'écriture complète de la session
+    setTimeout(() => {
+        window.location.href = data.redirect || '/';
+    }, 2000); // Je passe de 1500ms à 2000ms
+    
+
+
             } else {
                 // Erreur de connexion - j'affiche le message d'erreur
                 showErrorMessage(data.erreur);

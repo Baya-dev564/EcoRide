@@ -1,4 +1,5 @@
 <?php
+
 final class DatabaseConfig
 {
     private string $host;
@@ -10,11 +11,13 @@ final class DatabaseConfig
 
     public function __construct()
     {
-        $this->host     = getenv('MYSQL_HOST')     ?: 'mysql';
+        // Je récupère les valeurs depuis les variables d'environnement (.env ou docker-compose)
+        $this->host     = getenv('MYSQL_HOST')     ?: 'localhost';
         $this->port     = (int)(getenv('MYSQL_PORT') ?: 3306);
         $this->username = (string)getenv('MYSQL_USER');
         $this->password = (string)getenv('MYSQL_PASSWORD');
         $this->database = getenv('MYSQL_DATABASE') ?: 'EcoRide';
+        error_log("[DB DEBUG] Host: {$this->host}, User: {$this->username}, Pass: {$this->password}, DB: {$this->database}");
     }
 
     public function getConnection(): \PDO
@@ -22,6 +25,7 @@ final class DatabaseConfig
         if ($this->pdo instanceof \PDO) {
             return $this->pdo; // je reutilise ma connexion
         }
+        
         $dsn = sprintf(
             'mysql:host=%s;port=%d;dbname=%s;charset=utf8mb4',
             $this->host, $this->port, $this->database

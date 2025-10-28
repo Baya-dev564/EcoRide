@@ -18,13 +18,14 @@
  * - NOUVEAU : Workflow complet de notation post-trajet
  * - NOUVEAU : Système de vérification email complet
  */
-
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 // J'active l'affichage des erreurs pour le développement
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
-// Je démarre la session pour toute l'application
-session_start();
+
 
 // J'inclus la configuration de base de données et crée la connexion PDO globale
 require_once __DIR__ . '/../config/database.php';
