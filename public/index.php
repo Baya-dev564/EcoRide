@@ -21,9 +21,7 @@
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
-// J'active l'affichage des erreurs pour le développement
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
+
 
 
 
@@ -100,7 +98,7 @@ if (strpos($path, '/admin') === 0) {
         $userController->toggleUserStatus();
     }
     
-    // ROUTES ADMIN EXISTANTES (TON AdminController ORIGINAL NON MODIFIÉ)
+    // ROUTES ADMIN 
     else {
         $controller = new AdminController();
         
@@ -128,7 +126,7 @@ if (strpos($path, '/admin') === 0) {
             header('Content-Type: application/json');
             $controller->modererTrajet();
         }
-        // ROUTES ADMIN EXISTANTES CONSERVÉES INTACTES
+        // ROUTES ADMIN
         
         elseif ($path === '/admin/api/moderer-trajet' && $method === 'POST') {
             // API : Modérer un trajet (valider/refuser) - Route alternative
@@ -355,11 +353,18 @@ switch ($path) {
         $controller->index();
         break;
 
-    case '/donner-avis':
+       case '/donner-avis':
         // Je donne un avis sur un trajet/utilisateur
         $controller = new AvisController();
         $controller->create();
         break;
+
+    case '/avis/create':  // AJOUTE CETTE ROUTE
+        // Route alternative pour créer un avis
+        $controller = new AvisController();
+        $controller->create();
+        break;
+
 
     case '/api/avis':
         // API : Ajouter un nouvel avis

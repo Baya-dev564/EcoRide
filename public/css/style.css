@@ -105,7 +105,7 @@ body {
     border-color: var(--primary-green);
 }
 
-/* 🔔 Badges de notification pour les messages */
+/*  Badges de notification pour les messages */
 .message-notification-badge {
     background-color: #ffc107 !important; /* Même couleur que les avis */
     color: #212529 !important;

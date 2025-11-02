@@ -103,8 +103,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 clearFieldError('mot_de_passe');
                 
                 if (motDePasse.length > 0) {
-                    if (motDePasse.length < 6) {
-                        showFieldError('mot_de_passe', 'Le mot de passe doit contenir au moins 6 caractères.');
+                    if (motDePasse.length < 8) {
+                        showFieldError('mot_de_passe', 'Le mot de passe doit contenir au moins 8 caractères.');
                     } else {
                         showFieldSuccess('mot_de_passe');
                     }
@@ -225,8 +225,8 @@ document.addEventListener('DOMContentLoaded', function() {
         if (motDePasse.length === 0) {
             showFieldError('mot_de_passe', 'Le mot de passe est obligatoire.');
             return false;
-        } else if (motDePasse.length < 6) {
-            showFieldError('mot_de_passe', 'Le mot de passe doit contenir au moins 6 caractères.');
+        } else if (motDePasse.length < 8) {
+            showFieldError('mot_de_passe', 'Le mot de passe doit contenir au moins 8 caractères.');
             return false;
         }
         

@@ -154,7 +154,7 @@
                             </li>
                             
                             <?php if ($userConnecte): ?>
-                                <!-- 🔔 MESSAGES AVEC NOTIFICATION PROPRE - SEULEMENT POUR CONNECTÉS -->
+                                <!--  MESSAGES AVEC NOTIFICATION PROPRE - SEULEMENT POUR CONNECTÉS -->
                                 <li class="nav-item">
                                     <a class="nav-link d-flex align-items-center" href="/messages">
                                         <i class="fas fa-comments me-1"></i> 

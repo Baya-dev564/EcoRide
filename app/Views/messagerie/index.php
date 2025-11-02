@@ -45,7 +45,7 @@ ob_start();
                                             <h6 class="mb-1">
                                                 <?php foreach ($conversation['participants'] as $participant): ?>
                                                     <?php 
-                                                    // ✅ GESTION COMPATIBLE OBJET/ARRAY
+                                                    //  GESTION COMPATIBLE OBJET/ARRAY
                                                     $participantUserId = is_object($participant) ? $participant->user_id : $participant['user_id'];
                                                     $participantPseudo = is_object($participant) ? $participant->pseudo : $participant['pseudo'];
                                                     
