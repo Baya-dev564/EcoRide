@@ -399,8 +399,8 @@ public function verifierToken($token)
         
         if (empty($data['mot_de_passe'])) {
             $erreurs[] = 'Le mot de passe est obligatoire.';
-        } elseif (strlen($data['mot_de_passe']) < 6) {
-            $erreurs[] = 'Le mot de passe doit contenir au moins 6 caractères.';
+        } elseif (strlen($data['mot_de_passe']) < 8) {
+            $erreurs[] = 'Le mot de passe doit contenir au moins 8 caractères.';
         }
         
         if (!empty($data['nom']) && strlen($data['nom']) > 50) {

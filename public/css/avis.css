@@ -68,7 +68,7 @@
     margin-bottom: 0;
 }
 
-/* ⭐⭐⭐ Mise à jour cruciale : Étoiles entièrement alignées ⭐⭐⭐ */
+
 /* Applique à tous les "groupes" d'étoiles : note ET critères */
 .stars, .stars-small {
     display: flex;

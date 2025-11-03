@@ -248,9 +248,9 @@ ob_start();
                                             <option value="<?= htmlspecialchars($vehicule['id']) ?>" 
                                                     data-electrique="<?= $vehicule['electrique'] ? 'true' : 'false' ?>"
                                                     <?= ($donnees['vehicule_id'] ?? '') == $vehicule['id'] ? 'selected' : '' ?>>
-                                                <?= htmlspecialchars($vehicule['marque']) ?> <?= htmlspecialchars($vehicule['modele']) ?>
-                                                <?= $vehicule['electrique'] ? ' 🌱' : '' ?>
-                                                (<?= htmlspecialchars($vehicule['plaque_immatriculation']) ?>)
+                                                    <?= htmlspecialchars($vehicule['marque']) ?> <?= htmlspecialchars($vehicule['modele']) ?>
+                                                    <?= $vehicule['electrique'] ? ' 🌱' : '' ?>
+                                                    (<?= htmlspecialchars($vehicule['plaque_immatriculation']) ?>)
                                             </option>
                                         <?php endforeach; ?>
                                     <?php else: ?>
